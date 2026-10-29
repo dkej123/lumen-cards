@@ -47,7 +47,7 @@ let states: HassEntities = Object.fromEntries(
     e("light.ceiling", "off", { friendly_name: "Ceiling", ...CT }),
     e("light.kitchen", "on", { friendly_name: "Kitchen", brightness: 255, color_temp_kelvin: 4000, ...CT }),
     e("light.strip", "on", { friendly_name: "LED strip", brightness: 120, supported_color_modes: ["hs"], color_mode: "hs", rgb_color: [120, 90, 255] }),
-    e("scene.movie", "2026-10-01T20:00:00Z", { friendly_name: "Movie", icon: "mdi:movie-open-outline" }),
+    e("scene.movie", "2026-10-01T19:00:00Z", { friendly_name: "Movie", icon: "mdi:movie-open-outline" }),
     e("scene.evening", "2026-10-01T20:00:00Z", { friendly_name: "Evening", icon: "mdi:weather-sunset" }),
     e("binary_sensor.front_door", "off", { friendly_name: "Front door", device_class: "door" }),
     e("binary_sensor.back_door", "on", { friendly_name: "Back door", device_class: "door" }, 3),
@@ -86,11 +86,38 @@ let states: HassEntities = Object.fromEntries(
     e("sensor.aqi", "72", { friendly_name: "AQI", device_class: "aqi" }, 10),
     e("sensor.pm25_old", "14", { friendly_name: "PM2.5", unit_of_measurement: "µg/m³", device_class: "pm25" }, 180),
     e("sensor.pm10_old", "23", { friendly_name: "PM10", unit_of_measurement: "µg/m³", device_class: "pm10" }, 180),
+    // Catalog states (sections 01–08).
+    e("light.desk_strip", "on", { friendly_name: "Desk strip", brightness: 153, supported_color_modes: ["color_temp", "hs"], color_mode: "hs", hs_color: [324, 75], rgb_color: [255, 64, 182], min_color_temp_kelvin: 2200, max_color_temp_kelvin: 6500, color_temp_kelvin: 3950 }),
+    e("light.sconce", "on", { friendly_name: "Sconce", supported_color_modes: ["onoff"], color_mode: "onoff" }),
+    e("light.kitchen_all", "on", { friendly_name: "Kitchen · all", brightness: 204, entity_id: ["light.kitchen", "light.sofa", "light.ceiling"], ...CT }),
+    e("light.bedroom", "unavailable", { friendly_name: "Bedroom" }),
+    e("light.hall", "unknown", { friendly_name: "Hall", ...CT }),
+    e("fan.purifier", "on", { friendly_name: "Purifier", icon: "mdi:air-purifier" }),
+    e("input_boolean.purifier_night", "off", { friendly_name: "Night mode", icon: "mdi:weather-night" }),
+    e("input_boolean.purifier_lock", "unavailable", { friendly_name: "Child lock", icon: "mdi:lock-outline" }),
+    e("switch.coffee", "off", { friendly_name: "Socket · coffee", icon: "mdi:power-socket-eu" }),
+    e("switch.coffee_on", "on", { friendly_name: "Socket · coffee", icon: "mdi:power-socket-eu" }),
+    e("switch.kettle", "unavailable", { friendly_name: "Socket · kettle", icon: "mdi:power-socket-eu" }),
+    e("sensor.gate_status", "200", { friendly_name: "Gate status" }, 2),
+    e("sensor.gate_message", "no response", { friendly_name: "Gate message" }, 2),
+    e("script.barrier", "off", { friendly_name: "Barrier", icon: "mdi:boom-gate-outline", last_triggered: ago(60 * 20) }),
+    e("script.garage", "unavailable", { friendly_name: "Garage gate" }),
+    e("person.mark", "not_home", { friendly_name: "Mark" }, 15),
+    e("person.zoe", "home", { friendly_name: "Zoe" }, 20),
+    e("binary_sensor.zoe_ble", "on", { friendly_name: "Zoe key fob" }, 20),
+    e("person.ola", "unavailable", { friendly_name: "Ola" }),
+    e("input_boolean.trash", "on", { friendly_name: "Trash" }),
+    e("sensor.trash_kind", "bio tomorrow", {}),
+    e("input_boolean.laundry", "on", { friendly_name: "Laundry done" }),
+    e("sensor.laundry_min", "12", { unit_of_measurement: "min" }),
+    e("input_boolean.window", "on", { friendly_name: "Window open" }),
+    e("sensor.window_min", "25", { unit_of_measurement: "min" }),
     e("sensor.bike_battery", "18", { unit_of_measurement: "%" }),
   ].map((x) => [x.entity_id, x]),
 );
 
 const listeners = new Set<(h: HassLike) => void>();
+let gatePresses = 0;
 const set = (id: string, state: string, attributes: Record<string, unknown> = {}) => {
   const old = states[id];
   if (!old) return;
@@ -124,7 +151,13 @@ const make = (): HassLike => ({
   },
   callService: async (domain, service, data = {}, target) => {
     const id = String((target as { entity_id?: string })?.entity_id ?? "");
-    if (domain === "light") set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin } : {});
+    if (domain === "light")
+      set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin, color_mode: "color_temp" } : data.hs_color ? { hs_color: data.hs_color, color_mode: "hs", rgb_color: undefined } : {});
+    // Gate with a response sensor: every third press fails (catalog live demo).
+    if (domain === "script" && id === "script.gate") {
+      const n = (gatePresses = gatePresses + 1);
+      setTimeout(() => set("sensor.gate_status", n % 3 === 0 ? "503" : "200"), 1600);
+    }
     if (domain === "homeassistant" && service.startsWith("turn_")) set(id, service === "turn_on" ? "on" : "off");
     if (domain === "lock") {
       if (states[id]?.attributes.code_format && service !== "lock" && data.code !== "1234") throw new Error("Invalid code");
@@ -185,6 +218,61 @@ const GALLERY: Record<string, Spec[]> = {
   "climate-dialog": [["climate", { entity: "climate.bedroom_ac", fab: true, fab_narrow_only: false }]],
   "climate-fab": [["climate", { entity: "climate.bedroom_ac", fab: true, fab_narrow_only: false }], ["chips", { chips: [{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.evening" }], fab: true, fab_narrow_only: false }]],
   "air-quality": [["air-quality", { pm25: "sensor.pm25", pm10: "sensor.pm10" }]],
+  // Catalog states (use &scene=phone for the phone grid: 6 columns = compact, 3 = icon only).
+  "light-states": [
+    ["light", { entity: "light.ceiling" }, 6],
+    ["light", { entity: "light.sofa", icon: "mdi:ceiling-light" }, 6],
+    ["light", { entity: "light.desk_strip", icon: "mdi:led-strip-variant" }, 6],
+    ["light", { entity: "light.sconce", icon: "mdi:wall-sconce-flat" }, 6],
+    ["light", { entity: "light.kitchen_all", icon: "mdi:lightbulb-group" }, 6],
+    ["light", { entity: "light.bedroom" }, 6],
+    ["light", { entity: "light.hall" }, 6],
+  ],
+  "light-compact": [
+    ["light", { entity: "light.ceiling" }, 6],
+    ["light", { entity: "light.sofa", icon: "mdi:ceiling-light" }, 6],
+    ["light", { entity: "light.bedroom" }, 6],
+    ["light", { entity: "light.desk_strip", icon: "mdi:led-strip-variant" }, 6],
+    ["light", { entity: "light.ceiling" }, 3],
+    ["light", { entity: "light.sofa", icon: "mdi:ceiling-light" }, 3],
+    ["light", { entity: "light.bedroom" }, 3],
+    ["light", { entity: "light.kitchen_all", icon: "mdi:lightbulb-group" }, 3],
+  ],
+  "entity-subs": [
+    ["entity", { entity: "switch.coffee" }, 6],
+    ["entity", { entity: "switch.coffee_on" }, 6],
+    ["entity", { entity: "fan.purifier", sub_buttons: [{ entity: "fan.purifier", icon: "mdi:power" }] }, 6],
+    ["entity", { entity: "fan.purifier", sub_buttons: [{ entity: "input_boolean.purifier_night" }, { entity: "fan.purifier", icon: "mdi:power" }] }, 6],
+    ["entity", { entity: "fan.purifier", sub_buttons: [{ entity: "fan.purifier", icon: "mdi:fan-speed-1", tap_action: { action: "more-info" } }, { entity: "input_boolean.purifier_night" }, { entity: "input_boolean.purifier_lock" }, { entity: "fan.purifier", icon: "mdi:power" }] }, 12],
+    ["entity", { entity: "switch.kettle", sub_buttons: [{ entity: "switch.kettle", icon: "mdi:power" }] }, 12],
+    ["entity", { entity: "fan.purifier", layout: "compact", sub_buttons: [{ entity: "fan.purifier", icon: "mdi:power" }, { entity: "input_boolean.purifier_night" }] }, 4],
+    ["entity", { entity: "switch.coffee", layout: "compact" }, 4],
+    ["entity", { entity: "binary_sensor.front_door" }, 2],
+    ["entity", { entity: "binary_sensor.back_door" }, 2],
+  ],
+  "button-states": [
+    ["button", { entity: "script.gate", icon: "mdi:gate", feedback: { status_entity: "sensor.gate_status", message_entity: "sensor.gate_message", success_text: "Open" } }, 6],
+    ["button", { entity: "script.barrier", sub_buttons: [{ entity: "script.barrier", icon: "mdi:history", tap_action: { action: "more-info" } }] }, 6],
+    ["button", { entity: "script.garage", icon: "mdi:gate" }, 6],
+    ["button", { entity: "script.gate", icon: "mdi:gate", name: "Gate", layout: "compact", feedback: { status_entity: "sensor.gate_status", message_entity: "sensor.gate_message", success_text: "Open" } }, 3],
+  ],
+  "person-states": [
+    ["person", { entity: "person.alex" }, 6],
+    ["person", { entity: "person.sam" }, 6],
+    ["person", { entity: "person.mark" }, 6],
+    ["person", { entity: "person.zoe", presence_entity: "binary_sensor.zoe_ble" }, 6],
+    ["person", { entity: "person.alex", sub_buttons: [{ icon: "mdi:map-marker-outline", tap_action: { action: "more-info" }, entity: "person.alex" }, { icon: "mdi:cellphone", tap_action: { action: "more-info" }, entity: "person.alex" }] }, 6],
+    ["person", { entity: "person.ola" }, 6],
+    ["person", { entity: "person.alex", layout: "compact" }, 3],
+    ["person", { entity: "person.sam", layout: "compact" }, 3],
+  ],
+  "reminder-states": [
+    ["reminder", { entity: "input_boolean.trash", icon: "mdi:delete-outline", color: "info", value: "{value}", value_entity: "sensor.trash_kind", dialog: false }, 6],
+    ["reminder", { entity: "input_boolean.laundry", icon: "mdi:washing-machine", color: "ok", value: "{value} min", value_entity: "sensor.laundry_min", dialog: false }, 6],
+    ["reminder", { entity: "input_boolean.window", icon: "mdi:window-open-variant", color: "warning", value: "{value} min", value_entity: "sensor.window_min", alignment: "center", dialog: false }, 6],
+    ["reminder", { ...reminder, value: "{value}%", alignment: "end", dialog: false }, 6],
+  ],
+  "fab-list": [["chips", { chips: [{ type: "action", entity: "scene.evening" }, { type: "action", entity: "scene.movie" }], fab: true, fab_narrow_only: false, title: "Scenes" }]],
   "reminder": [["reminder", { ...reminder, dialog: false }]],
   "reminder-dialog": [["reminder", reminder]],
   "title": [["title", { title: "Security" }], ["title", { title: "Living room", heading_style: "section", badges: ["sensor.living_temp"] }], ["title", { title: "Kitchen", heading_style: "room", badges: ["sensor.living_temp"], entity: "light.kitchen" }]],

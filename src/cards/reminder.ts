@@ -8,9 +8,9 @@ import { LayerController } from "../core/layer";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
 import { tone } from "../core/styles";
-import type { HassLike } from "../hass/types";
+import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { alertToShow } from "../logic/alert";
-import { num } from "../logic/format";
+import { num, stateText } from "../logic/format";
 
 export interface ReminderConfig extends BaseConfig {
   /** The reminder is active while this entity has `state`. */
@@ -21,7 +21,7 @@ export interface ReminderConfig extends BaseConfig {
   name?: string;
   icon?: string;
   color?: "info" | "ok" | "warning" | "danger";
-  /** Value text in the pill; `{value}` = rounded state of `value_entity`. */
+  /** Value text in the pill; `{value}` = state of `value_entity` (numbers rounded, text as HA shows it). */
   value?: string;
   value_entity?: string;
   /** Show the pill while active (default true); off = only the dialog. */
@@ -37,6 +37,17 @@ export interface ReminderConfig extends BaseConfig {
 }
 
 const TONES = ["info", "ok", "warning", "danger"];
+/** Glyph colour on the tone circle (catalog: on-tone; dark ink on the light warning yellow). */
+const ON_TONE: Record<string, string> = { warning: "#2A1C06" };
+
+/** `{value}` in the pill text: a number rounded, any other state as text, "—" without data. */
+export function reminderValue(template: string | undefined, e: HassEntity | undefined, hass?: HassLike): string {
+  if (!template) return "";
+  if (!template.includes("{value}")) return template;
+  const n = num(e);
+  const v = n !== null ? String(Math.round(n)) : e && !isUnavailable(e) ? stateText(hass, e, e.state) : "—";
+  return template.replace("{value}", v);
+}
 const JUSTIFY = { start: "flex-start", center: "center", end: "flex-end" };
 
 export function validateReminder(c: Partial<ReminderConfig>): void {
@@ -120,7 +131,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       else this._hass?.callService("homeassistant", "turn_off", {}, { entity_id: c.entity });
     };
     const primary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer";
-    const secondary = "min-height:48px;border-radius:16px;border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer";
+    const secondary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer";
     const title = c.title || this.label;
     return html`<div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both;pointer-events:auto"></div>
       <div role="dialog" aria-modal="true" aria-label=${title} style="position:absolute;left:50%;top:50%;z-index:21;transform:translate(-50%,-50%);width:min(340px, calc(100% - 40px));box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 18px 16px;border-radius:28px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);text-align:center;pointer-events:auto">
@@ -144,18 +155,16 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     const c = this._config;
     const show = (this.active && c.show_chip !== false) || this.preview || this.editMode;
     if (!show) return nothing;
-    const col = tone(TONES.includes(c.color ?? "") ? c.color! : "info");
-    const raw = num(this.entity(c.value_entity));
-    const value = c.value?.replace("{value}", raw === null ? "—" : String(Math.round(raw))) ?? "";
+    const key = TONES.includes(c.color ?? "") ? c.color! : "info";
+    const col = tone(key);
+    const value = reminderValue(c.value, this.entity(c.value_entity), this._hass);
     const a = c.dialog !== false && !this.preview ? activate(() => (this._open = true)) : undefined;
-    const compact = this.compact;
     const dim = !this.active ? "opacity:.45;" : "";
-    const size = compact ? [22, 14] : [18, 12];
     return html`<div style="display:flex;justify-content:${JUSTIFY[c.alignment ?? "start"] ?? "flex-start"}">
       <div role=${a ? "button" : "status"} tabindex=${a ? 0 : nothing} aria-label="${this.label} ${value}" class=${a ? "press" : ""} @click=${a?.click} @keydown=${a?.key}
-        style="${a ? "cursor:pointer;" : ""}${dim}display:inline-flex;align-items:center;gap:${compact ? 7 : 6}px;${compact ? "padding:6px 14px 6px 6px" : "height:26px;padding:0 10px 0 4px"};border-radius:999px;background:color-mix(in srgb, ${col} 16%, var(--lumen-surface-solid));border:1px solid color-mix(in srgb, ${col} 35%, transparent);font-size:12px;font-weight:700;white-space:nowrap;animation:lumenRise 600ms var(--lumen-ease-spring) both">
-        <span style="width:${size[0]}px;height:${size[0]}px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:${size[1]}px;background:${col};color:#fff">${icon(c.icon ?? "mdi:bell-ring")}</span>
-        <span>${this.label}</span>${value ? html`<span style="color:var(--lumen-text-2);font-weight:600;font-variant-numeric:tabular-nums">${value}</span>` : nothing}
+        style="${a ? "cursor:pointer;" : ""}${dim}display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;box-sizing:border-box;padding:6px 14px 6px 6px;border-radius:999px;background:color-mix(in srgb, ${col} 16%, var(--lumen-surface-solid));border:1px solid color-mix(in srgb, ${col} 35%, transparent);font:700 12px var(--lumen-font);white-space:nowrap;animation:lumenRise 600ms var(--lumen-ease-spring) both">
+        <span style="width:22px;height:22px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:14px;background:${col};color:${ON_TONE[key] ?? "var(--lumen-on-tone, #fff)"}">${icon(c.icon ?? "mdi:bell-ring")}</span>
+        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${this.label}</span>${value ? html`<span style="flex:none;color:var(--lumen-text-2);font-weight:600;font-variant-numeric:tabular-nums">${value}</span>` : nothing}
       </div>
     </div>`;
   }
@@ -204,7 +213,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
         selector: { select: { mode: "dropdown", options: [["start", "align.start"], ["center", "align.center"], ["end", "align.end"]].map(([value, label]) => ({ value, label: t(label) })) } },
       },
       advanced(),
-      appearance({ layout: "screen" }),
+      appearance({ layout: false }),
     ]);
   }
 }

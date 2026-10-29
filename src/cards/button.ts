@@ -1,15 +1,14 @@
-import { html, nothing } from "lit";
+import { nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
-import { SubButtons } from "../core/sub-buttons";
+import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
-import { Presses, pressable, spinnerStyle } from "../core/press";
+import { Presses } from "../core/press";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
-import { glass } from "../core/styles";
-import { toast } from "../core/toast";
+import { ACCENT, ICON_ONLY_BELOW, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneBorder, toneLook, type TileLook } from "../core/tile";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
@@ -23,7 +22,7 @@ export interface ButtonFeedback {
   success_state?: string;
   /** Sensor with the response text (shown on failure). */
   message_entity?: string;
-  /** Toast text on success. Default "Done". */
+  /** Text on success (with the response code). Default "Done". */
   success_text?: string;
 }
 
@@ -36,7 +35,7 @@ export interface ButtonConfig extends BaseConfig {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-  /** Wait for the device's answer after a tap and show it in a toast. */
+  /** Wait for the device's answer after a tap and show it on the card. */
   feedback?: ButtonFeedback;
   /** Second line. auto: last use (last_used_entity → last success → last run), else the state. */
   secondary_info?: "auto" | "state" | "last-triggered" | "last-changed" | "none";
@@ -47,7 +46,8 @@ export interface ButtonConfig extends BaseConfig {
   show_state?: boolean;
 }
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
+/** How long the success line stays before the last use comes back (catalog: 6 s). */
+export const SUCCESS_MS = 6000;
 
 /** Default tap by domain (HA button card / Mushroom entity card behaviour). */
 const RUN: Record<string, [string, string]> = {
@@ -65,16 +65,22 @@ export function validateButton(c: Partial<ButtonConfig>): void {
   if (c.feedback !== undefined && (typeof c.feedback !== "object" || !c.feedback?.status_entity)) throw new Error(t("card.button.error.feedback"));
 }
 
+type Phase = "idle" | "wait" | "ok" | "err";
+
 /**
  * A button that runs something and (optionally) waits for the device's answer (design gate /
- * barrier, generalised): spinner while sending, a toast with the result, the last use as subtitle.
+ * barrier, generalised). With `feedback`: spinner and "Waiting…" (at most 10 s), then a green
+ * line with the code for 6 s, or a red frame with the error until the next use.
  */
 export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
-  static properties = { ...LumenBaseCard.properties, _sending: { state: true } };
+  static properties = { ...LumenBaseCard.properties, _phase: { state: true } };
   protected static compactBelow = 120;
   private presses = new Presses((type) => this.haptic(type));
   private subs = new SubButtons(this);
-  private _sending = false;
+  private _phase: Phase = "idle";
+  /** Outcome of the last use: response code and text. */
+  private result: { code: string | null; text: string } | null = null;
+  private okTimer?: number;
   private listeners = new Set<() => void>();
   private source: EntitySource = {
     entity: (id) => this.entity(id),
@@ -106,6 +112,8 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     super.disconnectedCallback();
     this.presses.dispose();
     this.subs.dispose();
+    window.clearTimeout(this.okTimer);
+    if (this._phase === "ok") this._phase = "idle";
   }
 
   private get name() {
@@ -130,33 +138,75 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     return Promise.resolve();
   }
 
+  private fail(code: string | null, text: string) {
+    this.result = { code, text };
+    this._phase = "err";
+  }
+
   private async run() {
     const c = this._config;
-    if (!this._hass || this._sending) return;
+    if (!this._hass || this._phase === "wait") return;
+    window.clearTimeout(this.okTimer);
+    this.result = null;
+    this._phase = "idle";
     const fb = c.feedback;
-    // Without feedback a plain action (navigate, more-info…) needs no spinner or toast.
+    // Without feedback a plain action (navigate, more-info…) needs no spinner.
     if (!fb) {
-      this.start().catch((err: Error) => toast(this, { icon: "mdi:alert-circle", tone: "danger", title: this.name, text: err.message }));
+      this.start().catch((err: Error) => this.fail(null, err.message ?? String(err)));
       return;
     }
-    this._sending = true;
+    this._phase = "wait";
     const since = Date.now();
     try {
       await this.start();
       const result = await waitForResponse(this.source, { script: c.entity, status: fb.status_entity, body: fb.message_entity, success: String(fb.success_state ?? "200") }, since);
       this.haptic(result?.ok ? "success" : "failure");
-      toast(this,
-        !result
-          ? { icon: "mdi:alert-circle", tone: "danger", title: this.name, text: t("card.button.no_response") }
-          : result.ok
-            ? { icon: "mdi:check-circle", tone: "ok", title: this.name, text: fb.success_text ?? t("card.button.done") }
-            : { icon: "mdi:alert-circle", tone: "danger", title: this.name, text: result.body || t("card.button.device_error"), code: result.code ?? undefined },
-      );
+      if (!result) this.fail(null, t("card.button.no_response"));
+      else if (!result.ok) this.fail(result.code, result.body || t("card.button.device_error"));
+      else {
+        this.result = { code: result.code, text: fb.success_text ?? t("card.button.done") };
+        this._phase = "ok";
+        this.okTimer = window.setTimeout(() => {
+          if (this._phase === "ok") this._phase = "idle";
+        }, SUCCESS_MS);
+      }
     } catch (err) {
-      toast(this, { icon: "mdi:alert-circle", tone: "danger", title: this.name, text: (err as Error).message });
-    } finally {
-      this._sending = false;
+      this.haptic("failure");
+      this.fail(null, (err as Error).message ?? String(err));
     }
+  }
+
+  /** Second line while waiting / after the answer; null = the normal `secondary_info`. */
+  private outcome(short: boolean): string | null {
+    const r = this.result;
+    switch (this._phase) {
+      case "wait":
+        return t("card.button.waiting");
+      case "ok": {
+        const code = r?.code ? (/^2\d\d$/.test(r.code) ? `${r.code} OK` : r.code) : "";
+        return short ? code || r!.text : [r?.text, code].filter(Boolean).join(" · ");
+      }
+      case "err": {
+        const code = r?.code ? t("card.button.error_code", { code: r.code }) : "";
+        return short ? code || r!.text : [code, r?.text].filter(Boolean).join(" · ");
+      }
+    }
+    return null;
+  }
+
+  /** Colours of the current phase / state. */
+  private look(e: HassEntity | undefined): TileLook {
+    if (!e || e.state === "unavailable") return UNAVAILABLE;
+    switch (this._phase) {
+      case "wait":
+        return { ...ACCENT, border: toneBorder("var(--lumen-accent)", 35) };
+      case "ok":
+        return toneLook("var(--lumen-ok)");
+      case "err":
+        return toneLook("var(--lumen-danger)", toneBorder("var(--lumen-danger)", 40));
+    }
+    if (e.state === "unknown") return UNKNOWN;
+    return e.state === "on" ? ACCENT : NEUTRAL;
   }
 
   private when(iso: string | undefined): string | undefined {
@@ -167,7 +217,6 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
   /** Second line (`secondary_info`). */
   private sub(e: HassEntity | undefined): string {
     const c = this._config;
-    if (this._sending) return t("common.sending");
     const mode = c.secondary_info ?? "auto";
     const state = () => stateText(this._hass, e, isUnavailable(e) ? t("common.no_data") : (e?.state ?? ""));
     switch (mode) {
@@ -196,26 +245,39 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.entity(c.entity);
-    const busy = this._sending;
-    const h = this.presses.handlers(
-      `button:${c.entity}`,
-      () => this.run(),
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.feedback?.status_entity ?? c.entity)),
-      c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-    );
+    const una = !e || e.state === "unavailable";
+    const busy = this._phase === "wait";
+    const h = una
+      ? undefined
+      : this.presses.handlers(
+          `button:${c.entity}`,
+          () => this.run(),
+          () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.feedback?.status_entity ?? c.entity)),
+          c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
+        );
     const ic = c.icon ?? e?.attributes.icon ?? ICONS[this.domain] ?? "mdi:gesture-tap";
-    const col = isUnavailable(e) ? "var(--lumen-unavailable)" : e?.state === "on" ? "var(--lumen-warning)" : "var(--lumen-info)";
-    const sub = c.show_state === false ? "" : this.sub(e);
-    if (this.compact) {
-      return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: col, handlers: h, body: icon(ic, `display:block;animation:${busy ? "lumenBreath 1600ms ease-in-out infinite" : "none"}`) });
+    const look = this.look(e);
+    const tiny = this.compact && this._width > 0 && this._width < ICON_ONLY_BELOW;
+    const compact = this.compact && !tiny;
+    const out = this.outcome(compact || tiny);
+    const sub = una ? t("common.unavailable") : out ?? (c.show_state === false ? "" : this.sub(e));
+    if (tiny) {
+      return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: look.iconFg, handlers: h, disabled: una, body: icon(busy ? "mdi:loading" : ic, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`) });
     }
-    return html`<div data-fx ${pressable(h)} class="press" aria-label="${this.name}${sub ? ` · ${sub}` : ""}" aria-busy=${busy}
-      style="position:relative;display:flex;flex-direction:row;align-items:center;gap:6px;min-height:56px;padding:8px 6px 8px 8px;box-sizing:border-box;border-radius:18px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};cursor:pointer;user-select:none;touch-action:pan-y;transition:background-color 500ms, transform 220ms var(--lumen-ease-spring)">${WFX}
-      ${c.show_icon !== false ? html`<div style="flex:none;width:28px;height:28px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:color-mix(in srgb, ${col} 16%, transparent);color:${col}">${icon(ic, `display:block;animation:${busy ? "lumenBreath 1600ms ease-in-out infinite" : "none"}`)}</div>` : nothing}
-      <div style="min-width:0;flex:1">${c.show_name !== false ? html`<div style="font-size:13px;font-weight:700;line-height:17px">${this.name}</div>` : nothing}${sub ? html`<div style="font-size:11px;font-weight:600;line-height:14px;color:var(--lumen-text-2);text-wrap:balance">${sub}</div>` : nothing}</div>
-      ${this.subs.render(c.sub_buttons)}
-      ${busy ? html`<span style=${spinnerStyle(10, "position:absolute;top:6px;right:6px")}></span>` : nothing}
-    </div>`;
+    const opts = {
+      title: this.name,
+      sub,
+      look,
+      lead: c.show_icon !== false ? (busy && compact ? "mdi:loading" : ic) : undefined,
+      iconAnim: busy && compact ? "lumenSpin 900ms linear infinite" : undefined,
+      handlers: h,
+      busy: busy && !compact,
+      plug: una && !compact,
+      showTitle: c.show_name !== false,
+      showSub: c.show_state !== false || out !== null || una,
+      trailing: this.subs.render(c.sub_buttons, { compact, max: subButtonLimit(compact, this._width) }),
+    };
+    return compact ? squareTile(opts) : rowTile(opts);
   }
 
   getCardSize() {
