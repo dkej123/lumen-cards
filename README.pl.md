@@ -21,7 +21,7 @@ Co dostajesz:
 
 ### Tak to wygląda w prawdziwym domu
 
-Dashboard autora, zbudowany wyłącznie z Lumen Cards, wieczorem w trybie ciemnym (komputer i telefon):
+Dashboard autora wieczorem, w trybie ciemnym. Na komputerze wersja zbudowana z Lumen Cards. Na telefonie panel „Dom”, z którego powstały Lumen Cards (karty wyglądają tak samo):
 
 <p align="center">
   <img src="docs/images/real-home-desktop.jpg" alt="Prawdziwy dashboard domu z Lumen Cards na komputerze, wieczorem" width="820"><br>
