@@ -308,7 +308,7 @@ export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
         ],
       },
       { name: "cards", selector: { object: {} } },
-      appearance({ layout: false, effects: false }),
+      appearance({ layout: false, effects: false, accent: false }),
     ]);
   }
 }

@@ -188,7 +188,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
       },
       tapHold(),
       advanced([["show_title"]]),
-      appearance({ layout: false }),
+      appearance({ layout: false, accent: false }),
     ]);
   }
 }

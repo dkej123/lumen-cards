@@ -162,7 +162,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
         { name: "entity", selector: { entity: {} } },
         { name: "tap_action", selector: { ui_action: {} } },
         advanced(),
-        appearance({ effects: false, layout: "screen" }),
+        appearance({ effects: false, layout: "screen", accent: false }),
       ],
       (c) => assertTitle(c as Partial<TitleConfig>),
     );

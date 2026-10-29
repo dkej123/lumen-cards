@@ -269,7 +269,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
       { name: "footer", selector: { text: {} } },
       { name: "stale_hours", default: 1, selector: { number: { min: 0.25, max: 24, step: 0.25, mode: "box", unit_of_measurement: "h" } } },
       advanced([["show_values"], ["show_bar"]]),
-      appearance(),
+      appearance({ accent: false }),
     ]);
   }
 }

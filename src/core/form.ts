@@ -131,10 +131,12 @@ interface AppearanceOpts {
   effects?: boolean;
   /** `layout` field: "width" (auto by card width), "screen" (auto by screen width) or none. */
   layout?: "width" | "screen" | false;
+  /** Accent colour field (off for cards with nothing in the accent colour). */
+  accent?: boolean;
 }
 
 /** "Appearance" section shared by every card. */
-export const appearance = ({ glow = false, effects = true, layout = "screen" }: AppearanceOpts = {}): Schema => ({
+export const appearance = ({ glow = false, effects = true, layout = "screen", accent = true }: AppearanceOpts = {}): Schema => ({
   name: "",
   type: "expandable",
   flatten: true,
@@ -154,7 +156,7 @@ export const appearance = ({ glow = false, effects = true, layout = "screen" }: 
       name: "",
       type: "grid",
       flatten: true,
-      schema: [...(glow ? [{ name: "glow_color", selector: { ui_color: {} } }] : []), { name: "accent_color", selector: { ui_color: {} } }],
+      schema: [...(glow ? [{ name: "glow_color", selector: { ui_color: {} } }] : []), ...(accent ? [{ name: "accent_color", selector: { ui_color: {} } }] : [])],
     },
     { name: "max_width", selector: { number: { min: 120, max: 2000, step: 10, mode: "box", unit_of_measurement: "px" } } },
     ...(effects ? [{ name: "weather_effects", default: true, selector: { boolean: {} } }] : []),

@@ -171,11 +171,17 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     return this._hass ? activeScene(this._config.chips ?? [], this._hass.states) : null;
   }
 
+  /** Strong fill of the active chip and the FAB: inverted by default, the accent when accent_color is set. */
+  private get strong() {
+    return this._config.accent_color ? { bg: "var(--lumen-accent)", fg: "var(--lumen-on-accent)" } : { bg: "var(--lumen-text-1)", fg: "var(--lumen-bg)" };
+  }
+
   /** Catalog chip: 44 px pill, glyph 18 + name; the active scene is inverted (text-1 background). */
   private actionChip(s: ActionChip, active: boolean) {
     const off = isUnavailable(this.entity(s.entity));
+    const strong = this.strong;
     return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-pressed=${active} aria-label=${this.chipName(s)}
-      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:${active ? "1px solid transparent" : "1px solid var(--lumen-border)"};background:${active ? "var(--lumen-text-1)" : "var(--lumen-surface)"};color:${active ? "var(--lumen-bg)" : "var(--lumen-text-1)"};box-shadow:${active ? "var(--lumen-shadow-1)" : "none"};font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${active ? "" : glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
+      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:${active ? "1px solid transparent" : "1px solid var(--lumen-border)"};background:${active ? strong.bg : "var(--lumen-surface)"};color:${active ? strong.fg : "var(--lumen-text-1)"};box-shadow:${active ? "var(--lumen-shadow-1)" : "none"};font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${active ? "" : glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
       ${icon(this.chipIcon(s), "font-size:18px")}${this.chipName(s)}
     </div>`;
   }
@@ -206,7 +212,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
       <button class="acfab" @click=${() => {
         this.haptic();
         this._fab = !open;
-      }} aria-label=${title} aria-expanded=${open} style="position:absolute;right:${fabRight(FAB_MAIN)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
+      }} aria-label=${title} aria-expanded=${open} style="position:absolute;right:${fabRight(FAB_MAIN)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:${this.strong.bg};color:${this.strong.fg};font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
         <span style="position:absolute;inset:0;display:grid;place-items:center;transform:${open ? "rotate(90deg)" : "none"};transition:transform 460ms var(--lumen-ease-spring)">
           ${icon("mdi:palette-outline", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms`)}
           ${icon("mdi:close", `position:absolute;opacity:${open ? 1 : 0};transition:opacity 200ms`)}

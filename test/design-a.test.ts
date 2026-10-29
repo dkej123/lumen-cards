@@ -312,6 +312,11 @@ describe("reminder", () => {
     expect(root.querySelector('[role="status"], [role="button"]')).toBeNull();
     expect(root.querySelector('[role="img"]')).not.toBeNull();
   });
+
+  it("accent_color colours the pill (over `color`)", async () => {
+    const el = await mount("reminder", { entity: "input_boolean.night", state: "off", color: "danger", accent_color: "#ff0000" });
+    expect(el.shadowRoot!.innerHTML).toContain("var(--lumen-accent)");
+  });
 });
 
 describe("chips and floating buttons", () => {

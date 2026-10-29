@@ -38,7 +38,7 @@ export interface ReminderConfig extends BaseConfig {
 
 const TONES = ["info", "ok", "warning", "danger"];
 /** Glyph colour on the tone circle (catalog: on-tone; dark ink on the light warning yellow). */
-const ON_TONE: Record<string, string> = { warning: "#2A1C06" };
+const ON_TONE: Record<string, string> = { warning: "#2A1C06", accent: "var(--lumen-on-accent)" };
 
 /** `{value}` in the pill text: a number rounded, any other state as text, "—" without data. */
 export function reminderValue(template: string | undefined, e: HassEntity | undefined, hass?: HassLike): string {
@@ -120,9 +120,16 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     this.style.display = this._config && empty && !this.editMode && !this.preview ? "none" : "";
   }
 
+  /** Pill colour: the card's accent_color when set (any colour), else the `color` tone, else info. */
+  private tone() {
+    const c = this._config;
+    const key = c.accent_color ? "accent" : TONES.includes(c.color ?? "") ? c.color! : "info";
+    return { key, col: key === "accent" ? "var(--lumen-accent)" : tone(key) };
+  }
+
   private dialog() {
     const c = this._config;
-    const col = tone(TONES.includes(c.color ?? "") ? c.color! : "info");
+    const col = this.tone().col;
     const close = () => (this._open = false);
     const done = () => {
       this.haptic();
@@ -166,8 +173,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     const pill = c.show_chip !== false && (this.active || this.preview || this.editMode);
     const showDialog = this.preview && c.dialog !== false;
     if (!pill && !showDialog) return nothing;
-    const key = TONES.includes(c.color ?? "") ? c.color! : "info";
-    const col = tone(key);
+    const { key, col } = this.tone();
     const value = reminderValue(c.value, this.entity(c.value_entity), this._hass);
     const a = c.dialog !== false && !this.preview ? activate(() => (this._open = true)) : undefined;
     // Editor preview: show the window under the pill so its texts and buttons can be checked.

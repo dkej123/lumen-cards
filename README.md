@@ -467,7 +467,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 |---|---|---|
 | `layout` | **Auto** picks the look by itself: compact when the card is small. **Full** or **Compact** forces one look. | Auto |
 | `color_scheme` | Light or dark card, or **Auto** to follow Home Assistant | Auto |
-| `accent_color` | Colour of buttons and highlights | from the theme |
+| `accent_color` | Colour of buttons and highlights (switched-on things, extra buttons, sliders; the active chip and floating button; the reminder pill – it wins over the reminder's own `color`). Not offered on cards with nothing to colour (greeting, title, air quality, calendar, pop-up). | from the theme |
 | `glow_color` | Colour of the glow around lit lights (light and chips cards) | the light's own colour |
 | `weather_effects` | Raindrops, snow and so on drawn on this card. Needs the weather background card in the same view. | on |
 | `max_width` | The card is never wider than this many pixels and stays centred in its place. Handy in a Panel view or very wide sections; in a normal sections view the columns already keep cards narrow. | full width |
