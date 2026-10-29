@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Lumen Cards · demo</title>
+    <style>
+      html, body { margin: 0; background: #f2f0ec; }
+      @media (prefers-color-scheme: dark) { html, body { background: #121110; } }
+      #grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; max-width: 520px; margin: 0 auto; padding: 16px; box-sizing: border-box; }
+      #grid.desktop { max-width: 1240px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
+      #grid .section { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; }
+      #grid.phone { max-width: 390px; padding: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="grid"></div>
+    <script type="module" src="./demo.ts"></script>
+  </body>
+</html>

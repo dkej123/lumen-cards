@@ -1,0 +1,216 @@
+import { html, nothing } from "lit";
+import { handleAction, type ActionConfig } from "../core/actions";
+import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { icon } from "../core/lumen-icon";
+import { advanced, appearance, firstOf, form, stub } from "../core/form";
+import { t } from "../core/i18n";
+import { LayerController } from "../core/layer";
+import { activate } from "../core/press";
+import { registerCard } from "../core/register";
+import { tone } from "../core/styles";
+import type { HassLike } from "../hass/types";
+import { alertToShow } from "../logic/alert";
+import { num } from "../logic/format";
+
+export interface ReminderConfig extends BaseConfig {
+  /** The reminder is active while this entity has `state`. */
+  entity: string;
+  /** Default "on". */
+  state?: string;
+  /** Pill label (and dialog title when `title` is empty). */
+  name?: string;
+  icon?: string;
+  color?: "info" | "ok" | "warning" | "danger";
+  /** Value text in the pill; `{value}` = rounded state of `value_entity`. */
+  value?: string;
+  value_entity?: string;
+  /** Show the pill while active (default true); off = only the dialog. */
+  show_chip?: boolean;
+  /** Dialog when the reminder starts and on every entry while it holds (default true). */
+  dialog?: boolean;
+  title?: string;
+  message?: string;
+  /** "Done" button: turns the entity off (or runs `done_action`). Without it a single "OK". */
+  done?: boolean;
+  done_action?: ActionConfig;
+  alignment?: "start" | "center" | "end";
+}
+
+const TONES = ["info", "ok", "warning", "danger"];
+const JUSTIFY = { start: "flex-start", center: "center", end: "flex-end" };
+
+export function validateReminder(c: Partial<ReminderConfig>): void {
+  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+}
+
+/**
+ * A reminder (e.g. "Bike to charge"): a pill while the entity has the
+ * state, and a dialog when it starts and on every entry (app / tab back in front) while it holds.
+ */
+export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
+  static properties = { ...LumenBaseCard.properties, _open: { state: true } };
+  private _open = false;
+  /** Occurrence already shown since the last entry (key from `alertToShow`). */
+  private seen?: string;
+
+  protected layer = new LayerController(this, () => (this._open && !this.preview ? this.dialog() : nothing), () => (this._open = false));
+
+  protected entityIds() {
+    return [this._config.entity, this._config.value_entity];
+  }
+
+  protected validate(c: ReminderConfig) {
+    validateReminder(c);
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener("visibilitychange", this.onVisible);
+    this.seen = undefined;
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("visibilitychange", this.onVisible);
+  }
+
+  private onVisible = () => {
+    if (document.visibilityState !== "visible") return;
+    this.seen = undefined;
+    this.requestUpdate();
+  };
+
+  private get active() {
+    return this.entity(this._config.entity)?.state === String(this._config.state ?? "on");
+  }
+
+  private get label() {
+    const c = this._config;
+    return c.name || this.entity(c.entity)?.attributes.friendly_name || c.entity;
+  }
+
+  protected willUpdate(changed: Map<string, unknown>): void {
+    super.willUpdate(changed);
+    const c = this._config;
+    if (!c || !this._hass || this.preview) return;
+    if (!this.active) this._open = false;
+    if (c.dialog === false) return;
+    const key = alertToShow(this.entity(c.entity), String(c.state ?? "on"), this.seen);
+    if (!key) return;
+    this.seen = key;
+    this._open = true;
+  }
+
+  protected updated(changed: Map<string, unknown>): void {
+    super.updated(changed);
+    const empty = !this.active || this._config?.show_chip === false;
+    // Not the `hidden` attribute: HA would take the card out of the page, and it could not come
+    // back (or show its dialog) when the reminder starts.
+    this.style.display = this._config && empty && !this.editMode && !this.preview ? "none" : "";
+  }
+
+  private dialog() {
+    const c = this._config;
+    const col = tone(TONES.includes(c.color ?? "") ? c.color! : "info");
+    const close = () => (this._open = false);
+    const done = () => {
+      this.haptic();
+      this._open = false;
+      if (c.done_action) handleAction(this, c.done_action, c.entity, "tap");
+      else this._hass?.callService("homeassistant", "turn_off", {}, { entity_id: c.entity });
+    };
+    const primary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer";
+    const secondary = "min-height:48px;border-radius:16px;border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer";
+    const title = c.title || this.label;
+    return html`<div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both;pointer-events:auto"></div>
+      <div role="dialog" aria-modal="true" aria-label=${title} style="position:absolute;left:50%;top:50%;z-index:21;transform:translate(-50%,-50%);width:min(340px, calc(100% - 40px));box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 18px 16px;border-radius:28px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);text-align:center;pointer-events:auto">
+        <span style="width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:color-mix(in srgb, ${col} 16%, transparent);color:${col}">${icon(c.icon ?? "mdi:bell-ring")}</span>
+        <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:19px;font-weight:800;letter-spacing:-0.01em">${title}</div>${c.message
+          ? html`<div style="font-size:14px;line-height:1.5;color:var(--lumen-text-2);text-wrap:pretty">${c.message}</div>`
+          : nothing}</div>
+        ${c.done
+          ? html`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;padding-top:4px">
+              <button class="press" @click=${close} style=${secondary}>${t("card.reminder.later")}</button>
+              <button class="press" @click=${done} style=${primary}>${t("card.reminder.done")}</button>
+            </div>`
+          : html`<div style="display:grid;grid-template-columns:1fr;width:100%;padding-top:4px">
+              <button class="press" @click=${close} style=${primary}>${t("common.ok")}</button>
+            </div>`}
+      </div>`;
+  }
+
+  render() {
+    if (!this._config || !this._hass) return nothing;
+    const c = this._config;
+    const show = (this.active && c.show_chip !== false) || this.preview || this.editMode;
+    if (!show) return nothing;
+    const col = tone(TONES.includes(c.color ?? "") ? c.color! : "info");
+    const raw = num(this.entity(c.value_entity));
+    const value = c.value?.replace("{value}", raw === null ? "—" : String(Math.round(raw))) ?? "";
+    const a = c.dialog !== false && !this.preview ? activate(() => (this._open = true)) : undefined;
+    const compact = this.compact;
+    const dim = !this.active ? "opacity:.45;" : "";
+    const size = compact ? [22, 14] : [18, 12];
+    return html`<div style="display:flex;justify-content:${JUSTIFY[c.alignment ?? "start"] ?? "flex-start"}">
+      <div role=${a ? "button" : "status"} tabindex=${a ? 0 : nothing} aria-label="${this.label} ${value}" class=${a ? "press" : ""} @click=${a?.click} @keydown=${a?.key}
+        style="${a ? "cursor:pointer;" : ""}${dim}display:inline-flex;align-items:center;gap:${compact ? 7 : 6}px;${compact ? "padding:6px 14px 6px 6px" : "height:26px;padding:0 10px 0 4px"};border-radius:999px;background:color-mix(in srgb, ${col} 16%, var(--lumen-surface-solid));border:1px solid color-mix(in srgb, ${col} 35%, transparent);font-size:12px;font-weight:700;white-space:nowrap;animation:lumenRise 600ms var(--lumen-ease-spring) both">
+        <span style="width:${size[0]}px;height:${size[0]}px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:${size[1]}px;background:${col};color:#fff">${icon(c.icon ?? "mdi:bell-ring")}</span>
+        <span>${this.label}</span>${value ? html`<span style="color:var(--lumen-text-2);font-weight:600;font-variant-numeric:tabular-nums">${value}</span>` : nothing}
+      </div>
+    </div>`;
+  }
+
+  getCardSize() {
+    return 1;
+  }
+
+  getGridOptions() {
+    return { columns: 6, rows: "auto", min_columns: 3 };
+  }
+
+  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
+    return { entity: stub(hass, "input_boolean", entities, fallback) ?? firstOf(hass, "input_boolean", "input_boolean.reminder"), done: true };
+  }
+
+  static getConfigForm() {
+    const colors = [
+      ["info", "tone.info"],
+      ["ok", "common.ok"],
+      ["warning", "tone.warning"],
+      ["danger", "card.alarm.name"],
+    ].map(([value, label]) => ({ value, label: t(label) }));
+    return form([
+      { name: "entity", required: true, selector: { entity: {} } },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", selector: { select: { mode: "dropdown", options: colors } } }] },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "value", selector: { text: {} } }, { name: "value_entity", selector: { entity: {} } }] },
+      { name: "show_chip", default: true, selector: { boolean: {} } },
+      {
+        name: "",
+        type: "expandable",
+        flatten: true,
+        title: t("card.reminder.dialog"),
+        icon: "mdi:bell-ring-outline",
+        schema: [
+          { name: "dialog", default: true, selector: { boolean: {} } },
+          { name: "title", selector: { text: {} } },
+          { name: "message", selector: { text: { multiline: true } } },
+          { name: "done", default: false, selector: { boolean: {} } },
+          { name: "done_action", selector: { ui_action: {} } },
+        ],
+      },
+      {
+        name: "alignment",
+        selector: { select: { mode: "dropdown", options: [["start", "align.start"], ["center", "align.center"], ["end", "align.end"]].map(([value, label]) => ({ value, label: t(label) })) } },
+      },
+      advanced(),
+      appearance({ layout: "screen" }),
+    ]);
+  }
+}
+
+registerCard("lumen-reminder-card", LumenReminderCard, {
+  name: "card.reminder.name",
+  description: "card.reminder.description",
+  domains: ["input_boolean"],
+});

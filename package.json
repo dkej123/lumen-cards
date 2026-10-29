@@ -1,0 +1,38 @@
+{
+  "name": "lumen-cards",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Lumen Cards – glass-style Home Assistant dashboard cards with weather effects and visual editors",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/gen-icons.mjs && tsc --noEmit && vite build",
+    "test": "vitest run",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@mdi/js": "^7.4.47",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "happy-dom": "^21.0.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dkej123/lumen-cards"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "hacs",
+    "custom-card",
+    "dashboard"
+  ]
+}
