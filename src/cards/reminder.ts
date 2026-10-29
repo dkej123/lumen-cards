@@ -130,11 +130,20 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       if (c.done_action) handleAction(this, c.done_action, c.entity, "tap");
       else this._hass?.callService("homeassistant", "turn_off", {}, { entity_id: c.entity });
     };
-    const primary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer";
-    const secondary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer";
     const title = c.title || this.label;
     return html`<div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both;pointer-events:auto"></div>
-      <div role="dialog" aria-modal="true" aria-label=${title} style="position:absolute;left:50%;top:50%;z-index:21;transform:translate(-50%,-50%);width:min(340px, calc(100% - 40px));box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 18px 16px;border-radius:28px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);text-align:center;pointer-events:auto">
+      ${this.box(title, col, close, done, false)}`;
+  }
+
+  /** The dialog body; `inline` = the static copy in the editor preview (buttons inert). */
+  private box(title: string, col: string, close: () => void, done: () => void, inline: boolean) {
+    const c = this._config;
+    const primary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer";
+    const secondary = "min-height:48px;border-radius:16px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer";
+    const place = inline
+      ? "position:relative;margin:12px auto 0;width:min(340px, 100%);pointer-events:none"
+      : "position:absolute;left:50%;top:50%;z-index:21;transform:translate(-50%,-50%);width:min(340px, calc(100% - 40px));pointer-events:auto";
+    return html`<div role=${inline ? "img" : "dialog"} aria-modal=${inline ? nothing : "true"} aria-label=${inline ? t("card.reminder.preview") : title} style="${place};box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 18px 16px;border-radius:28px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);text-align:center">
         <span style="width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:color-mix(in srgb, ${col} 16%, transparent);color:${col}">${icon(c.icon ?? "mdi:bell-ring")}</span>
         <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:19px;font-weight:800;letter-spacing:-0.01em">${title}</div>${c.message
           ? html`<div style="font-size:14px;line-height:1.5;color:var(--lumen-text-2);text-wrap:pretty">${c.message}</div>`
@@ -153,20 +162,26 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
   render() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
-    const show = (this.active && c.show_chip !== false) || this.preview || this.editMode;
-    if (!show) return nothing;
+    // show_chip: false hides the pill everywhere (also in the editor preview and edit mode).
+    const pill = c.show_chip !== false && (this.active || this.preview || this.editMode);
+    const showDialog = this.preview && c.dialog !== false;
+    if (!pill && !showDialog) return nothing;
     const key = TONES.includes(c.color ?? "") ? c.color! : "info";
     const col = tone(key);
     const value = reminderValue(c.value, this.entity(c.value_entity), this._hass);
     const a = c.dialog !== false && !this.preview ? activate(() => (this._open = true)) : undefined;
+    // Editor preview: show the window under the pill so its texts and buttons can be checked.
+    const noop = () => {};
+    const sample = this.preview && c.dialog !== false ? this.box(c.title || this.label, col, noop, noop, true) : nothing;
     const dim = !this.active ? "opacity:.45;" : "";
+    if (!pill) return sample;
     return html`<div style="display:flex;justify-content:${JUSTIFY[c.alignment ?? "start"] ?? "flex-start"}">
       <div role=${a ? "button" : "status"} tabindex=${a ? 0 : nothing} aria-label="${this.label} ${value}" class=${a ? "press" : ""} @click=${a?.click} @keydown=${a?.key}
         style="${a ? "cursor:pointer;" : ""}${dim}display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;box-sizing:border-box;padding:6px 14px 6px 6px;border-radius:999px;background:color-mix(in srgb, ${col} 16%, var(--lumen-surface-solid));border:1px solid color-mix(in srgb, ${col} 35%, transparent);font:700 12px var(--lumen-font);white-space:nowrap;animation:lumenRise 600ms var(--lumen-ease-spring) both">
         <span style="width:22px;height:22px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:14px;background:${col};color:${ON_TONE[key] ?? "var(--lumen-on-tone, #fff)"}">${icon(c.icon ?? "mdi:bell-ring")}</span>
         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${this.label}</span>${value ? html`<span style="flex:none;color:var(--lumen-text-2);font-weight:600;font-variant-numeric:tabular-nums">${value}</span>` : nothing}
       </div>
-    </div>`;
+    </div>${sample}`;
   }
 
   getCardSize() {

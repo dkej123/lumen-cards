@@ -299,6 +299,19 @@ describe("reminder", () => {
     expect(reminderValue("{value}", h.states["sensor.trash"], h)).toBe("bio tomorrow");
     expect(reminderValue("{value} min", undefined, h)).toBe("— min");
   });
+
+  it("editor preview shows the window under the pill; show_chip: false hides the pill", async () => {
+    const el = await mount("reminder", { entity: "input_boolean.night", title: "Bike", message: "Charge it", done: true });
+    el.preview = true;
+    await el.updateComplete;
+    const root = el.shadowRoot!;
+    expect(root.querySelector('[role="status"], [role="button"]')).not.toBeNull();
+    expect(root.querySelector('[role="img"]')!.textContent).toContain("Charge it");
+    el.setConfig({ type: "custom:lumen-reminder-card", entity: "input_boolean.night", title: "Bike", show_chip: false });
+    await el.updateComplete;
+    expect(root.querySelector('[role="status"], [role="button"]')).toBeNull();
+    expect(root.querySelector('[role="img"]')).not.toBeNull();
+  });
 });
 
 describe("chips and floating buttons", () => {

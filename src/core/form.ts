@@ -65,6 +65,8 @@ const LABELS: Record<string, string> = {
   state: "editor.state",
   message: "editor.message",
   done_action: "editor.done_action",
+  dialog: "editor.dialog",
+  done: "editor.done",
   snooze_minutes: "editor.snooze_minutes",
   show_chip: "editor.show_chip",
   show_name: "editor.show_name",
