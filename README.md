@@ -19,6 +19,15 @@ What you get:
 - **Light and dark mode.** The cards follow your Home Assistant settings.
 - **English and Polish.** The cards and their settings use the language from your Home Assistant profile.
 
+### What it looks like in a real home
+
+The author's own dashboard, built only from Lumen Cards, in the evening in dark mode (desktop and phone):
+
+<p align="center">
+  <img src="docs/images/real-home-desktop.jpg" alt="A real home dashboard made of Lumen Cards on a desktop, in the evening" width="820"><br>
+  <img src="docs/images/real-home-phone.jpg" alt="The same dashboard on a phone" width="300">
+</p>
+
 ---
 
 ## Contents

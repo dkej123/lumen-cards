@@ -19,6 +19,15 @@ Co dostajesz:
 - **Tryb jasny i ciemny.** Karty dopasowują się do ustawień Home Assistant.
 - **Po polsku i po angielsku.** Język kart i ich ustawień jest brany z Twojego profilu w Home Assistant.
 
+### Tak to wygląda w prawdziwym domu
+
+Dashboard autora, zbudowany wyłącznie z Lumen Cards, wieczorem w trybie ciemnym (komputer i telefon):
+
+<p align="center">
+  <img src="docs/images/real-home-desktop.jpg" alt="Prawdziwy dashboard domu z Lumen Cards na komputerze, wieczorem" width="820"><br>
+  <img src="docs/images/real-home-phone.jpg" alt="Ten sam dashboard na telefonie" width="300">
+</p>
+
 ---
 
 ## Spis treści
