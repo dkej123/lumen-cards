@@ -409,6 +409,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `accent_color` | Kolor przycisków i wyróżnień | z motywu |
 | `glow_color` | Kolor poświaty włączonych świateł (karty światła i chipów) | kolor światła |
 | `weather_effects` | Krople, śnieg itp. na tej karcie. Wymaga karty tła pogodowego w tym samym widoku. | wł. |
+| `max_width` | Karta nie będzie szersza niż tyle pikseli i zostanie wyśrodkowana w swoim miejscu. Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
 | `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
