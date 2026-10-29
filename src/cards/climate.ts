@@ -489,12 +489,15 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const a = this.ac();
     const btn = "flex:none;width:40px;height:40px;border-radius:12px;border:0;display:grid;place-items:center;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:20px;cursor:pointer";
     const value = a.range ? (this._side === "low" ? a.range.low : a.range.high) : a.target;
-    return html`<div data-fx style="display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:20px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1)">${WFX}
+    // Narrow cells (e.g. 3 columns): drop the name first, then −/+ (the icon still opens the details).
+    const w = this._width;
+    const named = !w || w >= 240, stepper = !w || w >= 170;
+    return html`<div data-fx style="display:flex;align-items:center;justify-content:${named ? "flex-start" : "space-between"};gap:${named ? 10 : 6}px;padding:${named ? "8px 8px 8px 12px" : "8px"};border-radius:20px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1)">${WFX}
       <button class="press" @click=${() => this.moreInfo(this._config.entity)} aria-label=${this.name} style="flex:none;width:34px;height:34px;border-radius:12px;border:0;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};cursor:pointer">${icon(a.ic)}</button>
-      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.short}</div></div>
-      <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:minus")}</button>
-      <span style="flex:none;min-width:46px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;opacity:${a.off ? 0.4 : 1}">${value}</span>
-      <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:plus")}</button>
+      ${named ? html`<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.short}</div></div>` : nothing}
+      ${stepper ? html`<button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:minus")}</button>` : nothing}
+      <span style="flex:none;min-width:${stepper ? 46 : 0}px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;opacity:${a.off ? 0.4 : 1}">${value}</span>
+      ${stepper ? html`<button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:plus")}</button>` : nothing}
     </div>`;
   }
 
