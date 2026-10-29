@@ -3,12 +3,13 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
-import { SubButtons } from "../core/sub-buttons";
+import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
-import { Presses, pressable } from "../core/press";
+import { Presses } from "../core/press";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
-import { glass, tone } from "../core/styles";
+import { tone } from "../core/styles";
+import { ACCENT, ICON_ONLY_BELOW, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneLook, type TileLook } from "../core/tile";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
 import { binaryStatus, type Status } from "../logic/status";
@@ -24,8 +25,6 @@ export interface EntityConfig extends BaseConfig {
   show_icon?: boolean;
   show_state?: boolean;
 }
-
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 /** Binary sensor glyphs by device class [on, off]; openings are red when open (design doors). */
 const BINARY: Record<string, [string, string]> = {
@@ -67,7 +66,19 @@ export function entityStatus(e: HassEntity | undefined, hass: HassLike | undefin
   return { icon: base, tone: e!.state === "on" ? "warning" : "info", label: stateText(hass, e, e!.state) };
 }
 
-/** A small state tile (e.g. door contacts); when compact a square cell of an access bar. */
+/**
+ * Tile look of an entity (catalog section 02): alerts (doors, leaks…) keep their tone, anything
+ * else is accent when on and neutral when off; unknown = "No data", unavailable = dashed frame.
+ */
+export function entityLook(e: HassEntity | undefined, s: Status): TileLook {
+  if (!e || e.state === "unavailable") return UNAVAILABLE;
+  if (e.state === "unknown") return UNKNOWN;
+  const dc: string | undefined = e.attributes.device_class;
+  if (e.entity_id.startsWith("binary_sensor.") && dc && ALERTS.has(dc)) return { ...toneLook(tone(s.tone)), subC: s.tone === "danger" ? tone(s.tone) : "var(--lumen-text-2)" };
+  return e.state === "on" ? ACCENT : NEUTRAL;
+}
+
+/** A state tile with optional sub-buttons; compact a square tile, below 100 px the access bar cell. */
 export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   protected static compactBelow = 120;
   private presses = new Presses((type) => this.haptic(type));
@@ -83,6 +94,11 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     return [this._config.entity, ...(this._config.sub_buttons ?? []).map((b) => b.entity)];
   }
 
+  /** Sub-buttons that fit (catalog C3). */
+  private get subMax() {
+    return subButtonLimit(this.compact, this._width);
+  }
+
   protected validate(c: EntityConfig) {
     validateEntity(c);
   }
@@ -92,7 +108,8 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     const c = this._config;
     const e = this.entity(c.entity);
     const s = entityStatus(e, this._hass, c.icon);
-    const col = tone(s.tone);
+    const look = entityLook(e, s);
+    const col = look.iconFg;
     const name = c.name || e?.attributes.friendly_name || c.entity;
     const h = this.presses.handlers(
       `entity:${c.entity}`,
@@ -100,21 +117,29 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
       () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
       c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
     );
-    if (this.compact) {
+    const una = !e || e.state === "unavailable";
+    const label = una ? t("common.unavailable") : s.label;
+    if (this.compact && this._width > 0 && this._width < ICON_ONLY_BELOW) {
       const glyph = s.icon === "mdi:door-closed-lock" ? "mdi:door-closed" : s.icon;
       return compactCell({
-        title: `${name} ${s.label}`,
+        title: `${name} ${label}`,
         color: col,
         handlers: h,
         body: html`<span style="position:relative;display:inline-flex">${icon(glyph, "font-size:24px")}<span style="position:absolute;right:-7px;top:3px;width:5px;height:5px;border-radius:50%;background:${col}"></span></span>`,
       });
     }
-    return html`<div data-fx ${pressable(h)} class="press" title="${name} ${s.label}" aria-label="${name} ${s.label}"
-      style="height:44px;box-sizing:border-box;border-radius:16px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};min-width:0;display:flex;align-items:center;gap:8px;padding:0 10px 0 6px;cursor:pointer;user-select:none;touch-action:pan-y">${WFX}
-      ${c.show_icon !== false ? html`<div style="width:32px;height:32px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:18px;background:color-mix(in srgb, ${col} 16%, transparent);color:${col};transition:background-color 500ms, color 500ms">${icon(s.icon, "display:block")}</div>` : nothing}
-      <div style="min-width:0;flex:1">${c.show_name !== false ? html`<div style="font-size:12px;font-weight:700;line-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>` : nothing}${c.show_state !== false ? html`<div style="font-size:11px;font-weight:600;line-height:14px;color:${col};white-space:nowrap">${s.label}</div>` : nothing}</div>
-      ${this.subs.render(c.sub_buttons)}
-    </div>`;
+    const opts = {
+      title: name,
+      sub: label,
+      look,
+      lead: c.show_icon !== false ? s.icon : undefined,
+      handlers: h,
+      showTitle: c.show_name !== false,
+      showSub: c.show_state !== false,
+      label: `${name} · ${label}`,
+      trailing: this.subs.render(c.sub_buttons, { compact: this.compact, max: this.subMax }),
+    };
+    return this.compact ? squareTile(opts) : rowTile(opts);
   }
 
   getCardSize() {

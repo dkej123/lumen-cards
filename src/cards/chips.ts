@@ -4,7 +4,7 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, fabFields, form } from "../core/form";
 import { t } from "../core/i18n";
-import { fabBottom, fabSlot, LayerController, releaseFab } from "../core/layer";
+import { FAB_MAIN, FAB_ORDER, fabBottom, fabRight, fabSlot, LayerController, releaseFab } from "../core/layer";
 import { Presses, pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass } from "../core/styles";
@@ -38,7 +38,7 @@ export interface ChipsConfig extends BaseConfig {
   fab?: boolean;
   /** …only on narrow screens (default); off = always. */
   fab_narrow_only?: boolean;
-  /** Heading above the speed-dial items. Default "Scenes". */
+  /** Heading of the speed-dial list. Default "Scenes". */
   title?: string;
 }
 
@@ -57,6 +57,24 @@ const JUSTIFY = { start: "flex-start", center: "center", end: "flex-end", justif
 /** Structure the editor cannot show (it falls back to YAML); an empty list is fine while editing. */
 export function assertChips(c: Partial<ChipsConfig>): void {
   if (c.chips !== undefined && !Array.isArray(c.chips)) throw new Error(t("card.chips.error.list"));
+}
+
+/**
+ * The active action chip: the scene activated last (a scene's state is the time of its last
+ * activation), only when it is the newest of the chips' scenes. Not for scripts or buttons.
+ */
+export function activeScene(chips: Chip[], states: Record<string, { state: string } | undefined>): string | null {
+  let best: string | null = null;
+  let at = 0;
+  for (const x of chips) {
+    if (x.type !== "action" || !x.entity.startsWith("scene.")) continue;
+    const ms = Date.parse(states[x.entity]?.state ?? "");
+    if (Number.isFinite(ms) && ms > at) {
+      at = ms;
+      best = x.entity;
+    }
+  }
+  return best;
 }
 
 export function validateChips(c: Partial<ChipsConfig>): void {
@@ -149,43 +167,49 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     );
   }
 
-  private actionChip(s: ActionChip) {
+  private get active(): string | null {
+    return this._hass ? activeScene(this._config.chips ?? [], this._hass.states) : null;
+  }
+
+  /** Catalog chip: 44 px pill, glyph 18 + name; the active scene is inverted (text-1 background). */
+  private actionChip(s: ActionChip, active: boolean) {
     const off = isUnavailable(this.entity(s.entity));
-    return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-label=${this.chipName(s)}
-      style="display:flex;align-items:center;gap:10px;min-height:48px;padding:4px 14px 4px 4px;box-sizing:border-box;border-radius:999px;border:1px solid var(--lumen-border);background:var(--lumen-surface);color:var(--lumen-text-1);font-family:inherit;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${glass};transition:background-color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
-      <span style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--lumen-surface-2);color:var(--lumen-text-2)">${icon(this.chipIcon(s))}</span>
-      <span style="font-size:13px;font-weight:700;white-space:nowrap">${this.chipName(s)}</span>
+    return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-pressed=${active} aria-label=${this.chipName(s)}
+      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:${active ? "1px solid transparent" : "1px solid var(--lumen-border)"};background:${active ? "var(--lumen-text-1)" : "var(--lumen-surface)"};color:${active ? "var(--lumen-bg)" : "var(--lumen-text-1)"};box-shadow:${active ? "var(--lumen-shadow-1)" : "none"};font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${active ? "" : glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
+      ${icon(this.chipIcon(s), "font-size:18px")}${this.chipName(s)}
     </div>`;
   }
 
+  /** Floating button (catalog FAB): 64 px, inverted; tap opens the list with its heading above it. */
   private renderFab() {
     const open = this._fab;
     const items = this.of("action");
-    const bottom = fabBottom(fabSlot(this));
+    const active = this.active;
+    const bottom = fabBottom(fabSlot(this, FAB_ORDER.scenes));
+    const title = this._config.title || t("card.chips.scenes");
     return html`
       <div @click=${() => (this._fab = false)} style="position:absolute;inset:0;z-index:6;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};transition:opacity 320ms var(--lumen-ease-out)"></div>
-      <div role=${open ? "dialog" : nothing} aria-label=${this._config.title || t("card.chips.scenes")} style="position:absolute;right:16px;bottom:calc(${bottom} + 78px);z-index:7;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:${open ? "auto" : "none"};visibility:${open ? "visible" : "hidden"};transition:visibility 0s ${open ? "0s" : "560ms"}">
-        <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding-right:8px;opacity:${open ? 1 : 0};transition:opacity 300ms;text-shadow:0 1px 8px rgba(0,0,0,.35)">${this._config.title || t("card.chips.scenes")}</div>
-        ${items.map(
-          (s, i) => html`<button @click=${() => {
+      <div role=${open ? "dialog" : nothing} aria-label=${title} style="position:absolute;right:calc(${fabRight(FAB_MAIN)} - 4px);bottom:calc(${bottom} + ${FAB_MAIN + 12}px);z-index:7;width:200px;max-height:calc(100% - ${FAB_MAIN + 60}px);overflow:auto;padding:10px;box-sizing:border-box;border-radius:22px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2);display:flex;flex-direction:column;gap:2px;transform-origin:bottom right;transform:${open ? "none" : "translateY(16px) scale(.92)"};opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};visibility:${open ? "visible" : "hidden"};transition:transform 460ms var(--lumen-ease-spring), opacity 220ms var(--lumen-ease-out), visibility 0s ${open ? "0s" : "460ms"}">
+        <div style="padding:4px 8px 6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3)">${title}</div>
+        ${items.map((s) => {
+          const on = s.entity === active;
+          return html`<button @click=${() => {
             this.haptic();
             this.run(s);
             window.clearTimeout(this.fabTimer);
             this.fabTimer = window.setTimeout(() => (this._fab = false), 450);
-          }} style="display:flex;align-items:center;gap:10px;min-height:52px;padding:5px 16px 5px 5px;border-radius:999px;border:1px solid var(--lumen-border);background:var(--lumen-surface-solid);color:var(--lumen-text-1);font-family:inherit;cursor:pointer;box-shadow:var(--lumen-shadow-2);transform:${open ? "translateY(0) scale(1)" : "translateY(22px) scale(.6)"};opacity:${open ? 1 : 0};transform-origin:right center;transition:transform 560ms var(--lumen-ease-spring), opacity 260ms var(--lumen-ease-out);transition-delay:${(items.length - 1 - i) * 45}ms">
-            <span style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:21px;background:var(--lumen-surface-2);color:var(--lumen-text-2);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${icon(this.chipIcon(s))}</span>
-            <span style="font-size:14px;font-weight:700;white-space:nowrap">${this.chipName(s)}</span>
-          </button>`,
-        )}
+          }} aria-pressed=${on} style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:14px;background:${on ? "var(--lumen-accent-soft)" : "transparent"};color:${on ? "var(--lumen-accent)" : "var(--lumen-text-1)"};font:700 13px var(--lumen-font);text-align:left;cursor:pointer;transition:background-color 300ms">
+            ${icon(this.chipIcon(s), `font-size:18px;flex:none;animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}`)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this.chipName(s)}</span>
+          </button>`;
+        })}
       </div>
-      <button class="press" @click=${() => {
+      <button class="acfab" @click=${() => {
         this.haptic();
         this._fab = !open;
-      }} aria-label=${this._config.title || t("card.chips.scenes")} aria-expanded=${open} style="position:absolute;right:16px;bottom:${bottom};z-index:8;width:64px;height:64px;padding:0;border-radius:50%;border:0;background:var(--lumen-accent);color:var(--lumen-on-accent);font-size:28px;cursor:pointer;pointer-events:auto;box-shadow:0 14px 34px -10px color-mix(in srgb, var(--lumen-accent) 75%, transparent), var(--lumen-shadow-1);transition:transform 260ms var(--lumen-ease-spring)">
-        <span style="position:absolute;inset:0;opacity:${open ? 0 : 1};transition:opacity 300ms;pointer-events:none"><span style="position:absolute;inset:0;border-radius:50%;border:2px solid var(--lumen-accent);animation:lumenHalo 3.2s var(--lumen-ease-out) infinite"></span></span>
-        <span style="position:absolute;inset:0;display:grid;place-items:center;transform:${open ? "rotate(135deg)" : "rotate(0deg)"};transition:transform 560ms var(--lumen-ease-spring)">
-          ${icon("mdi:creation", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms;animation:lumenTwinkle 4.5s ease-in-out infinite`)}
-          ${icon("mdi:plus", `position:absolute;font-size:30px;opacity:${open ? 1 : 0};transition:opacity 200ms`)}
+      }} aria-label=${title} aria-expanded=${open} style="position:absolute;right:${fabRight(FAB_MAIN)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
+        <span style="position:absolute;inset:0;display:grid;place-items:center;transform:${open ? "rotate(90deg)" : "none"};transition:transform 460ms var(--lumen-ease-spring)">
+          ${icon("mdi:palette-outline", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms`)}
+          ${icon("mdi:close", `position:absolute;opacity:${open ? 1 : 0};transition:opacity 200ms`)}
         </span>
       </button>`;
   }
@@ -217,10 +241,11 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
         : nothing;
     }
     const onlyActions = shown.every((x) => x.type === "action");
-    const items = shown.map((x) => (x.type === "action" ? this.actionChip(x) : this.lights.pill(x, compact)));
+    const active = this.active;
+    const items = shown.map((x) => (x.type === "action" ? this.actionChip(x, x.entity === active) : this.lights.pill(x, compact)));
     // Colour presets of a light pill cover the whole row: one pill is too narrow for four.
     const ct = this.of("light").find((i) => i.entity === this.lights.ctOpen && this.lights.light(i).on && this.lights.light(i).ct);
-    const gap = onlyActions ? 10 : compact ? 6 : 8;
+    const gap = onlyActions ? 8 : compact ? 6 : 8;
     const justify = JUSTIFY[c.alignment ?? "start"] ?? "flex-start";
     return html`<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:${justify};gap:${gap}px">${items}${ct ? this.lights.ctOverlay(ct.entity, this.lights.light(ct).k, compact, true) : nothing}</div>`;
   }

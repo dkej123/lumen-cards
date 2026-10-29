@@ -9,12 +9,16 @@ import { glass, prevent, stop } from "../core/styles";
 import { toast } from "../core/toast";
 import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
-import { HUE_PRESETS, brightnessPct, ctPresets, isDimmable, kelvinRange, lightPower, supportsColor, supportsColorTemp } from "../logic/light";
+import {
+  HUE_PRESETS, brightnessPct, ctPresets, hsOf, hsToRgb, hueName, isDimmable, kelvinRange, lightPower, miredPresets, mixedGroup,
+  supportsColor, supportsColorTemp, swatchIndex, whiteColor, whiteGradient,
+} from "../logic/light";
 import { warm } from "../weather/fx";
 
 // Lights of the design (light(), lightHandlers(), tile(), pill(), ctOverlay(),
 // slider(), the light sheet and the brightness HUD) as a controller any card can own.
-// Markup and inline styles are unchanged; `l.col` can be overridden by the card's glow colour.
+// The compact and icon-only tiles, the sheet's white presets, hue swatches and colour wheel
+// follow the Lumen Cards catalog (2026-10-29). `l.col` can be overridden by the card's glow colour.
 
 export interface LightItem {
   entity: string;
@@ -31,15 +35,17 @@ export interface LightItem {
   show_color_button?: boolean;
 }
 
-interface LightOverride { on?: boolean; b?: number; k?: number }
+interface LightOverride { on?: boolean; b?: number; k?: number; hs?: [number, number] }
 interface Pending { from?: HassEntity; until: number }
 interface Drag {
   entity: string; item: LightItem; el: HTMLElement;
-  hudY: number | null; x0: number; y0: number; w: number; b0: number;
-  moved: boolean; dragging: boolean; held: boolean; lx: number; lt: number; v: number; cur?: number;
+  hudY: number | null; x0: number; y0: number; left: number; w: number;
+  moved: boolean; dragging: boolean; held: boolean; cur?: number;
 }
 
 const PENDING_MS = 10_000;
+/** Horizontal movement (px) that turns a press into a brightness drag (catalog "Zachowanie"). */
+export const DRAG_PX = 6;
 const HUD_H = 40;
 const HUD_GAP = 12;
 const HUD_MIN_TOP = 8;
@@ -47,6 +53,10 @@ const HUD_MIN_TOP = 8;
 const TOP = 56;
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const onSwatch = (e: Event) => !!(e.target as Element | null)?.closest?.("[data-ct]");
+const RAINBOW = "conic-gradient(#f55, #fd5, #5d7, #5cf, #86f, #f5b, #f55)";
+const WHEEL = "radial-gradient(circle, #fff 0%, rgba(255,255,255,0) 70%), conic-gradient(from 90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)";
+const ring = (on: boolean) => (on ? "0 0 0 2px var(--lumen-surface-solid), 0 0 0 4px var(--lumen-text-1)" : "inset 0 0 0 1px rgba(0,0,0,.08)");
+const UNAV_BORDER = "1px dashed var(--lumen-border-strong)";
 
 export const lightName = (item: LightItem, e?: HassEntity) => item.name || e?.attributes.friendly_name || item.entity;
 export const lightIcon = (item: LightItem, e?: HassEntity) => item.icon || e?.attributes.icon || "mdi:lightbulb";
@@ -67,7 +77,9 @@ export class LightsController implements ReactiveController {
   private sheetOpenedAt = 0;
   private interval?: number;
   ctOpen: string | null = null;
-  private sheet: { item: LightItem; closing: boolean } | null = null;
+  private sheet: { item: LightItem; closing: boolean; view: "main" | "wheel" } | null = null;
+  /** Colour wheel position while the finger is on it. */
+  private wheelHs: [number, number] | null = null;
   now = Date.now();
 
   constructor(private host: LumenBaseCard & { lightItems(): LightItem[] }) {
@@ -160,21 +172,41 @@ export class LightsController implements ReactiveController {
     const e = this.entity(item.entity);
     const ov = this.overrides.get(item.entity);
     const p = lightPower(e, item.power_entity ? this.entity(item.power_entity) : undefined, !!item.power_entity, this.now);
-    const una = p.unavailable;
-    const reachable = !una && !p.booting && !isUnavailable(e);
+    // `unknown` is "no data", not an outage: the tile keeps its frame and its tap.
+    const unknown = !item.power_entity && e?.state === "unknown";
+    const una = p.unavailable && !unknown;
+    const reachable = !una && !unknown && !p.booting && !isUnavailable(e);
     const dim = reachable && isDimmable(e);
     const ct = reachable && supportsColorTemp(e);
     const color = reachable && supportsColor(e);
-    const on = !una && (ov?.on ?? p.on);
-    const b = ov?.b ?? (brightnessPct(e) || 100);
+    const on = !una && !unknown && (ov?.on ?? p.on);
+    // Light group with only some members on: fill by their average brightness, softer glow.
+    const group = reachable && !ov && this.hass ? mixedGroup(e, this.hass.states) : null;
+    const b = ov?.b ?? (group?.avg ?? (brightnessPct(e) || 100));
     const [kMin, kMax] = kelvinRange(e);
     const k = Math.round(ov?.k ?? e?.attributes.color_temp_kelvin ?? Math.min(kMax, Math.max(kMin, 2700)));
     const pending = this.pending.has(item.entity) || (p.booting && ov?.on !== false);
+    // Colour mode: a picked hue, else the bulb's own (anything but color_temp).
+    const hs = ov?.hs ?? (ov?.k !== undefined || !color || e?.attributes.color_mode === "color_temp" ? undefined : hsOf(e));
     // Glow: the card's colour (glow_color / theme) wins over the light's own colour or warm white.
     const rgb: unknown = e?.attributes.rgb_color;
-    const own = color && e?.attributes.color_mode !== "color_temp" && Array.isArray(rgb) ? `rgb(${rgb.join(",")})` : warm(ct ? k : 2700);
+    const own = ov?.hs ? hsToRgb(ov.hs) : hs && Array.isArray(rgb) ? `rgb(${rgb.join(",")})` : hs ? hsToRgb(hs) : warm(ct ? k : 2700);
     const col = this.host.glowColor(own);
-    return { e, una, dim, ct, color, on, b: dim ? b : 100, k, kMin, kMax, col, pending, powerOn: p.powerOn, booting: p.booting };
+    const bb = dim ? b : 100;
+    const value = una
+      ? t("card.light.unavailable")
+      : unknown
+        ? t("common.no_data")
+        : p.booting
+          ? t("card.light.booting")
+          : group && on
+            ? t("card.light.group_on", { on: group.on, total: group.total })
+            : on
+              ? dim ? `${bb}%` : t("card.light.on")
+              : t("card.light.off");
+    const meta = !on ? "" : group ? (group.avg !== null ? `${group.avg}%` : "") : hs ? t(hueName(hs)) : ct ? `${k} K` : "";
+    const glow = on ? (group ? 0.45 : 0.25 + (bb / 100) * 0.75) : 0;
+    return { e, una, unknown, reachable, dim, ct, color, on, b: bb, k, kMin, kMax, hs, col, pending, powerOn: p.powerOn, booting: p.booting, group, value, meta, glow };
   }
 
   /** Tap: the configured action, else toggle (bulb, or its relay when that is what is off). */
@@ -232,34 +264,54 @@ export class LightsController implements ReactiveController {
   }
 
   private setHue(entity: string, hs: [number, number]) {
-    this.overrides.set(entity, { ...this.overrides.get(entity), on: true });
+    this.overrides.set(entity, { ...this.overrides.get(entity), on: true, hs, k: undefined });
     this.setPending(entity);
     this.call("light", "turn_on", { hs_color: hs }, entity);
   }
 
   private hold(item: LightItem) {
     if (item.hold_action) handleAction(this.host, item.hold_action, item.entity, "hold");
-    else if (this.light(item).dim && !this.light(item).una && !this.host.preview) this.openSheet(item);
+    else this.sheetOrInfo(item);
+  }
+
+  /** The light sheet (any reachable light; on/off-only ones get it without sliders), else more-info. */
+  private sheetOrInfo(item: LightItem) {
+    if (this.light(item).reachable && !this.host.preview) this.openSheet(item);
     else this.moreInfo(item.entity);
   }
 
+  /** The tile icon opens the sheet; its pointerdown never starts a drag. */
+  private iconHandlers(item: LightItem) {
+    return {
+      down: (e: Event) => e.stopPropagation(),
+      click: (e: Event) => {
+        e.stopPropagation();
+        if (performance.now() - this.dragEnd < 350) return;
+        this.haptic();
+        this.sheetOrInfo(item);
+      },
+    };
+  }
+
   private setKelvin(entity: string, k: number) {
-    this.overrides.set(entity, { ...this.overrides.get(entity), on: true, k });
+    this.overrides.set(entity, { ...this.overrides.get(entity), on: true, k, hs: undefined });
     this.setPending(entity);
     this.call("light", "turn_on", { color_temp_kelvin: k }, entity);
   }
 
-  /** Tap = toggle, horizontal drag > 8 px = brightness with inertia, hold 500 ms = sheet / more-info. */
+  /**
+   * Tap = toggle; horizontal drag > 6 px sets the brightness from the finger position on the
+   * tile (pointer captured, page scroll stays vertical); hold 500 ms = sheet / more-info.
+   */
   handlers(item: LightItem) {
     const down = (e: PointerEvent) => {
       if (e.button !== 0) return;
       const el = e.currentTarget as HTMLElement;
-      const l = this.light(item);
       const onCt = onSwatch(e);
       const rect = el.getBoundingClientRect();
       this.drag = {
-        entity: item.entity, item, el, hudY: this.hudY(rect.top), x0: e.clientX, y0: e.clientY, w: rect.width,
-        b0: l.on ? l.b : 0, moved: false, dragging: false, held: false, lx: e.clientX, lt: performance.now(), v: 0,
+        entity: item.entity, item, el, hudY: this.hudY(rect.top), x0: e.clientX, y0: e.clientY, left: rect.left, w: Math.max(1, rect.width),
+        moved: false, dragging: false, held: false,
       };
       window.clearTimeout(this.holdTimer);
       this.holdTimer = window.setTimeout(() => {
@@ -282,7 +334,7 @@ export class LightsController implements ReactiveController {
           this.drag = null;
           return;
         }
-        if (Math.abs(dx) <= 8) return;
+        if (Math.abs(dx) <= DRAG_PX) return;
         d.moved = true;
         window.clearTimeout(this.holdTimer);
         const l = this.light(item);
@@ -294,13 +346,9 @@ export class LightsController implements ReactiveController {
           /* ignore */
         }
       }
-      const now = performance.now();
-      d.v = d.v * 0.6 + ((e.clientX - d.lx) / Math.max(1, now - d.lt)) * 0.4;
-      d.lx = e.clientX;
-      d.lt = now;
-      const b = Math.round(Math.max(0, Math.min(100, d.b0 + (dx / d.w) * 100)));
+      const b = Math.round(Math.max(1, Math.min(100, ((e.clientX - d.left) / d.w) * 100)));
       d.cur = b;
-      this.overrides.set(item.entity, b < 1 ? { on: false } : { ...this.overrides.get(item.entity), on: true, b });
+      this.overrides.set(item.entity, { ...this.overrides.get(item.entity), on: true, b });
       this.requestUpdate();
     };
     const up = (e: PointerEvent) => {
@@ -310,10 +358,8 @@ export class LightsController implements ReactiveController {
       this.drag = null;
       if (d.moved) this.dragEnd = performance.now();
       if (d.dragging) {
-        const extra = ((d.v * 140) / d.w) * 100;
-        const b = Math.round(Math.max(0, Math.min(100, (d.cur ?? d.b0) + extra)));
         this.haptic();
-        this.setBrightness(item, b);
+        if (d.cur !== undefined) this.setBrightness(item, d.cur);
       } else if (!d.moved && !d.held && !onSwatch(e)) this.tapOrDouble(item);
       this.requestUpdate();
     };
@@ -375,10 +421,10 @@ export class LightsController implements ReactiveController {
     const l = this.light(item);
     const h = this.handlers(item);
     const dragging = this.drag?.entity === item.entity && this.drag.dragging;
-    const value = l.una ? t("card.light.unavailable") : l.booting ? t("card.light.booting") : l.on ? (l.dim ? `${l.b}%` : t("card.light.on")) : t("card.light.off");
-    const meta = l.on && l.ct ? `${l.k} K` : "";
-    const fillW = l.on ? `${l.dim ? l.b : 100}%` : "0%";
-    const ctOpen = l.on && l.ct && this.ctOpen === item.entity;
+    const { value, meta } = l;
+    const fillW = l.on ? `${l.b}%` : "0%";
+    const ih = this.iconHandlers(item);
+    const ctOpen = l.on && l.ct && !l.hs && this.ctOpen === item.entity;
     const border = l.una ? "1.5px dashed var(--lumen-border-strong)" : l.on ? `1px solid color-mix(in srgb, ${l.col} 45%, transparent)` : "1px solid var(--lumen-border)";
     const shadow = l.on ? `0 18px 44px -18px color-mix(in srgb, ${l.col} ${Math.round(35 + l.b * 0.5)}%, transparent), var(--lumen-shadow-1)` : "var(--lumen-shadow-1)";
     const iconSize = mobile ? 30 : 34;
@@ -388,11 +434,11 @@ export class LightsController implements ReactiveController {
       ${ctOpen ? this.ctOverlay(item.entity, l.k, mobile, false, l.e) : nothing}
       <div style="position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;pointer-events:none">
       <div style="position:absolute;inset:0 auto 0 0;width:${fillW};background:linear-gradient(90deg, color-mix(in srgb, ${l.col} var(--lumen-fill-a), transparent), color-mix(in srgb, ${l.col} var(--lumen-fill-b), transparent));transition:${dragging ? "width 60ms linear" : "width 620ms var(--lumen-ease-spring)"};mask-image:linear-gradient(90deg, #000 calc(100% - 36px), transparent);-webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 36px), transparent);pointer-events:none"></div>
-      <div style="position:absolute;top:-70%;right:-35%;width:120%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, ${l.col} 55%, transparent) 0%, transparent 62%);opacity:${l.on ? (0.25 + (l.b / 100) * 0.75).toFixed(2) : 0};transition:opacity 800ms var(--lumen-ease-out);pointer-events:none"></div>
+      <div style="position:absolute;top:-70%;right:-35%;width:120%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, ${l.col} 55%, transparent) 0%, transparent 62%);opacity:${l.glow.toFixed(2)};transition:opacity 800ms var(--lumen-ease-out);pointer-events:none"></div>
       </div>
-      <div style="position:relative;flex:none;order:-2;width:${iconSize}px;height:${iconSize}px;border-radius:${mobile ? 10 : 12}px;display:grid;place-items:center;font-size:${mobile ? 17 : 19}px;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "#3B2709" : "var(--lumen-text-2)"};box-shadow:${l.on ? `0 0 18px color-mix(in srgb, ${l.col} 70%, transparent)` : "none"};transition:background-color 500ms, color 500ms, box-shadow 700ms">${icon(lightIcon(item, l.e))}</div>
+      <div role="button" tabindex="-1" aria-label=${t("card.light.settings")} title=${t("card.light.settings")} @pointerdown=${ih.down} @click=${ih.click} style="position:relative;flex:none;order:-2;width:${iconSize}px;height:${iconSize}px;border-radius:${mobile ? 10 : 12}px;display:grid;place-items:center;font-size:${mobile ? 17 : 19}px;cursor:pointer;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "#3B2709" : l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};box-shadow:${l.on ? `0 0 18px color-mix(in srgb, ${l.col} 70%, transparent)` : "none"};transition:background-color 500ms, color 500ms, box-shadow 700ms">${icon(lightIcon(item, l.e))}</div>
       ${l.una ? icon("mdi:power-plug-off-outline", "font-size:18px;color:var(--lumen-text-3)") : nothing}
-      ${l.on && l.ct && item.show_color_button !== false
+      ${l.on && l.ct && !l.hs && !l.group && item.show_color_button !== false
         ? this.swatch(item, l.col, mobile ? 20 : 22, `position:relative;width:${mobile ? 30 : 40}px;height:44px;margin:${mobile ? "0 -4px 0 -2px" : "0 -6px 0 0"};padding:0;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;touch-action:pan-y`)
         : nothing}
       <div style="position:relative;flex:1;order:-1;${mobile ? "" : "display:flex;flex-direction:column;gap:1px;"}min-width:0">
@@ -401,9 +447,56 @@ export class LightsController implements ReactiveController {
           ? nothing
           : mobile
           ? html`<div style="display:flex;gap:6px;font-size:11px;line-height:14px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);flex:none">${meta}</span></div>`
-          : html`<div style="display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);font-weight:600;flex:none">${meta}</span></div>`}
+          : html`<div style="display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:650;color:${l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);font-weight:600;flex:none">${meta}</span></div>`}
       </div>
     </div>`;
+  }
+
+  /** Tile frame shared by the compact and icon-only looks (catalog `C` / `I`). */
+  private frame(item: LightItem, l: ReturnType<LightsController["light"]>, h: number, body: TemplateResult, column: boolean) {
+    const hd = this.handlers(item);
+    const dragging = this.drag?.entity === item.entity && this.drag.dragging;
+    const name = lightName(item, l.e);
+    const label = `${name} · ${l.value}${l.meta ? ` · ${l.meta}` : ""}`;
+    const border = l.una ? UNAV_BORDER : l.on ? `1px solid color-mix(in srgb, ${l.col} 40%, var(--lumen-border))` : "1px solid var(--lumen-border)";
+    const shadow = l.una ? "none" : l.on ? `0 10px 30px -14px color-mix(in srgb, ${l.col} 70%, transparent), var(--lumen-shadow-1)` : "var(--lumen-shadow-1)";
+    return html`<div data-fx role="button" tabindex="0" aria-pressed=${l.on} aria-disabled=${l.una} aria-label=${label} title=${label} aria-keyshortcuts="Shift+Enter ArrowLeft ArrowRight"
+      @pointerdown=${hd.down} @pointermove=${hd.move} @pointerup=${hd.up} @pointercancel=${hd.cancel} @keydown=${hd.key} @contextmenu=${prevent}
+      class="press tile" style="position:relative;isolation:isolate;height:${h}px;${column ? "padding:10px;display:flex;flex-direction:column;justify-content:space-between" : "display:grid;place-items:center"};box-sizing:border-box;border-radius:18px;background:${l.una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};${l.una ? "" : glass};border:${border};box-shadow:${shadow};color:var(--lumen-text-1);touch-action:pan-y;user-select:none;cursor:${l.una ? "not-allowed" : "pointer"};outline:none;transition:box-shadow 700ms var(--lumen-ease-out), border-color 400ms, transform 240ms var(--lumen-ease-spring)">${WFX}
+      <div style="position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;pointer-events:none">
+        <div style="position:absolute;inset:0 auto 0 0;width:${l.on ? l.b : 0}%;background:linear-gradient(90deg, color-mix(in srgb, ${l.col} var(--lumen-fill-a), transparent), color-mix(in srgb, ${l.col} var(--lumen-fill-b), transparent));transition:${dragging ? "width 60ms linear" : "width 620ms var(--lumen-ease-spring)"}"></div>
+        ${column ? html`<div style="position:absolute;top:-70%;right:-50%;width:150%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, ${l.col} 55%, transparent) 0%, transparent 62%);opacity:${l.glow.toFixed(2)};transition:opacity 800ms var(--lumen-ease-out)"></div>` : nothing}
+      </div>
+      ${body}
+    </div>`;
+  }
+
+  /** Icon cell of the compact / icon-only tiles; a tap on it opens the sheet. */
+  private iconCell(item: LightItem, l: ReturnType<LightsController["light"]>, size: number, radius: number, font: number) {
+    const ih = this.iconHandlers(item);
+    const bg = l.on ? l.col : l.una ? "transparent" : "var(--lumen-surface-2)";
+    const fg = l.on ? "var(--lumen-light-ink)" : l.una ? "var(--lumen-unavailable)" : l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)";
+    const glyph = l.una && !item.icon ? "mdi:lightbulb-off-outline" : l.on || item.icon || l.e?.attributes.icon ? lightIcon(item, l.e) : "mdi:lightbulb-outline";
+    return html`<div role="button" tabindex="-1" aria-label=${t("card.light.settings")} @pointerdown=${ih.down} @click=${ih.click}
+      style="position:relative;flex:none;width:${size}px;height:${size}px;border-radius:${radius}px;display:grid;place-items:center;font-size:${font}px;background:${bg};color:${fg};cursor:pointer;transition:background-color 500ms, color 500ms">${icon(glyph, "display:block")}</div>`;
+  }
+
+  /** Compact tile (card narrower than 220 px): icon on top, name in up to two lines, state below. */
+  compactTile(item: LightItem, h: number): TemplateResult {
+    const l = this.light(item);
+    const sub = l.una ? l.value : !l.on ? (l.unknown ? l.value : t("common.off_short")) : l.group ? l.value : [l.value, l.meta].filter(Boolean).join(" · ");
+    return this.frame(item, l, h, html`
+      <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:6px">${this.iconCell(item, l, 30, 11, 17)}</div>
+      <div style="position:relative;min-width:0">
+        <div style="font-size:12px;font-weight:700;line-height:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere">${lightName(item, l.e)}</div>
+        ${item.show_state === false ? nothing : html`<div style="font-size:11px;font-weight:600;line-height:14px;color:${l.una || l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${sub}</div>`}
+      </div>`, true);
+  }
+
+  /** Icon-only tile (card narrower than 100 px, like the access bar cells): the fill shows the state. */
+  iconTile(item: LightItem, h: number): TemplateResult {
+    const l = this.light(item);
+    return this.frame(item, l, h, this.iconCell(item, l, 40, 14, 22), false);
   }
 
   /** Colour picker over the whole tile: 4 presets, a pick closes it after 280 ms. */
@@ -441,7 +534,8 @@ export class LightsController implements ReactiveController {
   private openSheet(item: LightItem) {
     this.haptic();
     this.sheetOpenedAt = performance.now();
-    this.sheet = { item, closing: false };
+    this.sheet = { item, closing: false, view: "main" };
+    this.wheelHs = null;
     this.sheetDy = 0;
     this.requestUpdate();
   }
@@ -569,6 +663,65 @@ export class LightsController implements ReactiveController {
     </div>`;
   }
 
+  private sheetView(view: "main" | "wheel") {
+    if (!this.sheet) return;
+    this.haptic();
+    this.sheet = { ...this.sheet, view };
+    this.wheelHs = null;
+    this.requestUpdate();
+  }
+
+  /** Colour wheel (hs): hue = angle clockwise from the right (as the conic gradient), saturation = distance from the centre. */
+  private wheel(item: LightItem) {
+    let rect: DOMRect | undefined;
+    const at = (e: PointerEvent): [number, number] => {
+      const r = rect!;
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top + r.height / 2);
+      const h = Math.round(((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360);
+      const sat = Math.round(Math.min(1, Math.hypot(dx, dy) / (r.width / 2)) * 100);
+      return [h, sat];
+    };
+    return {
+      down: (e: PointerEvent) => {
+        if (e.button !== 0) return;
+        rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
+        this.wheelHs = at(e);
+        this.requestUpdate();
+      },
+      move: (e: PointerEvent) => {
+        if (!this.wheelHs || !rect) return;
+        this.wheelHs = at(e);
+        this.requestUpdate();
+      },
+      up: () => {
+        const hs = this.wheelHs;
+        if (!hs) return;
+        this.wheelHs = null;
+        this.haptic();
+        this.setHue(item.entity, hs);
+      },
+      /** Arrows: ←/→ hue ∓/± 10°, ↑/↓ saturation ± 10 %. */
+      key: (e: KeyboardEvent) => {
+        const cur = this.light(item).hs ?? [0, 100];
+        const next: [number, number] | null =
+          e.key === "ArrowRight" ? [(cur[0] + 10) % 360, cur[1]]
+          : e.key === "ArrowLeft" ? [(cur[0] + 350) % 360, cur[1]]
+          : e.key === "ArrowUp" ? [cur[0], Math.min(100, cur[1] + 10)]
+          : e.key === "ArrowDown" ? [cur[0], Math.max(0, cur[1] - 10)]
+          : null;
+        if (!next) return;
+        e.preventDefault();
+        this.setHue(item.entity, next);
+      },
+    };
+  }
+
   private renderSheet() {
     const sh = this.sheet;
     if (!sh) return nothing;
@@ -578,51 +731,95 @@ export class LightsController implements ReactiveController {
       ? isSheet ? "lumenSheetOut 250ms var(--lumen-ease-in-out) forwards" : "lumenModalOut 220ms ease forwards"
       : isSheet ? "lumenSheetIn 560ms var(--lumen-ease-spring) both" : "lumenModalIn 460ms var(--lumen-ease-spring) both";
     const l = this.light(item);
+    const title = lightName(item, l.e);
+    const body = sh.view === "wheel" && l.color ? this.wheelView(item, l) : this.mainView(item, l);
+    return html`<div style="position:absolute;inset:0;z-index:50;display:flex;align-items:${isSheet ? "flex-end" : "center"};justify-content:center;padding:${isSheet ? "0" : "24px"};box-sizing:border-box;font-family:var(--lumen-font);color:var(--lumen-text-1)">
+      <div @click=${this.scrimClose} style="position:absolute;inset:0;background:var(--lumen-scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:${sh.closing ? "lumenFadeOut 250ms forwards" : "lumenFadeIn 300ms both"}"></div>
+      <div role="dialog" aria-modal="true" aria-label=${title} style="position:relative;width:100%;max-width:${isSheet ? "520px" : "420px"};animation:${anim}">
+        <div style="transform:translateY(${this.sheetDy}px);transition:${this.grabY !== null ? "none" : "transform 460ms var(--lumen-ease-spring)"};background:var(--lumen-surface-solid);border-radius:${isSheet ? "28px 28px 0 0" : "28px"};box-shadow:var(--lumen-shadow-2);border:1px solid var(--lumen-border);padding:${isSheet ? "4px" : "18px"} 18px calc(18px + ${isSheet ? "env(safe-area-inset-bottom)" : "0px"});max-height:86vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box">
+          <div @pointerdown=${this.grab.down} @pointermove=${this.grab.move} @pointerup=${this.grab.up} @pointercancel=${this.grab.up} style="touch-action:none;cursor:${isSheet ? "grab" : "default"}">
+            ${isSheet ? html`<div style="display:flex;justify-content:center;padding:6px 0 12px"><span style="width:40px;height:5px;border-radius:3px;background:var(--lumen-border-strong)"></span></div>` : nothing}
+            ${sh.view === "wheel" && l.color
+              ? html`<div style="display:flex;align-items:center;gap:8px;padding-bottom:14px">
+                  <button aria-label=${t("common.back")} @click=${() => this.sheetView("main")} style="width:40px;height:40px;flex:none;border-radius:50%;border:0;padding:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;cursor:pointer;display:grid;place-items:center">${icon("mdi:chevron-left")}</button>
+                  <span style="flex:1;font-size:16px;font-weight:800">${t("card.light.wheel")}</span>
+                  <button aria-label=${t("common.close")} @click=${this.closeSheet} style="width:40px;height:40px;flex:none;border-radius:50%;border:0;padding:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;cursor:pointer;display:grid;place-items:center">${icon("mdi:close")}</button>
+                </div>`
+              : html`<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px">
+                  <div style="width:40px;height:40px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "var(--lumen-light-ink)" : "var(--lumen-text-2)"};transition:background-color 500ms">${icon(lightIcon(item, l.e))}</div>
+                  <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:12px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[l.on ? (l.dim ? `${l.b}%` : t("card.light.on")) : t("common.off_short"), l.on ? l.meta : ""].filter(Boolean).join(" · ")}</div></div>
+                  <button aria-label=${t("common.close")} @click=${this.closeSheet} style="width:40px;height:40px;flex:none;border-radius:50%;border:0;padding:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;cursor:pointer;display:grid;place-items:center">${icon("mdi:close")}</button>
+                </div>`}
+          </div>
+          ${body}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /** Sheet content: brightness, whites (4 presets in mireds), 8 hue swatches + the colour wheel. */
+  private mainView(item: LightItem, l: ReturnType<LightsController["light"]>) {
     const tr = this.sliding ? "none" : "width 500ms var(--lumen-ease-spring), left 500ms var(--lumen-ease-spring)";
     const b = this.slider("b", item);
     const k = this.slider("k", item);
-    const title = lightName(item, l.e);
-    return html`<div style="position:absolute;inset:0;z-index:50;display:flex;align-items:${isSheet ? "flex-end" : "center"};justify-content:center;padding:${isSheet ? "0" : "24px"};box-sizing:border-box;font-family:var(--lumen-font);color:var(--lumen-text-1)">
-      <div @click=${this.scrimClose} style="position:absolute;inset:0;background:var(--lumen-scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:${sh.closing ? "lumenFadeOut 250ms forwards" : "lumenFadeIn 300ms both"}"></div>
-      <div role="dialog" aria-modal="true" aria-label=${title} style="position:relative;width:100%;max-width:${isSheet ? "520px" : "560px"};animation:${anim}">
-        <div style="transform:translateY(${this.sheetDy}px);transition:${this.grabY !== null ? "none" : "transform 460ms var(--lumen-ease-spring)"};background:var(--lumen-surface-solid);border-radius:${isSheet ? "30px 30px 0 0" : "28px"};box-shadow:var(--lumen-shadow-2);border:1px solid var(--lumen-border);padding:6px 20px calc(28px + ${isSheet ? "env(safe-area-inset-bottom)" : "0px"});max-height:86vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box">
-          <div @pointerdown=${this.grab.down} @pointermove=${this.grab.move} @pointerup=${this.grab.up} @pointercancel=${this.grab.up} style="touch-action:none;cursor:${isSheet ? "grab" : "default"}">
-            ${isSheet ? html`<div style="display:flex;justify-content:center;padding:8px 0 10px"><span style="width:40px;height:5px;border-radius:3px;background:var(--lumen-border-strong)"></span></div>` : nothing}
-            <div style="display:flex;align-items:center;gap:12px;padding:10px 0 16px">
-              <div style="width:44px;height:44px;border-radius:15px;display:grid;place-items:center;font-size:24px;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "#3B2709" : "var(--lumen-text-2)"}">${icon(lightIcon(item, l.e))}</div>
-              <div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;letter-spacing:-0.02em">${title}</div><div style="font:500 11px var(--lumen-mono);color:var(--lumen-text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.entity}</div></div>
-              <button aria-label=${t("common.close")} @click=${this.closeSheet} style="width:44px;height:44px;border-radius:50%;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;cursor:pointer;display:grid;place-items:center">${icon("mdi:close")}</button>
+    const label = "font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3)";
+    const sel = swatchIndex(l.on ? l.hs : undefined);
+    return html`<div style="display:flex;flex-direction:column;gap:14px">
+      ${l.dim
+        ? html`<div role="slider" tabindex="0" aria-label=${t("card.light.brightness")} aria-valuemin="0" aria-valuemax="100" aria-valuenow=${l.on ? l.b : 0} aria-valuetext=${l.on ? `${l.b}%` : t("common.off_short")}
+            @keydown=${b.key} @pointerdown=${b.down} @pointermove=${b.move} @pointerup=${b.up} @pointercancel=${b.up} style="position:relative;height:52px;border-radius:16px;background:var(--lumen-surface-2);overflow:hidden;touch-action:none;user-select:none;cursor:ew-resize">
+            <div style="position:absolute;inset:0 auto 0 0;width:${l.on ? l.b : 0}%;background:linear-gradient(90deg, color-mix(in srgb, ${l.col} var(--lumen-fill-a), transparent), color-mix(in srgb, ${l.col} var(--lumen-fill-b), transparent));transition:${tr}"></div>
+            <span style="position:absolute;left:14px;top:0;bottom:0;display:flex;align-items:center;gap:8px;font:700 13px var(--lumen-font)">${icon("mdi:brightness-6", "font-size:18px")}${t("card.light.brightness")}</span>
+            <span style="position:absolute;right:14px;top:0;bottom:0;display:flex;align-items:center;font:750 15px var(--lumen-font);font-variant-numeric:tabular-nums">${l.on ? `${l.b}%` : t("common.off_short")}</span>
+          </div>`
+        : nothing}
+      ${l.ct
+        ? html`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:-6px"><span style=${label}>${t("card.light.white")}</span><span style="font:500 11px var(--lumen-mono);color:var(--lumen-text-3)">${t("card.light.range", { lo: l.kMin, hi: l.kMax })}</span></div>
+            <div role="slider" tabindex="0" aria-label=${t("card.light.ct")} aria-valuemin=${l.kMin} aria-valuemax=${l.kMax} aria-valuenow=${l.k} aria-valuetext="${l.k} K"
+              @keydown=${k.key} @pointerdown=${k.down} @pointermove=${k.move} @pointerup=${k.up} @pointercancel=${k.up} style="position:relative;height:44px;border-radius:16px;background:${whiteGradient(l.kMin, l.kMax)};touch-action:none;user-select:none;cursor:ew-resize">
+              <span style="position:absolute;top:6px;bottom:6px;left:${Math.max(0, Math.min(100, ((l.k - l.kMin) / (l.kMax - l.kMin)) * 100))}%;width:6px;margin-left:-3px;border-radius:3px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.25);opacity:${l.hs ? 0.5 : 1};transition:${tr}"></span>
             </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--lumen-text-2)">${t("card.light.brightness")}</span><span style="font-size:32px;font-weight:300;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">${l.on ? `${l.b}%` : t("common.off_short")}</span></div>
-            <div role="slider" tabindex="0" aria-label=${t("card.light.brightness")} aria-valuemin="0" aria-valuemax="100" aria-valuenow=${l.on ? l.b : 0} aria-valuetext=${l.on ? `${l.b}%` : t("common.off_short")}
-              @keydown=${b.key} @pointerdown=${b.down} @pointermove=${b.move} @pointerup=${b.up} @pointercancel=${b.up} style="position:relative;height:72px;border-radius:22px;background:var(--lumen-surface-2);overflow:hidden;touch-action:none;cursor:ew-resize">
-              <div style="position:absolute;inset:0 auto 0 0;width:${l.on ? l.b : 0}%;background:linear-gradient(90deg, color-mix(in srgb, ${l.col} 55%, transparent), ${l.col});transition:${tr}"></div>
-            </div>
-            ${l.ct
-              ? html`<div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:8px"><span style="font-size:13px;font-weight:700;color:var(--lumen-text-2)">${t("card.light.ct")}</span><span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">${l.k} K</span></div>
-                  <div role="slider" tabindex="0" aria-label=${t("card.light.ct")} aria-valuemin=${l.kMin} aria-valuemax=${l.kMax} aria-valuenow=${l.k} aria-valuetext="${l.k} K"
-                    @keydown=${k.key} @pointerdown=${k.down} @pointermove=${k.move} @pointerup=${k.up} @pointercancel=${k.up} style="position:relative;height:48px;border-radius:16px;background:linear-gradient(90deg, ${warm(l.kMin)}, ${warm((l.kMin + l.kMax) / 2)}, ${warm(l.kMax)});touch-action:none;cursor:ew-resize">
-                    <div style="position:absolute;top:4px;bottom:4px;left:${Math.max(0, Math.min(100, ((l.k - l.kMin) / (l.kMax - l.kMin)) * 100))}%;width:8px;margin-left:-4px;border-radius:4px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);transition:${tr}"></div>
-                  </div>`
-              : nothing}
-            ${l.color
-              ? html`<div style="font-size:13px;font-weight:700;color:var(--lumen-text-2);padding-top:8px">${t("card.light.color")}</div>
-                  <div role="group" aria-label=${t("card.light.color")} style="display:grid;grid-template-columns:repeat(8, 1fr);gap:6px">${HUE_PRESETS.map(
-                    ([hs, name]) => html`<button class="ct" aria-label=${t(name)} title=${t(name)} @click=${() => {
-                      this.haptic();
-                      this.setHue(item.entity, hs);
-                    }} style="aspect-ratio:1;min-height:32px;border-radius:50%;border:0;padding:0;cursor:pointer;background:hsl(${hs[0]} ${hs[1]}% 60%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)"></button>`,
-                  )}</div>`
-              : nothing}
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px">
-              <button class="press" @click=${() => this.toggleLight(item)} style="min-height:52px;border-radius:18px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer">${l.on ? t("card.light.turn_off") : t("card.light.turn_on")}</button>
-              <button class="press" @click=${() => this.moreInfo(item.entity)} style="min-height:52px;border-radius:18px;border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer">${t("card.light.more")}</button>
-            </div>
-          </div>
-        </div>
+            <div role="radiogroup" aria-label=${t("card.light.white")} style="display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:6px">${miredPresets(l.e).map((preset) => {
+              const on = l.on && !l.hs && Math.abs(l.k - preset) < 60;
+              return html`<button class="ct" role="radio" aria-checked=${on} aria-label="${preset} K" @click=${() => {
+                this.haptic();
+                this.setKelvin(item.entity, preset);
+              }} style="min-height:48px;padding:0;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:4px;font:650 11px var(--lumen-font);color:var(--lumen-text-2);font-variant-numeric:tabular-nums;cursor:pointer">
+                <span style="width:30px;height:30px;border-radius:50%;background:${whiteColor(preset)};box-shadow:${ring(on)};transition:box-shadow 250ms"></span>${preset} K</button>`;
+            })}</div>`
+        : nothing}
+      ${l.color
+        ? html`<div style="${label};margin-bottom:-6px">${t("card.light.color")}</div>
+            <div role="radiogroup" aria-label=${t("card.light.color")} style="display:grid;grid-template-columns:repeat(9, minmax(0,1fr));gap:4px;justify-items:center">${HUE_PRESETS.map(
+              ([hs, name, css], i) => html`<button class="ct" role="radio" aria-checked=${i === sel} aria-label=${t(name)} title=${t(name)} @click=${() => {
+                this.haptic();
+                this.setHue(item.entity, hs);
+              }} style="width:100%;height:36px;padding:0;border:0;background:transparent;display:grid;place-items:center;cursor:pointer"><span style="width:28px;height:28px;border-radius:50%;background:${css};box-shadow:${ring(i === sel)};transition:box-shadow 250ms"></span></button>`,
+            )}<button class="ct" aria-label=${t("card.light.wheel")} title=${t("card.light.wheel")} @click=${() => this.sheetView("wheel")} style="width:100%;height:36px;padding:0;border:0;background:transparent;display:grid;place-items:center;cursor:pointer"><span style="width:28px;height:28px;border-radius:50%;background:${RAINBOW};box-shadow:${ring(false)};display:grid;place-items:center;color:#fff;font-size:16px">${icon("mdi:plus")}</span></button></div>`
+        : nothing}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:4px">
+        <button class="press" @click=${() => this.toggleLight(item)} style="min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer">${l.on ? t("card.light.turn_off") : t("card.light.turn_on")}</button>
+        <button class="press" @click=${() => this.moreInfo(item.entity)} style="min-height:48px;border-radius:16px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer">${t("card.light.more")}</button>
       </div>
+    </div>`;
+  }
+
+  /** Colour wheel view of the sheet. */
+  private wheelView(item: LightItem, l: ReturnType<LightsController["light"]>) {
+    const w = this.wheel(item);
+    const hs = this.wheelHs ?? (l.on ? l.hs : undefined) ?? [0, 0];
+    const rad = (hs[0] * Math.PI) / 180;
+    const x = 50 + Math.cos(rad) * hs[1] * 0.5;
+    const y = 50 + Math.sin(rad) * hs[1] * 0.5;
+    const col = hsToRgb(hs);
+    const text = `hs ${hs[0]}°, ${hs[1]}%`;
+    return html`<div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+      <div role="slider" tabindex="0" aria-label=${t("card.light.wheel")} aria-valuetext="${t(hueName(hs))} · ${text}" aria-valuenow=${hs[0]} aria-valuemin="0" aria-valuemax="360"
+        @keydown=${w.key} @pointerdown=${w.down} @pointermove=${w.move} @pointerup=${w.up} @pointercancel=${w.up}
+        style="position:relative;width:220px;height:220px;border-radius:50%;background:${WHEEL};box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);touch-action:none;user-select:none;cursor:crosshair">
+        <span style="position:absolute;left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:26px;height:26px;margin:-13px;border-radius:50%;background:${col};box-shadow:0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35);pointer-events:none"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font:700 13px var(--lumen-font)"><span style="width:18px;height:18px;border-radius:50%;background:${col}"></span>${t(hueName(hs))}<span style="font:500 12px var(--lumen-mono);color:var(--lumen-text-3)">${text}</span></div>
     </div>`;
   }
 }
