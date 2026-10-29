@@ -91,7 +91,9 @@ export class LayerController implements ReactiveController {
     if (this.el) this.el.style.zIndex = dlg ? "7" : "";
     if (dlg) {
       if (!dlg.hasAttribute("tabindex")) dlg.setAttribute("tabindex", "-1");
-      requestAnimationFrame(() => (dlg.querySelector<HTMLElement>(FOCUSABLE) ?? dlg).focus({ preventScroll: true }));
+      // The dialog itself takes focus (no ring on the close button when opened by touch); Tab goes inside.
+      dlg.style.outline = "none";
+      requestAnimationFrame(() => dlg.focus({ preventScroll: true }));
     } else this.restoreFocus();
   }
 
