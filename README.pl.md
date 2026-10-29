@@ -12,7 +12,7 @@
 
 Co dostajesz:
 
-- **Karty na codzienne sprawy w domu:** światła, domownicy, alarm, zamki, drzwi, brama, temperatury, jakość powietrza, klimatyzacja i przypomnienia.
+- **Karty na codzienne sprawy w domu:** światła, domownicy, alarm, zamki, drzwi, brama, temperatury, jakość powietrza, klimatyzacja, przypomnienia, rolety, muzyka, wentylatory, listy wyboru, kalendarze, pasek nawigacji i pop-upy.
 - **Pogoda na dashboardzie.** Za kartami pada deszcz, sypie śnieg, snuje się mgła albo świeci słońce, a krople i śnieg osiadają też na samych kartach.
 - **Duże, wygodne przyciski.** Światło włączasz dotknięciem, ściemniasz przesuwając po nim palcem, a przytrzymanie otwiera jasność i kolor.
 - **Telefon i duży ekran.** Karta wciśnięta w małe miejsce sama zamienia się w mały kwadratowy przycisk.
@@ -89,11 +89,15 @@ Każde ustawienie ma swoje pole w tym oknie. Kodu nie trzeba pisać nigdy.
 Duży kafel jednego światła, który świeci kolorem żarówki.
 
 - **Dotknięcie** włącza i wyłącza.
-- **Przesunięcie palcem** w lewo lub w prawo ściemnia i rozjaśnia.
+- **Przesunięcie palcem** w lewo lub w prawo ustawia jasność.
 - **Kółko** po prawej zmienia biel na cieplejszą lub chłodniejszą.
-- **Przytrzymanie** otwiera pełne sterowanie: jasność, barwę bieli, a w kolorowych żarówkach także kolory.
+- **Dotknięcie ikony albo przytrzymanie** otwiera pełne sterowanie: jasność, cztery odcienie bieli rozłożone na zakresie Twojej żarówki, a w kolorowych żarówkach osiem kolorów i koło barw.
 
-<img src="docs/images/light-sheet.png" alt="Panel jasności i barwy" width="260">
+Grupa świateł pokazuje, ile z nich świeci („2 z 3 włączone”). W małym miejscu kafel staje się kwadratem, a poniżej 100 px zostaje sama ikona:
+
+<img src="docs/images/light-compact.png" alt="Kompaktowe kwadratowe kafle świateł i kafle z samą ikoną" width="480">
+
+<img src="docs/images/light-sheet.png" alt="Panel jasności, odcieni bieli i kolorów" width="260">
 
 ### Chipy
 
@@ -104,29 +108,37 @@ Rząd małych okrągłych przycisków. Są dwa rodzaje:
 - **Akcja:** jednym dotknięciem uruchamia scenę, skrypt albo przycisk, np. „Film” czy „Wieczór”.
 - **Światło:** mała pigułka światła, działa tak samo jak karta światła.
 
-Na telefonie akcje mogą zamienić się w **pływający przycisk** w rogu ekranu (zdjęcie przy [Klimatyzacji](#klimatyzacja)).
+Na telefonie akcje mogą zamienić się w **pływający przycisk** w rogu ekranu. Dotknięcie pokazuje listę scen; ostatnio użyta jest wyróżniona:
+
+<img src="docs/images/fab-list.png" alt="Pływający przycisk z listą scen" width="260">
 
 ### Osoba
 
 <img src="docs/images/person.png" alt="Dwie osoby: w domu i poza domem" width="480">
 
-Domownik: zdjęcie (albo pierwsza litera imienia), **zielona kropka, gdy jest w domu**, i od kiedy jest w domu albo poza nim. Gdy jest poza domem, karta pokazuje też gdzie, np. „Praca”.
+Domownik: zdjęcie (albo pierwsza litera imienia na kolorze dobranym do imienia), **zielona kropka, gdy jest w domu**, i od kiedy jest w domu albo poza nim. Gdy jest poza domem, karta pokazuje też gdzie, np. „Praca”. Jeśli obecność bierze się z czujnika, np. breloka Bluetooth, mówi o tym mały znacznik „BLE”.
 
 ### Alarm
 
 <img src="docs/images/alarm.png" alt="Alarm uzbrojony i rozbrojony" width="480">
 
-Stan alarmu w jednym spojrzeniu: zielony, gdy uzbrojony, czerwony, gdy rozbrojony. Kiedy alarm się włączy, pojawia się czerwony baner, a cały ekran pulsuje na czerwono:
+Stan alarmu w jednym spojrzeniu. Każdy tryb uzbrojenia jest zielony (ikona i podpis mówią: w domu, poza domem, noc, urlop), uzbrajanie ma żółty pasek odliczania z przyciskiem **Anuluj**, czas na wejście jest pomarańczowy i pulsuje, a wzbudzony alarm barwi kartę na czerwono.
+
+**Uzbrój** otwiera klawiaturę z trybami, które obsługuje Twój alarm, **Rozbrój** samą klawiaturę. Przy błędnym kodzie kropki się trzęsą. Alarmy bez kodu przełączają się od razu.
+
+<img src="docs/images/alarm-keypad.png" alt="Klawiatura z trybami W domu, Poza domem i Noc" width="260">
+
+Kiedy alarm się włączy, cały ekran dodatkowo pulsuje na czerwono:
 
 <img src="docs/images/alarm-triggered.png" alt="Wzbudzony alarm" width="480">
 
-Sam decydujesz, co robi dotknięcie, np. uruchamia Twój skrypt „uzbrój / rozbrój”.
+Wolisz własny skrypt? Ustaw go w `tap_action`, a karta i jej przyciski uruchomią skrypt zamiast klawiatury.
 
 ### Zamek
 
 <img src="docs/images/lock.png" alt="Zamek auta i zamek drzwi" width="480">
 
-Czy zamek jest zamknięty, z przyciskami **Zablokuj** i **Odblokuj** (oraz **Otwórz**, jeśli zamek umie otworzyć drzwi). Jeśli zamek wymaga PIN-u, najpierw pokaże się pole na kod:
+Czy zamek jest zamknięty, z przyciskami **Zablokuj** i **Odblokuj** (oraz **Otwórz**, jeśli zamek umie otworzyć drzwi). Pokazuje też, kiedy zamek pracuje, jest otwarty albo zablokowany mechanicznie (czerwona ramka). **Zablokuj** działa od razu; jeśli zamek wymaga PIN-u, **Odblokuj** i **Otwórz** najpierw o niego poproszą:
 
 <img src="docs/images/lock-code.png" alt="Wpisywanie kodu zamka" width="260">
 
@@ -134,13 +146,13 @@ Czy zamek jest zamknięty, z przyciskami **Zablokuj** i **Odblokuj** (oraz **Otw
 
 <img src="docs/images/entity.png" alt="Drzwi wejściowe zamknięte, tylne otwarte" width="480">
 
-Mały kafel dla czegokolwiek, co ma stan. Drzwi i okna robią się **czerwone, gdy są otwarte**. Na telefonie karta może być małym kwadratowym przyciskiem.
+Mały kafel dla czegokolwiek, co ma stan. Drzwi i okna robią się **czerwone, gdy są otwarte**, a włączone urządzenia dostają kolor akcentu. Po prawej mieszczą się do czterech małych dodatkowych przycisków (dwa na wąskiej karcie, jeden na kompaktowej). W małym miejscu karta staje się kwadratowym kaflem.
 
 ### Przycisk
 
 <img src="docs/images/button.png" alt="Przycisk bramy z dodatkowym przyciskiem światła" width="480">
 
-Jednym dotknięciem coś uruchamia: skrypt, scenę albo przycisk. Potrafi też **poczekać na odpowiedź** urządzenia, np. bramy, która zgłasza, czy naprawdę się otworzyła. Wtedy pokaże „Otwarto bramę” albo treść błędu.
+Jednym dotknięciem coś uruchamia: skrypt, scenę albo przycisk. Potrafi też **poczekać na odpowiedź** urządzenia (do 10 sekund), np. bramy, która zgłasza, czy naprawdę się otworzyła. Sukces świeci na zielono przez 6 sekund, a błąd dostaje czerwoną ramkę i zostaje do następnej próby.
 
 Mały okrągły przycisk po prawej to **dodatkowy przycisk** (`sub_buttons`). Możesz dodać takie do kilku kart, np. żeby zapalić światło obok.
 
@@ -148,13 +160,13 @@ Mały okrągły przycisk po prawej to **dodatkowy przycisk** (`sub_buttons`). Mo
 
 <img src="docs/images/sensor.png" alt="Dwa sensory temperatury z wykresami" width="480">
 
-Temperatura (albo dowolna inna liczba) z małym wykresem z ostatnich godzin w tle. Dotknięcie pokazuje pełną historię.
+Temperatura (albo dowolna inna liczba) z małym wykresem z ostatnich godzin w tle. Dotknięcie pokazuje pełną historię. Gdy czujnik dawno nic nie wysłał, karta dostaje przerywaną ramkę i mówi, jak stara jest wartość.
 
 ### Klimatyzacja
 
 <img src="docs/images/climate.png" alt="Karta klimatyzacji" width="480">
 
-Klimatyzator albo termostat: temperatura docelowa z przyciskami **−** i **+**, tryb (wył. / grzanie / chłodzenie) i nadmuch.
+Klimatyzator albo termostat: temperatura docelowa z przyciskami **−** i **+**, tryby i prędkości nadmuchu, które ma Twoje urządzenie, kierunek nawiewu, presety i znacznik, co urządzenie robi teraz (grzeje, chłodzi, czeka). Termostaty z zakresem pokazują dwa pola: „Grzej do” i „Chłodź od”.
 
 Na telefonie karta może zmienić się w **pływający okrągły przycisk** z temperaturą. Dotknięcie otwiera sterowanie, a przytrzymanie włącza lub wyłącza urządzenie:
 
@@ -195,6 +207,48 @@ Nagłówki dzielące dashboard na części, w trzech stylach: mały napis wersal
 Dodaj tę kartę **raz na każdy widok dashboardu**, a niebo za kartami będzie pokazywać prawdziwą pogodę: słońce, chmury, deszcz, śnieg, mgłę, wiatr i burzę, w dzień i w nocy. Krople i śnieg pojawiają się też na innych kartach Lumen.
 
 Sama karta nie zajmuje miejsca. Jeśli chcesz, może pokazać trzy przełączniki, żeby każde urządzenie decydowało za siebie: tło, pogoda na kartach i animacje. Przydaje się na starym tablecie.
+
+### Rolety i bramy garażowe
+
+<img src="docs/images/cover.png" alt="Roleta w połowie z przyciskami Otwórz, Stop, Zamknij i lamelami" width="480">
+
+Rolety, żaluzje, bramy garażowe. **Przesuń palcem** po karcie, żeby ustawić pozycję (roleta rusza, gdy puścisz), albo użyj przycisków **Otwórz**, **Stop** i **Zamknij**. Żaluzje z ruchomymi lamelami mają drugi pasek dla lameli.
+
+### Odtwarzacz
+
+<img src="docs/images/media.png" alt="Odtwarzacz z okładką, sterowaniem i głośnością oraz wersja kompaktowa" width="480">
+
+Głośniki i telewizory: okładka, tytuł i wykonawca, poprzedni / odtwarzaj-pauza / następny, postęp i głośność. W małym miejscu zamienia się w jeden wiersz z przyciskiem odtwarzania.
+
+### Lista wyboru
+
+<img src="docs/images/select.png" alt="Lista trybów odkurzacza" width="480">
+
+Dla pomocników `input_select` i `select`, np. tryb odkurzacza albo „w domu / poza domem / noc”. Dotknij, żeby rozwinąć listę i wybrać opcję.
+
+### Wentylator i liczba
+
+<img src="docs/images/fan-number.png" alt="Wentylator na 60 procent i dwa suwaki liczbowe" width="480">
+
+Wentylator, `input_number` albo `number` jako duży kafel z suwakiem: **przesuń palcem**, żeby ustawić prędkość albo wartość, **dotknij**, żeby włączyć lub wyłączyć wentylator. Ikona wentylatora kręci się tym szybciej, im wyższa prędkość.
+
+### Kalendarz
+
+<img src="docs/images/calendar.png" alt="Lista najbliższych wydarzeń" width="480">
+
+Najbliższe wydarzenia z kalendarza na kolejne dni, z wyraźnie oznaczonym dziś i jutro.
+
+### Pasek nawigacji
+
+<img src="docs/images/nav.png" alt="Dolny pasek nawigacji z czterema widokami" width="480">
+
+Pasek z przyciskami do widoków dashboardu (albo pop-upów). Może przykleić się do dołu ekranu jak pasek kart w aplikacji; pływające przyciski przesuwają się wtedy nad niego.
+
+### Pop-up
+
+<img src="docs/images/popup.png" alt="Pop-up z kartami salonu" width="260">
+
+Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` (np. z paska nawigacji albo przycisku). Zamykasz je ×, klawiszem Esc, dotknięciem obok albo przesunięciem w dół. Sama karta jest na dashboardzie niewidoczna, chyba że chcesz wiersz, który ją otwiera.
 
 ---
 
@@ -420,8 +474,14 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `weather_effects` | Krople, śnieg itp. na tej karcie. Wymaga karty tła pogodowego w tym samym widoku. | wł. |
 | `max_width` | Karta nie będzie szersza niż tyle pikseli i zostanie wyśrodkowana w swoim miejscu. Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
-| `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. | brak |
+| `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
+
+**Kolory.** `accent_color` i `glow_color` przyjmują nazwy kolorów z Home Assistanta (`blue`, `pink`…), hex albo rgb. Z tego jednego koloru karta buduje cały komplet: wypełnienie, poświatę, tło ikony i czytelny kolor tekstu, w trybie jasnym i ciemnym.
+
+**Kiedy coś jest nie tak.** Karta, której urządzenia nie ma albo której ustawienia są niepełne, pokazuje czytelną kartę błędu Lumen z powodem, zamiast się psuć. Póki Home Assistant się ładuje, karty pokazują delikatny zarys, a w wyszukiwarce kart przykładowe dane.
+
+<img src="docs/images/general-states.png" alt="Zamek niedostępny i nieznany, karty błędów i ładowanie" width="480">
 
 <a id="lumen-light-card"></a>
 
@@ -457,7 +517,8 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `presence_entity` | Czujnik, który najlepiej wie, czy ktoś jest w domu, np. brelok Bluetooth. Bez niego liczy się strefa „dom” osoby. | brak |
 | `name` | Wyświetlane imię | z osoby |
 | `picture` | Adres (URL) zdjęcia | zdjęcie osoby |
-| `avatar_color` | Kolor tła za literą, gdy nie ma zdjęcia | brzoskwiniowy |
+| `avatar_color` | Kolor tła za literą, gdy nie ma zdjęcia | dobrany do imienia |
+| `presence_badge` | Krótki znacznik obok imienia, gdy obecność pochodzi z `presence_entity`; puste = bez znacznika | „BLE” |
 | `show_name`, `show_status` | Pokazuj imię / linię „w domu od…” | wł. |
 
 <a id="lumen-alarm-card"></a>
@@ -472,8 +533,11 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `banner_text` | Tekst banera | „Alarm: *nazwa*!” |
 | `screen_ring` | Czerwona pulsująca ramka wokół całego ekranu, gdy alarm się włączy | wł. |
 | `show_state` | Pokazuj linię stanu | wł. |
+| `show_buttons` | Przycisk Uzbrój / Rozbrój na karcie | wł. |
+| `arm_modes` | Które tryby oferuje klawiatura (`armed_home`, `armed_away`, `armed_night`, `armed_vacation`, `armed_custom_bypass`) | wszystkie, które ma alarm |
+| `arming_time`, `pending_time` | Długość odliczania przy uzbrajaniu i czasu na wejście w sekundach, jeśli alarm ich nie podaje | z alarmu |
 
-Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy jedno dotknięcie przełącza alarm.
+Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy karta i jej przyciski uruchamiają skrypt zamiast klawiatury.
 
 <a id="lumen-lock-card"></a>
 
@@ -520,6 +584,7 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy jed
 | `hours` | Ile godzin obejmuje wykres | 12 |
 | `color` | Kolor wykresu | kolor akcentu |
 | `show_name`, `show_graph` | Pokazuj nazwę / wykres | wł. |
+| `stale_after` | Po ilu godzinach bez nowego odczytu karta pokaże wartość jako nieaktualną | 2 |
 
 <a id="lumen-climate-card"></a>
 
@@ -529,13 +594,16 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy jed
 |---|---|---|
 | `entity` | Klimatyzator albo termostat | – |
 | `name`, `icon` | Nazwa i ikona | z urządzenia |
-| `hvac_modes` | Które przyciski trybu pokazać | wył., grzanie, chłodzenie |
-| `fan_modes` | Które przyciski nadmuchu pokazać | auto, niski, średni, wysoki |
+| `hvac_modes` | Które przyciski trybu pokazać | wszystkie, które ma urządzenie |
+| `fan_modes` | Które przyciski nadmuchu pokazać (więcej niż 5 zamienia się w listę) | wszystkie, które ma urządzenie |
+| `preset_modes` | Które presety pokazać | wszystkie, które ma urządzenie |
 | `min_temp`, `max_temp` | Zawęża zakres temperatur (puste = zakres urządzenia) | zakres urządzenia |
 | `fab` | **Pokaż jako pływający przycisk** w rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie**: pływający przycisk na telefonie, zwykła karta na dużym ekranie | wł. |
 | `power_action` | Co robi przycisk zasilania, jeśli wolisz własny skrypt | włącza ostatni tryb / wyłącza |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Pokazuj temperaturę w pokoju / przyciski trybu / przyciski nadmuchu | wł. |
+| `show_swing`, `show_presets`, `show_action` | Pokazuj kierunek nawiewu / presety / znacznik „grzeje, chłodzi, czeka” | wł. |
+| `show_range` | Zakres temperatur urządzenia pod temperaturą docelową | wył. |
 
 Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakresem „od–do” też działają: dotknij dolnej albo górnej liczby, żeby wybrać, którą zmieniają **−** i **+**.
 
@@ -598,6 +666,98 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | `weather_entity` | Twoje urządzenie z prognozą pogody | – |
 | `sun_entity` | Czujnik słońca (dzień i noc) | `sun.sun` |
 | `show_controls` | Pokazuj trzy przełączniki: tło pogodowe, pogoda na kartach, animacje. Każde urządzenie pamięta swój wybór. | wył. |
+
+<a id="lumen-cover-card"></a>
+
+### Rolety (`lumen-cover-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | Roleta, żaluzja albo brama garażowa | – |
+| `name`, `icon` | Nazwa i ikona | z urządzenia |
+| `show_buttons` | Rząd Otwórz / Stop / Zamknij (Stop tylko, gdy roleta umie się zatrzymać) | wł. |
+| `show_tilt` | Pasek lameli (tylko żaluzje z ruchomymi lamelami) | wł. |
+| `show_state` | Pokazuj linię stanu | wł. |
+| `tap_action`, `hold_action` | Dotknięcie i przytrzymanie | otwórz/zamknij, szczegóły |
+
+<a id="lumen-media-card"></a>
+
+### Odtwarzacz (`lumen-media-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | Głośnik albo telewizor | – |
+| `name`, `icon` | Nazwa oraz ikona, gdy nie ma okładki | z urządzenia |
+| `show_progress` | Pasek postępu (dotknięcie przewija, jeśli odtwarzacz to umie) | wł. |
+| `show_volume` | Suwak głośności i wyciszenie | wł. |
+| `show_source` | Nazwa odtwarzacza albo ostatnia aplikacja, gdy jest wyłączony | wł. |
+
+<a id="lumen-select-card"></a>
+
+### Lista wyboru (`lumen-select-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | `input_select` albo `select` | – |
+| `name`, `icon` | Nazwa i ikona | z urządzenia |
+| `secondary_entity` | Inne urządzenie, którego stan widać w drugiej linii, np. status odkurzacza | brak |
+| `tap_action`, `hold_action` | Dotknięcie i przytrzymanie | rozwiń listę, szczegóły |
+
+<a id="lumen-fan-card"></a>
+
+### Wentylator (`lumen-fan-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | Wentylator | – |
+| `name`, `icon` | Nazwa i ikona | z urządzenia |
+| `icon_animation` | Kręcąca się ikona, szybsza przy wyższej prędkości | wł. |
+| `show_state` | Pokazuj linię prędkości | wł. |
+| `tap_action`, `hold_action` | Dotknięcie i przytrzymanie | wł./wył., szczegóły |
+
+<a id="lumen-number-card"></a>
+
+### Liczba (`lumen-number-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | `input_number` albo `number` | – |
+| `name`, `icon` | Nazwa i ikona | z urządzenia |
+| `show_state` | Pokazuj linię z wartością | wł. |
+
+<a id="lumen-calendar-card"></a>
+
+### Kalendarz (`lumen-calendar-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | Kalendarz | – |
+| `name`, `icon` | Nazwa i ikona | z kalendarza |
+| `days` | Na ile dni do przodu patrzeć | 7 |
+| `max_events` | Najwyżej tyle wydarzeń | 5 |
+| `show_title` | Nazwa kalendarza nad listą | wł. |
+
+<a id="lumen-nav-card"></a>
+
+### Pasek nawigacji (`lumen-nav-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `items` | Przyciski. Każdy ma `navigation_path` (widok, np. `pokoje`, ścieżkę, np. `/lovelace/pokoje`, albo pop-up, np. `#salon`), `name` i `icon`. | – |
+| `position` | **Na dole**: przyklejony do dołu ekranu (daj tę kartę na koniec). **W treści**: zwykła karta tam, gdzie ją wstawisz. | na dole |
+| `narrow_only` | Pokazuj tylko na telefonach i wąskich ekranach | wył. |
+
+<a id="lumen-popup-card"></a>
+
+### Pop-up (`lumen-popup-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `hash` | Link, który go otwiera, np. `#salon` | – |
+| `name`, `icon` | Nagłówek okna | brak |
+| `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML) | – |
+| `show_trigger` | Pokazuj na dashboardzie wiersz, który otwiera pop-up (inaczej karta jest niewidoczna) | wył. |
+| `auto_close` | Zamknij samo po tylu sekundach (0 = nigdy) | 0 |
 
 ---
 

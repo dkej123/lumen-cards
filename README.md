@@ -12,7 +12,7 @@
 
 What you get:
 
-- **Cards for the everyday things in a home:** lights, people, alarm, locks, doors, the gate, temperatures, air quality, the air conditioner and reminders.
+- **Cards for the everyday things in a home:** lights, people, alarm, locks, doors, the gate, temperatures, air quality, the air conditioner, reminders, blinds, music, fans, lists, calendars, a navigation bar and pop-ups.
 - **Weather on the dashboard.** Rain, snow, fog or sunshine move behind the cards, and raindrops or snow settle on the cards themselves.
 - **Big, comfortable controls.** Tap a light to switch it on, slide a finger across it to dim it, and hold it to pick the brightness and colour.
 - **Phone and big screen.** A card squeezed into a small space turns into a compact square button.
@@ -89,11 +89,15 @@ Every setting has a field in this window. You never have to write code.
 A large tile for one light. The tile glows in the colour of the bulb.
 
 - **Tap** to switch it on or off.
-- **Slide your finger** left or right across the tile to dim it.
+- **Slide your finger** left or right across the tile to set the brightness.
 - **Tap the small circle** to choose a warmer or cooler white.
-- **Hold** to open the full controls: brightness, white tone, and colours for colour bulbs.
+- **Tap the icon or hold** to open the full controls: brightness, four white tones spread over your bulb's range, eight colours and a colour wheel for colour bulbs.
 
-<img src="docs/images/light-sheet.png" alt="Brightness and colour temperature panel" width="260">
+A light group shows how many lights are on ("2 of 3 on"). In a small space the tile becomes a square, and below 100 px just the icon:
+
+<img src="docs/images/light-compact.png" alt="Compact square light tiles and icon-only tiles" width="480">
+
+<img src="docs/images/light-sheet.png" alt="Brightness, white tones and colours panel" width="260">
 
 ### Chips
 
@@ -104,29 +108,37 @@ A row of small round buttons. They come in two kinds:
 - **Action:** runs a scene, script or button with one tap, for example "Movie" or "Evening".
 - **Light:** a small pill for a light, which works like the light card.
 
-On a phone you can turn the action chips into a **floating button** in the corner of the screen (see [Climate](#climate) for a picture).
+On a phone you can turn the action chips into a **floating button** in the corner of the screen. Tap it for the list of scenes; the one you used last is highlighted:
+
+<img src="docs/images/fab-list.png" alt="Floating button with the list of scenes" width="260">
 
 ### Person
 
 <img src="docs/images/person.png" alt="Two people: one at home, one away" width="480">
 
-Shows a household member: their photo (or initial), a **green dot when they are home**, and how long they have been home or away. When they are away, it shows where, for example "Work".
+Shows a household member: their photo (or initial on a colour picked from their name), a **green dot when they are home**, and how long they have been home or away. When they are away, it shows where, for example "Work". If presence comes from a sensor such as a Bluetooth tag, a small "BLE" badge says so.
 
 ### Alarm
 
 <img src="docs/images/alarm.png" alt="Alarm armed and disarmed" width="480">
 
-Shows your alarm at a glance: green when it is armed, red when it is disarmed. When the alarm goes off, a red banner appears and the whole screen pulses red:
+Shows your alarm at a glance. Every armed mode is green (the icon and caption tell home, away, night or vacation apart), arming shows a yellow countdown bar with **Cancel**, the entry delay is orange and pulsing, and a triggered alarm turns the card red.
+
+**Arm** opens a keypad with the modes your alarm supports, **Disarm** just the keypad. A wrong code makes the dots shake. Alarms that need no code switch straight away.
+
+<img src="docs/images/alarm-keypad.png" alt="Keypad with Home, Away and Night" width="260">
+
+When the alarm goes off, the whole screen also pulses red:
 
 <img src="docs/images/alarm-triggered.png" alt="Alarm going off" width="480">
 
-You decide what a tap does, for example run your "arm / disarm" script.
+Prefer your own script? Set `tap_action` to it and the card and its buttons run the script instead of the keypad.
 
 ### Lock
 
 <img src="docs/images/lock.png" alt="A car lock and a door lock" width="480">
 
-Shows whether a lock is locked, with **Lock** and **Unlock** buttons (and **Open** if the lock can open the door). If the lock needs a PIN, a keypad appears first:
+Shows whether a lock is locked, with **Lock** and **Unlock** buttons (and **Open** if the lock can open the door). It also shows when the lock is working, open or jammed (red frame). **Lock** works straight away; if the lock needs a PIN, **Unlock** and **Open** ask for it first:
 
 <img src="docs/images/lock-code.png" alt="Entering the lock code" width="260">
 
@@ -134,13 +146,13 @@ Shows whether a lock is locked, with **Lock** and **Unlock** buttons (and **Open
 
 <img src="docs/images/entity.png" alt="Front door closed, back door open" width="480">
 
-A small tile for anything with a state. Doors and windows turn **red when open**. On a phone the card can become a small square button.
+A small tile for anything with a state. Doors and windows turn **red when open**, switched-on things get the accent colour. Up to four small extra buttons fit on the right (two on a narrow card, one on a compact one). In a small space the card becomes a square tile.
 
 ### Button
 
 <img src="docs/images/button.png" alt="Gate button with an extra light button" width="480">
 
-Runs something with one tap: a script, a scene, a button. It can also **wait for an answer** from the device, for example a gate that reports whether it really opened, and then shows "Gate opened" or the error.
+Runs something with one tap: a script, a scene, a button. It can also **wait for an answer** from the device (up to 10 seconds), for example a gate that reports whether it really opened. Success shows in green for 6 seconds; an error gets a red frame and stays until the next try.
 
 The small round button on the right is an **extra button** (`sub_buttons`). You can add them to several cards, for example to switch a nearby light.
 
@@ -148,13 +160,13 @@ The small round button on the right is an **extra button** (`sub_buttons`). You 
 
 <img src="docs/images/sensor.png" alt="Two temperature sensors with charts" width="480">
 
-A temperature (or any other number) with a small chart of the last hours behind it. Tap to see the full history.
+A temperature (or any other number) with a small chart of the last hours behind it. Tap to see the full history. When the sensor has not reported for a while, the card gets a dashed frame and says how old the value is.
 
 ### Climate
 
 <img src="docs/images/climate.png" alt="Air conditioner card" width="480">
 
-For an air conditioner or a thermostat: the target temperature with **−** and **+**, the mode (off / heat / cool) and the fan speed.
+For an air conditioner or a thermostat: the target temperature with **−** and **+**, the modes and fan speeds your device has, swing and presets, and a badge saying what it is doing right now (heating, cooling, idle). Thermostats with a range show two fields: "Heat to" and "Cool from".
 
 On a phone it can shrink to a **floating round button** that shows the temperature. Tap it to open the controls, or hold it to switch the device on or off:
 
@@ -195,6 +207,48 @@ Headings that split your dashboard into parts, in three styles: a small caps lab
 Add this card **once per dashboard view** and the sky behind your cards follows the real weather: sun, clouds, rain, snow, fog, wind and lightning, by day and by night. Raindrops and snow also appear on the other Lumen cards.
 
 The card itself takes no space. If you like, it can show three switches so each device decides for itself: background on/off, weather on cards on/off, animations on/off. That is handy for an old tablet.
+
+### Blinds and covers
+
+<img src="docs/images/cover.png" alt="Blind half open with Open, Stop and Close, and slats" width="480">
+
+Roller blinds, shutters, garage doors. **Slide your finger** across the card to set the position (it moves when you let go), or use **Open**, **Stop** and **Close**. Covers with tilting slats get a second bar for the slats.
+
+### Media player
+
+<img src="docs/images/media.png" alt="Music player with cover art, controls and volume, and a compact row" width="480">
+
+Speakers and TVs: cover art, title and artist, previous / play-pause / next, progress and volume. In a small space it becomes a single row with a play button.
+
+### List (select)
+
+<img src="docs/images/select.png" alt="Vacuum mode list" width="480">
+
+For `input_select` and `select` helpers, for example a vacuum mode or "home / away / night". Tap to open the list and pick an option.
+
+### Fan and number
+
+<img src="docs/images/fan-number.png" alt="Fan at 60 percent and two number sliders" width="480">
+
+A fan, an `input_number` or a `number` as a big slider tile: **slide** to set the speed or value, **tap** to switch the fan on or off. The fan icon spins faster at higher speeds.
+
+### Calendar
+
+<img src="docs/images/calendar.png" alt="List of upcoming events" width="480">
+
+The next events from a calendar for the coming days, with today and tomorrow clearly marked.
+
+### Navigation bar
+
+<img src="docs/images/nav.png" alt="Bottom navigation bar with four views" width="480">
+
+A bar with buttons for your dashboard's views (or pop-ups). It can stick to the bottom of the screen like an app's tab bar; floating buttons then move above it.
+
+### Pop-up
+
+<img src="docs/images/popup.png" alt="Pop-up with the living room's cards" width="260">
+
+A window with any cards you like, Lumen or not, opened by a link like `#living-room` (for example from the navigation bar or a button). Close it with ×, Esc, a tap outside, or by swiping down. The card itself is invisible on the dashboard unless you want a row that opens it.
 
 ---
 
@@ -420,8 +474,14 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `weather_effects` | Raindrops, snow and so on drawn on this card. Needs the weather background card in the same view. | on |
 | `max_width` | The card is never wider than this many pixels and stays centred in its place. Handy in a Panel view or very wide sections; in a normal sections view the columns already keep cards narrow. | full width |
 | `tap_action`, `hold_action`, `double_tap_action` | What happens when you tap, hold or double-tap: switch, show details, open another page, run a script… | depends on the card |
-| `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on entity, button, person and alarm cards. | none |
+| `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
 | `styles` | For tinkerers: your own CSS inside the card | none |
+
+**Colours.** `accent_color` and `glow_color` accept Home Assistant colour names (`blue`, `pink`…), hex or rgb. From that one colour the card builds the whole set: the fill, the glow, the icon background and a readable text colour, in light and dark mode.
+
+**When something is wrong.** A card whose device is missing, or whose settings are incomplete, shows a clear Lumen error card with the reason instead of breaking. While Home Assistant is still loading, cards show a soft placeholder, and in the card picker they show example data.
+
+<img src="docs/images/general-states.png" alt="Unavailable and unknown lock, error cards and loading" width="480">
 
 <a id="lumen-light-card"></a>
 
@@ -457,7 +517,8 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `presence_entity` | A sensor that knows best whether they are home, for example a Bluetooth tag. Without it the person's home zone is used. | none |
 | `name` | Name shown | from the person |
 | `picture` | Address (URL) of a photo | the person's photo |
-| `avatar_color` | Background colour behind the initial when there is no photo | peach |
+| `avatar_color` | Background colour behind the initial when there is no photo | picked from the name |
+| `presence_badge` | Short label next to the name while presence comes from `presence_entity`; empty hides it | "BLE" |
 | `show_name`, `show_status` | Show the name / the "home since…" line | on |
 
 <a id="lumen-alarm-card"></a>
@@ -472,8 +533,11 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `banner_text` | Text of the banner | "Alarm: *name*!" |
 | `screen_ring` | Red pulsing frame around the whole screen when the alarm goes off | on |
 | `show_state` | Show the state line | on |
+| `show_buttons` | Show the Arm / Disarm button on the card | on |
+| `arm_modes` | Which modes the keypad offers (`armed_home`, `armed_away`, `armed_night`, `armed_vacation`, `armed_custom_bypass`) | all your alarm supports |
+| `arming_time`, `pending_time` | Length of the arming countdown and the entry delay in seconds, if your alarm does not report them | from the alarm |
 
-Tip: set `tap_action` to your arm/disarm script so one tap switches the alarm.
+Tip: set `tap_action` to your arm/disarm script and the card and its buttons run it instead of the keypad.
 
 <a id="lumen-lock-card"></a>
 
@@ -522,6 +586,7 @@ Tip: set `tap_action` to your arm/disarm script so one tap switches the alarm.
 | `hours` | How many hours the chart covers | 12 |
 | `color` | Colour of the chart | accent colour |
 | `show_name`, `show_graph` | Show the name / the chart | on |
+| `stale_after` | After how many hours without a new reading the card shows it as outdated | 2 |
 
 <a id="lumen-climate-card"></a>
 
@@ -531,13 +596,16 @@ Tip: set `tap_action` to your arm/disarm script so one tap switches the alarm.
 |---|---|---|
 | `entity` | The air conditioner or thermostat | – |
 | `name`, `icon` | Name and icon | from the device |
-| `hvac_modes` | Which mode buttons to show | off, heat, cool |
-| `fan_modes` | Which fan buttons to show | auto, low, medium, high |
+| `hvac_modes` | Which mode buttons to show | all the device has |
+| `fan_modes` | Which fan buttons to show (more than 5 become a list) | all the device has |
+| `preset_modes` | Which presets to show | all the device has |
 | `min_temp`, `max_temp` | Narrow the temperature range (empty = the device's own range) | the device's |
 | `fab` | **Show as a floating button** in the corner | off |
 | `fab_narrow_only` | **Auto: only on narrow screens**: floating button on phones, normal card on big screens | on |
 | `power_action` | What the power button does, if you want your own script instead | turns on the last used mode / turns off |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Show the room temperature / the mode buttons / the fan buttons | on |
+| `show_swing`, `show_presets`, `show_action` | Show swing / presets / the "heating, cooling, idle" badge | on |
+| `show_range` | Show the device's temperature range under the target | off |
 
 Only the modes your device really has are shown. Thermostats with a "from–to" range work too: tap the lower or upper number to choose which one **−** and **+** change.
 
@@ -600,6 +668,98 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | `weather_entity` | Your weather forecast device | – |
 | `sun_entity` | Sun sensor for day and night | `sun.sun` |
 | `show_controls` | Show the three switches: weather background, weather on cards, animations. Each device remembers its own choice. | off |
+
+<a id="lumen-cover-card"></a>
+
+### Blinds and covers (`lumen-cover-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | The blind, shutter or garage door | – |
+| `name`, `icon` | Name and icon | from the device |
+| `show_buttons` | The Open / Stop / Close row (Stop only if the cover can stop) | on |
+| `show_tilt` | The slats bar (only for covers with tilting slats) | on |
+| `show_state` | Show the state line | on |
+| `tap_action`, `hold_action` | Tap and hold | open/close, details |
+
+<a id="lumen-media-card"></a>
+
+### Media player (`lumen-media-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | The speaker or TV | – |
+| `name`, `icon` | Name, and the icon shown when there is no cover art | from the device |
+| `show_progress` | The progress bar (tap it to jump, if the player can) | on |
+| `show_volume` | The volume slider and mute button | on |
+| `show_source` | The player's name, or the last app when it is off | on |
+
+<a id="lumen-select-card"></a>
+
+### List (`lumen-select-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | An `input_select` or `select` | – |
+| `name`, `icon` | Name and icon | from the device |
+| `secondary_entity` | Another device whose state is shown as the second line, for example the vacuum's status | none |
+| `tap_action`, `hold_action` | Tap and hold | open the list, details |
+
+<a id="lumen-fan-card"></a>
+
+### Fan (`lumen-fan-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | The fan | – |
+| `name`, `icon` | Name and icon | from the device |
+| `icon_animation` | Spinning icon, faster at higher speed | on |
+| `show_state` | Show the speed line | on |
+| `tap_action`, `hold_action` | Tap and hold | on/off, details |
+
+<a id="lumen-number-card"></a>
+
+### Number (`lumen-number-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | An `input_number` or `number` | – |
+| `name`, `icon` | Name and icon | from the device |
+| `show_state` | Show the value line | on |
+
+<a id="lumen-calendar-card"></a>
+
+### Calendar (`lumen-calendar-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | The calendar | – |
+| `name`, `icon` | Name and icon | from the calendar |
+| `days` | How many days ahead to look | 7 |
+| `max_events` | At most this many events | 5 |
+| `show_title` | Show the calendar's name above the list | on |
+
+<a id="lumen-nav-card"></a>
+
+### Navigation bar (`lumen-nav-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `items` | The buttons. Each has a `navigation_path` (a view such as `rooms`, a path such as `/lovelace/rooms`, or a pop-up such as `#living-room`), a `name` and an `icon`. | – |
+| `position` | **Bottom**: stuck to the bottom of the screen (put this card last). **Inline**: an ordinary card where you place it. | bottom |
+| `narrow_only` | Show it only on phones and narrow screens | off |
+
+<a id="lumen-popup-card"></a>
+
+### Pop-up (`lumen-popup-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `hash` | The link that opens it, for example `#living-room` | – |
+| `name`, `icon` | Heading of the window | none |
+| `cards` | The cards inside (any Home Assistant cards, edited as YAML) | – |
+| `show_trigger` | Show a row on the dashboard that opens the pop-up (otherwise the card is invisible) | off |
+| `auto_close` | Close by itself after this many seconds (0 = never) | 0 |
 
 ---
 

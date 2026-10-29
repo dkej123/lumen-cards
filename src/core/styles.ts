@@ -61,10 +61,14 @@ export const prevent = (e: Event) => e.preventDefault();
 export const stop = (e: Event) => e.stopPropagation();
 
 // HA's named colours (the `ui_color` selector), as in frontend src/common/color/compute-color.ts.
-const HA_COLORS = new Set([
-  "primary", "accent", "red", "pink", "purple", "deep-purple", "indigo", "blue", "light-blue", "cyan", "teal",
-  "green", "light-green", "lime", "yellow", "amber", "orange", "deep-orange", "brown", "light-grey", "grey",
-  "dark-grey", "blue-grey", "black", "white", "disabled",
+// Values are HA's defaults, used as the var() fallback outside HA (gallery, other dashboards' themes).
+const HA_COLORS = new Map([
+  ["primary", "#03a9f4"], ["accent", "#ff9800"], ["red", "#f44336"], ["pink", "#e91e63"], ["purple", "#926bc7"],
+  ["deep-purple", "#6e41ab"], ["indigo", "#3f51b5"], ["blue", "#2196f3"], ["light-blue", "#03a9f4"], ["cyan", "#00bcd4"],
+  ["teal", "#009688"], ["green", "#4caf50"], ["light-green", "#8bc34a"], ["lime", "#cddc39"], ["yellow", "#ffeb3b"],
+  ["amber", "#ffc107"], ["orange", "#ff9800"], ["deep-orange", "#ff6f22"], ["brown", "#795548"], ["light-grey", "#bdbdbd"],
+  ["grey", "#9e9e9e"], ["dark-grey", "#606060"], ["blue-grey", "#607d8b"], ["black", "#000000"], ["white", "#ffffff"],
+  ["disabled", "#bdbdbd"],
 ]);
 
 /**
@@ -75,7 +79,7 @@ export function cssColor(c: unknown): string | undefined {
   if (Array.isArray(c) && c.length === 3 && c.every((v) => Number.isFinite(Number(v)))) return `rgb(${c.map(Number).join(",")})`;
   if (typeof c !== "string" || !c) return undefined;
   if (c === "none" || c === "state") return undefined;
-  if (HA_COLORS.has(c)) return `var(--${c}-color)`;
+  if (HA_COLORS.has(c)) return `var(--${c}-color, ${HA_COLORS.get(c)})`;
   if (/^#[0-9a-f]{3,8}$/i.test(c) || /^(rgb|hsl|oklch)a?\([\d\s.,%/-]+\)$/i.test(c)) return c;
   return undefined;
 }

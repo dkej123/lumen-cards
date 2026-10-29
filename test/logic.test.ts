@@ -127,7 +127,7 @@ describe("reminder occurrences", () => {
 
 describe("colours from the config", () => {
   it("accepts HA names, hex and RGB; rejects CSS declarations", () => {
-    expect(cssColor("red")).toBe("var(--red-color)");
+    expect(cssColor("red")).toBe("var(--red-color, #f44336)");
     expect(cssColor("#ff8800")).toBe("#ff8800");
     expect(cssColor([1, 2, 3])).toBe("rgb(1,2,3)");
     expect(cssColor("red;position:fixed")).toBeUndefined();
