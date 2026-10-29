@@ -142,11 +142,13 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     return {
       c: col,
       stale,
-      title: stale ? `⚠️ ${t("card.air_quality.stale")}` : `${lvl.emoji} ${typeof own?.title === "string" ? own.title : t(lvl.title)}`,
+      // Outdated (catalog section 11): grey dot, dashed frame on surface-2, the age in the warning colour.
+      title: stale ? t("card.air_quality.stale") : `${lvl.emoji} ${typeof own?.title === "string" ? own.title : t(lvl.title)}`,
       sub: stale ? t("card.air_quality.last_reading_ago", { x: formatAgo(q.readAt, now) }) : typeof own?.hint === "string" ? own.hint : t(lvl.hint),
-      age: stale ? "" : formatAgo(q.readAt, now),
-      bg: stale ? "var(--lumen-surface)" : `color-mix(in srgb, ${col} 15%, var(--lumen-surface-solid))`,
-      border: stale ? "1.5px dashed var(--lumen-border-strong)" : `1px solid color-mix(in srgb, ${col} 38%, transparent)`,
+      age: q.readAt ? formatAgo(q.readAt, now) : "",
+      ageC: stale ? "var(--lumen-warning)" : "var(--lumen-text-3)",
+      bg: stale ? "var(--lumen-surface-2)" : `color-mix(in srgb, ${col} 15%, var(--lumen-surface-solid))`,
+      border: stale ? "1px dashed var(--lumen-border-strong)" : `1px solid color-mix(in srgb, ${col} 38%, transparent)`,
       level: l,
       pmShort: c.show_values === false ? "" : parts.join(" · "),
       pm25,
@@ -219,7 +221,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     if (this.compact) {
       return html`<div data-fx ${pressable(h)} aria-label="${t("card.air_quality.name")}: ${aq.title}" class="press"
         style="position:relative;flex:none;height:36px;padding:0 12px;box-sizing:border-box;border-radius:14px;background:${aq.bg};border:${aq.border};display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;touch-action:pan-y;transition:background-color 700ms, transform 220ms var(--lumen-ease-spring)">${WFX}
-        <span style="flex:none;width:8px;height:8px;border-radius:50%;background:${aq.c};transition:background-color 700ms"></span><span style="flex:0 0 auto;max-width:60%;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${aq.title}</span><span style="margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap">${aq.pmShort}${aq.age ? html` · <span style="color:var(--lumen-text-3)">${aq.age}</span>` : nothing}</span>
+        <span style="flex:none;width:8px;height:8px;border-radius:50%;background:${aq.c};transition:background-color 700ms"></span><span style="flex:0 0 auto;max-width:60%;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${aq.title}</span><span style="margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap">${aq.pmShort}${aq.stale && aq.age ? html` · <span style="color:${aq.ageC}">${aq.age}</span>` : nothing}</span>
         <div style="position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;display:${this._config.show_bar === false ? "none" : "block"}"><div style="position:absolute;left:0;right:0;bottom:0;display:flex;gap:2px;height:3px">${[0, 1, 2, 3, 4, 5].map(
           (i) => html`<span style="flex:1;background:${aq.stale ? "var(--lumen-unavailable)" : `var(--lumen-aq-${i})`};opacity:${aq.stale ? 0.25 : i === aq.level ? 1 : 0.28};transition:opacity 500ms"></span>`,
         )}</div></div>
@@ -229,8 +231,8 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
       style="padding:10px 12px;border-radius:18px;background:${aq.bg};border:${aq.border};display:flex;flex-direction:column;gap:7px;cursor:pointer;user-select:none;touch-action:pan-y;transition:background-color 700ms, transform 220ms var(--lumen-ease-spring)">${WFX}
       <div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="flex:none;width:8px;height:8px;border-radius:50%;background:${aq.c};transition:background-color 700ms"></span><span style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${aq.title}</span><span style="margin-left:auto;flex:none;font-size:11px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums">${aq.pmShort}</span></div>
       <div style="display:${this._config.show_bar === false ? "none" : "flex"};align-items:center;gap:10px"><div style="flex:1;display:flex;align-items:center;gap:3px;height:8px">${[0, 1, 2, 3, 4, 5].map(
-        (i) => html`<span style="flex:1;height:${!aq.stale && i === aq.level ? 8 : 4}px;border-radius:3px;background:${aq.stale ? "var(--lumen-unavailable)" : `var(--lumen-aq-${i})`};opacity:${aq.stale ? 0.25 : i === aq.level ? 1 : 0.28};transition:opacity 500ms, height 500ms var(--lumen-ease-spring)"></span>`,
-      )}</div><span style="flex:none;font-size:11px;font-weight:600;color:var(--lumen-text-3)">${aq.age}</span></div>
+        (i) => html`<span style="flex:1;height:${!aq.stale && i === aq.level ? 8 : 5}px;border-radius:3px;background:${aq.stale ? "var(--lumen-unavailable)" : `var(--lumen-aq-${i})`};opacity:${aq.stale ? 0.3 : i === aq.level ? 1 : 0.28};transition:opacity 500ms, height 500ms var(--lumen-ease-spring)"></span>`,
+      )}</div><span style="flex:none;font-size:11px;font-weight:600;color:${aq.ageC}">${aq.age}</span></div>
     </div>`;
   }
 

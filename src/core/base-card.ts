@@ -1,11 +1,12 @@
-import { LitElement, css, unsafeCSS, type CSSResultGroup, type PropertyValues } from "lit";
+import { LitElement, css, html, unsafeCSS, type CSSResultGroup, type PropertyValues } from "lit";
 import { tokens } from "../design/tokens";
 import type { HassEntity, HassLike } from "../hass/types";
 import { setLanguage, setLocale, t } from "./i18n";
 import { injectFonts } from "../design/fonts";
 import { weather } from "../weather/engine";
 import { haptic, openMoreInfo } from "./actions";
-import { cssColor, shared } from "./styles";
+import { colorVars, cssColor, shared } from "./styles";
+import { errorCard, sampleBadge, skeleton } from "./parts";
 import type { SubButton } from "./sub-buttons";
 
 /** Options every card has (editor section "Appearance"). */
@@ -59,6 +60,21 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
    */
   protected static compactBelow: number | "screen" = "screen";
 
+  /**
+   * Card width (px) below which the compact look becomes the icon tile (catalog C1), 0 = never.
+   * Only cards that have an icon tile set it.
+   */
+  protected static iconBelow = 0;
+
+  /** Height of the loading skeleton (section 15), 0 = none (background / text cards). */
+  protected static skeletonHeight = 58;
+
+  /**
+   * Sample entity for the card picker preview when the entity of the stub config does not exist
+   * (section 15, "Example" badge). Cards with an `entity` field override it.
+   */
+  protected static sample?: (entityId: string) => HassEntity | undefined;
+
   /** Set by HA in the card editor / picker preview. */
   preview = false;
   /** Set by HA while the dashboard is being edited. */
@@ -69,6 +85,17 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   private resize?: ResizeObserver;
   protected _hass?: HassLike;
   private timers: number[] = [];
+  /** Config the card cannot work with (section 15): shown as the Lumen error card instead of HA's. */
+  protected _configError?: { title: string; detail: string };
+  private _inPicker?: boolean;
+
+  constructor() {
+    super();
+    // General states of every card (section 15) before the card's own render: config error,
+    // loading skeleton, entity not found. Wrapping keeps every subclass' render() unchanged.
+    const own = this.render;
+    this.render = () => this.generalState() ?? this.withBadge(own.call(this));
+  }
 
   /** Entities whose state changes re-render the card. */
   protected abstract entityIds(): readonly (string | undefined)[];
@@ -81,10 +108,77 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     return {};
   }
 
+  /**
+   * Invalid configs no longer throw (HA would show its own red error card): the card keeps the
+   * config and renders the Lumen error card with the reason and the card type.
+   */
   setConfig(config: C): void {
-    if (!config || typeof config !== "object") throw new Error(t("error.invalid_config"));
-    this.validate(config);
+    if (!config || typeof config !== "object") {
+      this._configError = { title: t("error.invalid_config"), detail: "" };
+      this._config = { type: "" } as C;
+      this.requestUpdate();
+      return;
+    }
+    try {
+      this.validate(config);
+      this._configError = undefined;
+    } catch (err) {
+      this._configError = { title: (err as Error)?.message ?? String(err), detail: `type: ${config.type ?? ""}` };
+    }
     this._config = { ...this.defaults(), ...config } as C;
+    this.requestUpdate();
+  }
+
+  /** Main entity of the card (the `entity` option): "entity not found" when it does not exist. */
+  protected mainEntity(): string | undefined {
+    const id = (this._config as { entity?: unknown } | undefined)?.entity;
+    return typeof id === "string" && id ? id : undefined;
+  }
+
+  /** Section 15 states shared by every card, or undefined when the card renders itself. */
+  private generalState() {
+    if (this._configError) {
+      // Re-read the reason: setConfig may run before `hass` set the user's language.
+      let title = this._configError.title;
+      try {
+        if (this._config?.type) this.validate(this._config);
+      } catch (err) {
+        title = (err as Error)?.message ?? title;
+      }
+      return errorCard(title, this._configError.detail);
+    }
+    if (!this._config) return undefined;
+    const ctor = this.constructor as typeof LumenBaseCard;
+    if (!this._hass) return ctor.skeletonHeight ? skeleton(ctor.skeletonHeight) : undefined;
+    const id = this.mainEntity();
+    if (id && !this._hass.states[id] && !this.sampleFor(id)) return errorCard(t("error.entity_not_found"), id);
+    return undefined;
+  }
+
+  private withBadge(content: unknown) {
+    const id = this.mainEntity();
+    if (!id || !this._hass || this._hass.states[id] || !this.sampleFor(id)) return content;
+    return html`<div style="position:relative">${content}${sampleBadge()}</div>`;
+  }
+
+  /** Inside HA's card picker (hui-card-picker), where previews may show sample data. */
+  protected get inCardPicker(): boolean {
+    if (!this.preview) return false;
+    if (this._inPicker !== undefined) return this._inPicker;
+    let n: Node | null = this;
+    for (let i = 0; i < 16 && n; i++) {
+      const parent: Node | null = n.parentNode;
+      n = parent instanceof ShadowRoot ? parent.host : parent;
+      if (n instanceof Element && n.localName === "hui-card-picker") return (this._inPicker = true);
+    }
+    // Only cached once the card is in the page (the picker attaches previews after creating them).
+    if (this.isConnected) this._inPicker = false;
+    return false;
+  }
+
+  private sampleFor(id: string): HassEntity | undefined {
+    const make = (this.constructor as typeof LumenBaseCard).sample;
+    return make && this.inCardPicker ? make(id) : undefined;
   }
 
   set hass(hass: HassLike) {
@@ -117,7 +211,8 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   }
 
   protected entity(id?: string): HassEntity | undefined {
-    return id ? this._hass?.states[id] : undefined;
+    if (!id) return undefined;
+    return this._hass?.states[id] ?? (id === this.mainEntity() ? this.sampleFor(id) : undefined);
   }
 
   /** Wide or compact look (`layout`). */
@@ -126,6 +221,12 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     if (v !== "auto") return v === "compact";
     const rule = (this.constructor as typeof LumenBaseCard).compactBelow;
     return rule === "screen" ? !this._wide : this._width > 0 && this._width < rule;
+  }
+
+  /** Compact and narrower than `iconBelow`: only the icon (catalog C1). `layout: compact` never forces it. */
+  get iconOnly(): boolean {
+    const below = (this.constructor as typeof LumenBaseCard).iconBelow;
+    return (this._config?.layout ?? "auto") === "auto" && this.compact && this._width > 0 && this._width < below;
   }
 
   /** Viewport narrower than WIDE_PX: overlays become bottom sheets, FABs in auto mode show. */
@@ -173,6 +274,18 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
 
   private onWide = () => (this._wide = wideQuery?.matches ?? true);
 
+  /**
+   * `--lumen-accent`, `-soft`, `-ink`, `-shadow`, `-fill-a`, `-fill-b`, `-glow` (and the same for
+   * `--lumen-glow-*`) on the host from a user colour; removed when the option is cleared.
+   */
+  private userColor(name: string, c: string | undefined): void {
+    const vars = colorVars(name, c ?? "transparent");
+    for (const [k, v] of Object.entries(vars)) {
+      if (c) this.style.setProperty(k, v);
+      else this.style.removeProperty(k);
+    }
+  }
+
   /** setInterval that is cleared when the card leaves the DOM (re-added on reconnect by the caller). */
   protected every(ms: number, fn: () => void): void {
     this.timers.push(window.setInterval(fn, ms));
@@ -181,22 +294,20 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   protected willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed);
     this.setAttribute("data-lumen-theme", this.dark ? "dark" : "light");
-    const accent = cssColor(this._config?.accent_color);
-    if (accent) {
-      this.style.setProperty("--lumen-accent", accent);
-      this.style.setProperty("--lumen-accent-soft", `color-mix(in srgb, ${accent} 14%, transparent)`);
-    } else {
-      this.style.removeProperty("--lumen-accent");
-      this.style.removeProperty("--lumen-accent-soft");
-    }
+    // User colours (section 16): one colour C → fill, glow, icon background, shadow and ink.
+    this.userColor("accent", cssColor(this._config?.accent_color));
+    this.userColor("glow", cssColor(this._config?.glow_color));
     this.toggleAttribute("data-wfx-card", this.effects);
     const mw = Number(this._config?.max_width);
     if (mw > 0) {
       this.style.maxWidth = `${mw}px`;
       this.style.marginInline = "auto";
+      // A grid cell with auto margins shrinks to the content: keep the full (capped) width.
+      this.style.width = "100%";
     } else {
       this.style.removeProperty("max-width");
       this.style.removeProperty("margin-inline");
+      this.style.removeProperty("width");
     }
   }
 

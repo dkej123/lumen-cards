@@ -3,6 +3,8 @@
 //   &scene=phone | desktop   the example dashboards of the README
 //   &only=<id>               one card of the gallery (ids in GALLERY below), for screenshots
 //   &weather=rainy|snowy|…   weather state;  &alarm=triggered   alarm state;  &code   lock asks for a code
+//   &only=alarm-states | lock-states | climate-states | sensor-states | general-states   catalog 2026-10-29 states
+//   (demo code for the alarm and the locks: 1234)
 import type { HassEntities, HassEntity, HassLike } from "../src/hass/types";
 import { injectLocalFonts } from "./local-fonts";
 
@@ -58,6 +60,32 @@ let states: HassEntities = Object.fromEntries(
     e("sensor.pm10", "22", { friendly_name: "PM10", unit_of_measurement: "µg/m³", device_class: "pm10" }, 5),
     e("climate.bedroom_ac", "cool", { friendly_name: "Bedroom AC", hvac_modes: ["off", "heat", "cool"], fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 23.4, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }),
     e("input_boolean.bike_battery", "on", { friendly_name: "Bike battery low" }, 10),
+    // Catalog 2026-10-29 states (sections 05, 06, 09, 10, 11, 15).
+    e("alarm_control_panel.demo", "disarmed", { friendly_name: "Alarm · home", supported_features: 7, code_format: "number" }),
+    e("alarm_control_panel.home_mode", "armed_home", { friendly_name: "Alarm · home", supported_features: 7, code_format: "number" }),
+    e("alarm_control_panel.night", "armed_night", { friendly_name: "Alarm · home", supported_features: 7, code_format: "number" }),
+    e("alarm_control_panel.arming", "arming", { friendly_name: "Alarm · home", next_state: "armed_away", arming_time: 60, code_format: "number" }, 0.4),
+    e("alarm_control_panel.pending", "pending", { friendly_name: "Alarm · home", delay: 30, code_format: "number" }, 0.2),
+    e("alarm_control_panel.triggered", "triggered", { friendly_name: "Alarm · home", changed_by: "Living room, motion", code_format: "number" }),
+    e("alarm_control_panel.text", "armed_away", { friendly_name: "Alarm · text code", code_format: "text" }),
+    e("alarm_control_panel.offline", "unavailable", { friendly_name: "Alarm · home" }),
+    e("lock.demo", "locked", { friendly_name: "Front door", supported_features: 1, code_format: "^\\d+$" }),
+    e("lock.unlocked", "unlocked", { friendly_name: "Front door", supported_features: 1 }, 5),
+    e("lock.open", "open", { friendly_name: "Front door", supported_features: 1 }),
+    e("lock.jammed", "jammed", { friendly_name: "Front door", supported_features: 1 }),
+    e("lock.locking", "locking", { friendly_name: "Front door", supported_features: 1 }),
+    e("lock.unknown", "unknown", { friendly_name: "Front door", supported_features: 1 }),
+    e("lock.gate", "locked", { friendly_name: "Garden gate", supported_features: 0 }),
+    e("lock.offline", "unavailable", { friendly_name: "Front door", supported_features: 1 }),
+    e("climate.heat_cool", "heat_cool", { friendly_name: "Climate · living room", hvac_modes: ["heat_cool", "cool", "heat", "off"], hvac_action: "idle", target_temp_low: 20, target_temp_high: 25, current_temperature: 22.4, min_temp: 10, max_temp: 32, target_temp_step: 0.5 }),
+    e("climate.radiator", "heat", { friendly_name: "Radiator · bathroom", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 23, current_temperature: 21.2, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort" }),
+    e("climate.office_f", "cool", { friendly_name: "AC · office", temperature_unit: "°F", hvac_modes: ["auto", "cool", "heat", "dry", "fan_only"], hvac_action: "cooling", temperature: 72, current_temperature: 76, min_temp: 61, max_temp: 86, target_temp_step: 1, fan_modes: ["auto", "1", "2", "3", "turbo"], fan_mode: "auto", swing_modes: ["off", "vertical", "both"], swing_mode: "vertical", preset_modes: ["none", "eco", "sleep", "boost"], preset_mode: "none" }),
+    e("climate.off", "off", { friendly_name: "Climate · living room", hvac_modes: ["off", "cool", "heat", "dry"], fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 24.1, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }),
+    e("sensor.balcony", "8.1", { friendly_name: "Balcony", unit_of_measurement: "°C", device_class: "temperature" }, 180),
+    e("sensor.cellar", "unavailable", { friendly_name: "Cellar", unit_of_measurement: "°C", device_class: "temperature" }),
+    e("sensor.aqi", "72", { friendly_name: "AQI", device_class: "aqi" }, 10),
+    e("sensor.pm25_old", "14", { friendly_name: "PM2.5", unit_of_measurement: "µg/m³", device_class: "pm25" }, 180),
+    e("sensor.pm10_old", "23", { friendly_name: "PM10", unit_of_measurement: "µg/m³", device_class: "pm10" }, 180),
     e("sensor.bike_battery", "18", { unit_of_measurement: "%" }),
   ].map((x) => [x.entity_id, x]),
 );
@@ -98,7 +126,21 @@ const make = (): HassLike => ({
     const id = String((target as { entity_id?: string })?.entity_id ?? "");
     if (domain === "light") set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin } : {});
     if (domain === "homeassistant" && service.startsWith("turn_")) set(id, service === "turn_on" ? "on" : "off");
-    if (domain === "lock") set(id, service === "lock" ? "locked" : "unlocked");
+    if (domain === "lock") {
+      if (states[id]?.attributes.code_format && service !== "lock" && data.code !== "1234") throw new Error("Invalid code");
+      set(id, service === "lock" ? "locked" : service === "open" ? "open" : "unlocked");
+    }
+    if (domain === "alarm_control_panel") {
+      const needs = !!states[id]?.attributes.code_format;
+      if (needs && data.code !== "1234") throw new Error("Invalid alarm code");
+      if (service === "alarm_disarm") set(id, "disarmed");
+      else {
+        const mode = service.replace("alarm_arm_", "armed_");
+        set(id, "arming", { next_state: mode, arming_time: 10 });
+        setTimeout(() => set(id, mode), 10_000);
+      }
+    }
+    if (domain === "climate" && service !== "set_hvac_mode" && service !== "set_temperature") set(id, states[id].state, data);
     if (domain === "climate" && service === "set_hvac_mode") set(id, String(data.hvac_mode));
     if (domain === "climate" && service === "set_temperature") set(id, states[id].state, data);
     return undefined;
@@ -147,6 +189,13 @@ const GALLERY: Record<string, Spec[]> = {
   "reminder-dialog": [["reminder", reminder]],
   "title": [["title", { title: "Security" }], ["title", { title: "Living room", heading_style: "section", badges: ["sensor.living_temp"] }], ["title", { title: "Kitchen", heading_style: "room", badges: ["sensor.living_temp"], entity: "light.kitchen" }]],
   "greeting": [["greeting", {}]],
+  "alarm-states": ["demo", "home_mode", "night", "arming", "pending", "triggered", "text", "offline"].map((id): Spec => ["alarm", { entity: `alarm_control_panel.${id}`, screen_ring: false, banner: false, max_width: 340 }])
+    .concat([["alarm", { entity: "alarm_control_panel.home_mode", layout: "compact" }, 4], ["alarm", { entity: "alarm_control_panel.pending", layout: "compact", banner: false }, 4], ["alarm", { entity: "alarm_control_panel.triggered", layout: "compact", banner: false, screen_ring: false }, 4]]),
+  "lock-states": ["demo", "unlocked", "open", "jammed", "locking", "unknown", "gate", "offline"].map((id): Spec => ["lock", { entity: `lock.${id}`, max_width: 340 }])
+    .concat([["lock", { entity: "lock.demo", layout: "compact" }, 4], ["lock", { entity: "lock.open", layout: "compact" }, 4]]),
+  "climate-states": [["climate", { entity: "climate.bedroom_ac", max_width: 340 }], ["climate", { entity: "climate.heat_cool", max_width: 340 }], ["climate", { entity: "climate.off", max_width: 340 }], ["climate", { entity: "climate.radiator", max_width: 340, show_range: true }], ["climate", { entity: "climate.office_f", max_width: 340, show_range: true }], ["climate", { entity: "climate.bedroom_ac", layout: "compact", max_width: 320 }], ["climate", { entity: "climate.off", layout: "compact", max_width: 320 }]],
+  "sensor-states": [["sensor", { entity: "sensor.living_temp" }, 6], ["sensor", { entity: "sensor.balcony" }, 6], ["sensor", { entity: "sensor.cellar" }, 6], ["sensor", { entity: "sensor.living_temp", layout: "compact" }, 6], ["air-quality", { pm25: "sensor.pm25", pm10: "sensor.pm10" }], ["air-quality", { aqi_entity: "sensor.aqi" }], ["air-quality", { pm25: "sensor.pm25_old", pm10: "sensor.pm10_old" }], ["air-quality", { pm25: "sensor.pm25", pm10: "sensor.pm10", layout: "compact" }]],
+  "general-states": [["lock", { entity: "lock.offline", max_width: 340 }], ["lock", { entity: "lock.unknown", max_width: 340 }], ["light", { entity: "light.salon_sufit" }], ["light", {}], ["sensor", { entity: "sensor.living_temp", accent_color: "pink" }, 6], ["sensor", { entity: "sensor.outside_temp", color: "green" }, 6]],
   "weather": [["weather-background", { weather_entity: "weather.home", show_controls: true }], ["sensor", { entity: "sensor.outside_temp", color: "light-blue" }, 6], ["entity", { entity: "binary_sensor.front_door" }, 6], ["light", { entity: "light.sofa", icon: "mdi:sofa" }, 6], ["light", { entity: "light.ceiling", icon: "mdi:ceiling-light" }, 6]],
 };
 

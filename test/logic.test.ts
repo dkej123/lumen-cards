@@ -29,8 +29,8 @@ describe("alarmStatus", () => {
     expect(s.label).toMatch(/^Armed/);
     expect(alarmBarIcon(ent("alarm_control_panel.a", state))).toBe("mdi:home-lock");
   });
-  it("disarmed is danger, transitions are busy, triggered alerts", () => {
-    expect(alarmStatus(ent("a.a", "disarmed")).tone).toBe("danger");
+  it("disarmed is neutral, transitions are busy, triggered alerts", () => {
+    expect(alarmStatus(ent("a.a", "disarmed")).tone).toBe("text-3");
     expect(alarmStatus(ent("a.a", "arming")).busy).toBe(true);
     expect(alarmStatus(ent("a.a", "disarming")).busy).toBe(true);
     expect(alarmStatus(ent("a.a", "pending")).busy).toBe(true);
@@ -71,7 +71,8 @@ describe("air quality", () => {
   });
   it("works with only one sensor or only AQI", () => {
     expect(airQuality(undefined, r(45), 1, now).level).toBe(2);
-    expect(airQuality(undefined, undefined, 1, now, r(120)).level).toBe(2);
+    expect(airQuality(undefined, undefined, 1, now, r(72)).level).toBe(2);
+    expect(airQuality(undefined, undefined, 1, now, r(120)).level).toBe(3);
     expect(airQuality(undefined, undefined, 1, now).level).toBeNull();
   });
   it("stale after stale_hours", () => {

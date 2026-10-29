@@ -2,6 +2,12 @@
 // minus the prototype frame.
 
 export const shared = `
+/* Tone tokens of the catalog (section 16) and the accent's ink; a user colour overrides them on the host. */
+:host { --lumen-tone-k: 78%; --lumen-tone-mix: #000; --lumen-on-tone: #FFFFFF; --lumen-accent-ink: var(--lumen-accent); }
+:host([data-lumen-theme=dark]) { --lumen-tone-k: 82%; --lumen-tone-mix: #fff; --lumen-on-tone: #14110E; }
+@keyframes lumenPendingPulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lumen-orange) 50%, transparent), var(--lumen-shadow-1); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--lumen-orange) 0%, transparent), var(--lumen-shadow-1); } }
+@keyframes lumenNudge { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+@keyframes lumenIndeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 :host {
   display: block;
   font-family: var(--lumen-font);
@@ -46,7 +52,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 export const glass = "backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4)";
 
-const TONES = new Set(["ok", "warning", "danger", "info", "unavailable", "accent", "orange"]);
+const TONES = new Set(["ok", "warning", "danger", "info", "unavailable", "accent", "orange", "text-3"]);
 
 /** Semantic colour token; unknown names fall back to the accent (never raw config into CSS). */
 export const tone = (t: string) => `var(--lumen-${TONES.has(t) ? t : "accent"})`;
@@ -75,3 +81,40 @@ export function cssColor(c: unknown): string | undefined {
 }
 
 export const colorOr = (c: unknown, fallback: string): string => cssColor(c) ?? fallback;
+
+/** Icon / text colour of a user colour C (section 16): 78 % C with black (light), 82 % with white (dark). */
+export const ink = (c: string) => `color-mix(in oklch, ${c} var(--lumen-tone-k), var(--lumen-tone-mix))`;
+
+/**
+ * The whole set derived from one user colour C (catalog section 16), the same in both themes:
+ * fill C at --lumen-fill-a → --lumen-fill-b, glow C 55 %, icon background C 16 %,
+ * shadow 0 10px 30px -14px C 70 %, icon / text ink(C).
+ */
+export function colorSet(c: string) {
+  const fillA = `color-mix(in srgb, ${c} var(--lumen-fill-a), transparent)`;
+  const fillB = `color-mix(in srgb, ${c} var(--lumen-fill-b), transparent)`;
+  return {
+    fillA,
+    fillB,
+    fill: `linear-gradient(90deg, ${fillA}, ${fillB})`,
+    glow: `radial-gradient(circle, color-mix(in srgb, ${c} 55%, transparent) 0%, transparent 62%)`,
+    iconBg: `color-mix(in srgb, ${c} 16%, transparent)`,
+    shadow: `0 10px 30px -14px color-mix(in srgb, ${c} 70%, transparent)`,
+    ink: ink(c),
+    border: `color-mix(in srgb, ${c} 40%, var(--lumen-border))`,
+  };
+}
+
+/** Host custom properties of a user colour: `--lumen-<name>` plus -soft, -ink, -shadow, -fill-a/-b, -glow. */
+export function colorVars(name: string, c: string): Record<string, string> {
+  const s = colorSet(c);
+  return {
+    [`--lumen-${name}`]: c,
+    [`--lumen-${name}-soft`]: s.iconBg,
+    [`--lumen-${name}-ink`]: s.ink,
+    [`--lumen-${name}-shadow`]: s.shadow,
+    [`--lumen-${name}-fill-a`]: s.fillA,
+    [`--lumen-${name}-fill-b`]: s.fillB,
+    [`--lumen-${name}-glow`]: s.glow,
+  };
+}

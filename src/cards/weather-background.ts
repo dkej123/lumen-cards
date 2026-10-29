@@ -30,6 +30,8 @@ export function validateWeatherBackground(c: Partial<WeatherBackgroundConfig>): 
  * every Lumen card in the view. One per view; takes no space unless it shows its switches.
  */
 export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundConfig> {
+  /** A full-screen layer, not a card in the grid: no loading skeleton. */
+  protected static skeletonHeight = 0;
   static properties = { ...LumenBaseCard.properties, _settings: { state: true } };
   private _settings: EffectSettings = readSettings();
   private reducedMotion = typeof matchMedia === "undefined" ? undefined : matchMedia("(prefers-reduced-motion: reduce)");

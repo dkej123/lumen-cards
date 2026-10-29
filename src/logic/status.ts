@@ -2,51 +2,82 @@ import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { t } from "../core/i18n";
 
-export type Tone = "ok" | "warning" | "danger" | "info" | "orange" | "unavailable";
+export type Tone = "ok" | "warning" | "danger" | "info" | "orange" | "unavailable" | "text-3";
 
 export interface Status {
   icon: string;
   tone: Tone;
   label: string;
-  /** Strong alert (alarm triggered): pulse, shake, banner, screen ring. */
+  /** Strong alert (alarm triggered): red row, pulse, banner, screen ring. */
   alert?: boolean;
   /** Operation in progress – lumenBreath on the icon. */
   busy?: boolean;
 }
 
-const ARMED = new Set(["armed_away", "armed_home", "armed_night", "armed_vacation", "armed_custom_bypass"]);
-const ARMED_ICON: Record<string, string> = {
+/** Arm modes in the catalog's order, with their AlarmControlPanelEntityFeature bit. */
+export const ARM_MODES: readonly [string, number][] = [
+  ["armed_home", 1],
+  ["armed_away", 2],
+  ["armed_night", 4],
+  ["armed_vacation", 32],
+  ["armed_custom_bypass", 16],
+];
+const ARMED = new Set(ARM_MODES.map(([m]) => m));
+export const ARMED_ICON: Record<string, string> = {
   armed_away: "mdi:shield-lock",
   armed_home: "mdi:shield-home",
   armed_night: "mdi:shield-moon",
   armed_vacation: "mdi:shield-airplane",
   armed_custom_bypass: "mdi:security",
 };
-const ARMED_LABEL: Record<string, string> = {
-  armed_away: "card.alarm.armed_away",
-  armed_home: "card.alarm.armed_home",
-  armed_night: "card.alarm.armed_night",
-  armed_vacation: "card.alarm.armed_vacation",
-  armed_custom_bypass: "card.alarm.armed_custom_bypass",
-};
 
-/** Every `alarm_control_panel` state; `icon` replaces the shield glyphs (except while triggered). */
+export const isArmed = (state?: string) => !!state && ARMED.has(state);
+
+/** Short name of an arm mode ("At home"). */
+export const modeLabel = (mode: string) => t(`card.alarm.mode.${ARMED.has(mode) ? mode : "armed_away"}`);
+
+/**
+ * Arm modes the entity supports (supported_features), optionally narrowed by the card's
+ * `arm_modes`. Without supported_features: home, away, night (the catalog's set).
+ */
+export function armModes(entity: HassEntity | undefined, wanted?: string[]): string[] {
+  const f = entity?.attributes.supported_features;
+  const all = typeof f === "number" ? ARM_MODES.filter(([, bit]) => (f & bit) !== 0).map(([m]) => m) : ["armed_home", "armed_away", "armed_night"];
+  const out = wanted?.length ? all.filter((m) => wanted.includes(m)) : all;
+  return out.length ? out : all;
+}
+
+/** Target mode while arming / in the entry countdown (next_state of the manual alarm, arm_mode of Alarmo). */
+export function targetMode(entity: HassEntity | undefined): string | undefined {
+  const a = entity?.attributes ?? {};
+  return [a.next_state, a.arm_mode, a.previous_state].find((m): m is string => typeof m === "string" && ARMED.has(m));
+}
+
+/**
+ * Every `alarm_control_panel` state (catalog section 05): every armed mode is green and told
+ * apart by icon and caption, arming yellow, pending orange, triggered red, disarmed neutral.
+ * `icon` replaces the shield glyphs (except while triggered).
+ */
 export function alarmStatus(entity: HassEntity | undefined, customIcon?: string): Status {
   const ic = (fallback: string) => customIcon ?? fallback;
-  if (isUnavailable(entity)) return { icon: ic("mdi:shield-off"), tone: "unavailable", label: t("common.no_data") };
-  const state = entity!.state;
-  if (ARMED.has(state)) return { icon: ic(ARMED_ICON[state]), tone: "ok", label: t(ARMED_LABEL[state]) };
+  if (!entity || entity.state === "unavailable") return { icon: ic("mdi:shield-off-outline"), tone: "unavailable", label: t("common.unavailable") };
+  const state = entity.state;
+  if (ARMED.has(state)) return { icon: ic(ARMED_ICON[state]), tone: "ok", label: t(`card.alarm.${state}`) };
   switch (state) {
     case "pending":
-      return { icon: ic("mdi:shield-alert"), tone: "warning", label: t("card.alarm.pending"), busy: true };
-    case "arming":
-      return { icon: ic("mdi:shield-lock"), tone: "warning", label: t("card.alarm.arming"), busy: true };
+      return { icon: ic("mdi:shield-alert-outline"), tone: "orange", label: t(entity.attributes.code_format ? "card.alarm.enter_code" : "card.alarm.pending"), busy: true };
+    case "arming": {
+      const m = targetMode(entity);
+      return { icon: ic("mdi:shield-lock-outline"), tone: "warning", label: m ? t("card.alarm.arming_mode", { mode: modeLabel(m).toLocaleLowerCase() }) : t("card.alarm.arming"), busy: true };
+    }
     case "disarming":
-      return { icon: ic("mdi:shield-off"), tone: "warning", label: t("card.alarm.disarming"), busy: true };
+      return { icon: ic("mdi:shield-off-outline"), tone: "warning", label: t("card.alarm.disarming"), busy: true };
     case "triggered":
-      return { icon: "mdi:alarm-light", tone: "warning", label: t("card.alarm.triggered"), alert: true };
+      return { icon: "mdi:shield-alert", tone: "danger", label: t("card.alarm.triggered"), alert: true };
     case "disarmed":
-      return { icon: ic("mdi:shield-off"), tone: "danger", label: t("card.alarm.disarmed") };
+      return { icon: ic("mdi:shield-off-outline"), tone: "text-3", label: t("card.alarm.disarmed") };
+    case "unknown":
+      return { icon: ic("mdi:shield-outline"), tone: "text-3", label: t("common.no_data") };
     default:
       return { icon: ic("mdi:shield"), tone: "info", label: state };
   }

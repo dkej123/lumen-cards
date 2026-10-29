@@ -27,6 +27,22 @@ interface CardSurface {
   h?: number;
   drawnSig?: string;
   lit?: boolean;
+  /** Card without glass (no backdrop blur, opaque surface): effects only on the edge. */
+  edge?: boolean;
+}
+
+/**
+ * A card without glass (catalog section 13): no backdrop blur, or an opaque background
+ * (surface-solid). Weather on it stays on the edge: drops, frost and the snow cap.
+ */
+export function isSolidCard(cs: { backdropFilter?: string; webkitBackdropFilter?: string; backgroundColor?: string; backgroundImage?: string }): boolean {
+  const blur = cs.backdropFilter || cs.webkitBackdropFilter || "none";
+  if (blur === "none") return true;
+  const bg = cs.backgroundColor ?? "";
+  const m = /rgba?\(([^)]+)\)/.exec(bg);
+  if (!m || (cs.backgroundImage && cs.backgroundImage !== "none")) return false;
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean);
+  return parts.length < 4 || Number(parts[3]) >= 1;
 }
 
 interface Layers {
@@ -362,9 +378,13 @@ export class WeatherEngine {
       }
       const ctx = canvas.getContext("2d")!;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      surface.radius ??= parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0;
+      if (surface.radius === undefined) {
+        const cs = getComputedStyle(card);
+        surface.radius = parseFloat(cs.borderTopLeftRadius) || 0;
+        surface.edge = isSolidCard(cs as unknown as Parameters<typeof isSolidCard>[0]);
+      }
       const r = Math.min(surface.radius, ch / 2, cw / 2);
-      drawSurf(ctx, w, h, [{ el: card, x: BLEED.x, y: BLEED.top, w: cw, h: ch, r }], this.surf.st, t, s.cond, s.phase, s.dark, animated ? dt : 0, s.level);
+      drawSurf(ctx, w, h, [{ el: card, x: BLEED.x, y: BLEED.top, w: cw, h: ch, r, edge: surface.edge }], this.surf.st, t, s.cond, s.phase, s.dark, animated ? dt : 0, s.level);
     }
     return animated;
   }

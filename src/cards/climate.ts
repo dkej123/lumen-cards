@@ -10,7 +10,6 @@ import { glass, prevent } from "../core/styles";
 import { toast } from "../core/toast";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
-import { temp } from "../logic/format";
 import { formatNumber } from "../logic/time";
 
 export interface ClimateConfig extends BaseConfig {
@@ -30,25 +29,82 @@ export interface ClimateConfig extends BaseConfig {
   hvac_modes?: string[];
   /** Fan buttons (those the entity supports). Default: auto, low, medium, high. */
   fan_modes?: string[];
+  /** Preset buttons (preset_modes). Default: all the entity has. */
+  preset_modes?: string[];
   show_current_temp?: boolean;
   show_modes?: boolean;
   show_fan_modes?: boolean;
+  /** Swing direction segment (swing_modes). */
+  show_swing?: boolean;
+  /** Preset pills (preset_modes). */
+  show_presets?: boolean;
+  /** hvac_action badge under the name (heating / cooling / idle). */
+  show_action?: boolean;
+  /** "range 16–30 °C · step 0.5" line under the controls. */
+  show_range?: boolean;
 }
 
 const PENDING_MS = 10_000;
 const AC_LAST_KEY = "lumen-ac-last:";
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
+/** Modes in the catalog's order. */
 const MODES: Record<string, [string, string]> = {
-  off: ["common.off_short", "mdi:power"],
-  heat: ["card.climate.mode.heat", "mdi:fire"],
-  cool: ["card.climate.mode.cool", "mdi:snowflake"],
-  heat_cool: ["card.climate.mode.heat_cool", "mdi:sun-snowflake-variant"],
   auto: ["common.auto", "mdi:thermostat-auto"],
+  heat_cool: ["card.climate.mode.heat_cool", "mdi:thermostat-auto"],
+  cool: ["card.climate.mode.cool", "mdi:snowflake"],
+  heat: ["card.climate.mode.heat", "mdi:fire"],
   dry: ["card.climate.mode.dry", "mdi:water-percent"],
   fan_only: ["card.climate.mode.fan_only", "mdi:fan"],
+  off: ["common.off_short", "mdi:power"],
+};
+/** Colour of a mode (icon, badge): heat orange, cool blue, auto green, dry / fan accent. */
+const MODE_COLOR: Record<string, string> = {
+  heat: "var(--lumen-orange)",
+  cool: "var(--lumen-info)",
+  auto: "var(--lumen-ok)",
+  heat_cool: "var(--lumen-ok)",
+  dry: "var(--lumen-accent)",
+  fan_only: "var(--lumen-accent)",
+  off: "var(--lumen-text-3)",
+};
+/** hvac_action badge: label key, colour, pulsing dot. */
+const ACTIONS: Record<string, [string, string, boolean]> = {
+  heating: ["card.climate.action.heating", "var(--lumen-orange)", true],
+  preheating: ["card.climate.action.heating", "var(--lumen-orange)", true],
+  cooling: ["card.climate.action.cooling", "var(--lumen-info)", false],
+  drying: ["card.climate.action.drying", "var(--lumen-accent)", false],
+  fan: ["card.climate.action.fan", "var(--lumen-accent)", false],
+  defrosting: ["card.climate.action.defrosting", "var(--lumen-info)", false],
+  idle: ["card.climate.action.idle", "var(--lumen-text-3)", false],
+};
+const SWINGS: Record<string, [string, string]> = {
+  off: ["card.climate.swing.off", "mdi:arrow-collapse-vertical"],
+  on: ["card.climate.swing.on", "mdi:arrow-oscillating"],
+  vertical: ["card.climate.swing.vertical", "mdi:arrow-up-down"],
+  horizontal: ["card.climate.swing.horizontal", "mdi:arrow-left-right"],
+  both: ["card.climate.swing.both", "mdi:arrow-all"],
+};
+const PRESETS: Record<string, [string, string]> = {
+  none: ["card.climate.preset.none", "mdi:close"],
+  eco: ["card.climate.preset.eco", "mdi:leaf"],
+  comfort: ["card.climate.preset.comfort", "mdi:sofa-outline"],
+  away: ["card.climate.preset.away", "mdi:home-export-outline"],
+  home: ["card.climate.preset.home", "mdi:home-outline"],
+  sleep: ["card.climate.preset.sleep", "mdi:weather-night"],
+  boost: ["card.climate.preset.boost", "mdi:rocket-launch-outline"],
+  activity: ["card.climate.preset.activity", "mdi:run"],
 };
 const MODE_LABEL: Record<string, string> = { heat: "card.climate.mode.heat", cool: "card.climate.mode.cool", heat_cool: "card.climate.mode.heat_cool", auto: "common.auto", dry: "card.climate.mode.dry", fan_only: "card.climate.mode.fan_only" };
+const SECTION = "font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3);margin-bottom:-8px";
+const STEP_BTN = "border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:22px;cursor:pointer;display:grid;place-items:center;border-radius:16px;height:48px";
+
+/** "22°", "22,5°", "72 °F": whole numbers without decimals, °F spelled out. */
+export function formatTemp(v: number | undefined | null, fahrenheit = false): string {
+  if (v === undefined || v === null || !Number.isFinite(v)) return "—";
+  const n = Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : formatNumber(v);
+  return fahrenheit ? `${n} °F` : `${n}°`;
+}
 const FANS: Record<string, [string, string]> = {
   auto: ["common.auto", "mdi:fan-auto"],
   low: ["card.climate.fan.low", "mdi:fan-speed-1"],
@@ -81,6 +137,8 @@ export function validateClimate(c: Partial<ClimateConfig>): void {
 
 /** Air conditioner / thermostat of the design: a card, or a FAB + dialog B9. */
 export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
+  protected static compactBelow = 300;
+  protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "cool", attributes: { friendly_name: t("card.climate.name"), hvac_modes: ["off", "heat", "cool", "dry"], hvac_action: "cooling", fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 24.1, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
   static properties = { ...LumenBaseCard.properties, _dlg: { state: true }, _side: { state: true } };
   private _dlg = false;
   /** heat_cool with a range: which end the ± buttons move. */
@@ -251,25 +309,35 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     }, 600);
   }
 
+  /** °F per the entity or HA's unit system (no conversion: the device's numbers as they are). */
+  private get fahrenheit(): boolean {
+    const e = this.entity(this._config.entity);
+    const unit = e?.attributes.temperature_unit ?? (this._hass as { config?: { unit_system?: { temperature?: string } } } | undefined)?.config?.unit_system?.temperature;
+    return unit === "°F";
+  }
+
   private ac() {
     const cfg = this._config;
     const e = this.entity(cfg.entity);
     const una = isUnavailable(e);
     const mode = una ? "off" : e!.state;
-    const c = mode === "heat" ? "var(--lumen-orange)" : mode === "off" ? "var(--lumen-text-3)" : "var(--lumen-accent)";
+    const c = MODE_COLOR[mode] ?? "var(--lumen-accent)";
     const busy = this.pending.has(cfg.entity);
-    const room = temp(e?.attributes.current_temperature);
+    const f = this.fahrenheit;
+    const room = formatTemp(typeof e?.attributes.current_temperature === "number" ? e.attributes.current_temperature : null, f);
     const target = this.disp;
     const off = mode === "off";
     const fan = e?.attributes.fan_mode ?? "auto";
     const sel = (a: boolean, color: string) =>
       a ? `background:var(--lumen-surface-solid);color:${color};box-shadow:var(--lumen-shadow-1)` : "background:transparent;color:var(--lumen-text-2);box-shadow:none";
-    // The entity's own modes in the design's order; off/heat/cool is the design's set.
+    // The entity's own modes in the catalog's order (hvac_modes narrows them).
     const hvac: string[] = e?.attributes.hvac_modes ?? ["off", "heat", "cool"];
-    const wanted = cfg.hvac_modes?.length ? cfg.hvac_modes : ["off", "heat", "cool"];
+    const wanted = cfg.hvac_modes?.length ? cfg.hvac_modes : hvac;
+    // heat_cool reads "Auto" when the device has no separate auto mode (catalog section 09).
+    const label = (k: string) => t(k === "heat_cool" && !hvac.includes("auto") ? "common.auto" : MODES[k][0]);
     const modes = Object.keys(MODES).filter((k) => hvac.includes(k) && wanted.includes(k)).map((k) => ({
-      k, label: t(MODES[k][0]), ic: MODES[k][1], active: mode === k,
-      color: k === "heat" ? "var(--lumen-orange)" : k === "off" ? "var(--lumen-text-1)" : "var(--lumen-accent)",
+      k, label: label(k), ic: MODES[k][1], active: mode === k,
+      color: k === "off" ? "var(--lumen-text-1)" : MODE_COLOR[k],
       on: () => {
         if (una) return;
         this.haptic();
@@ -278,15 +346,36 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         this.call("climate", "set_hvac_mode", { hvac_mode: k }, cfg.entity);
       },
     }));
-    const fanModes: string[] = e?.attributes.fan_modes ?? ["auto", "low", "medium", "high"];
-    const wantedFans = cfg.fan_modes?.length ? cfg.fan_modes : ["auto", "low", "medium", "high"];
-    const fans = fanModes.filter((k) => wantedFans.includes(k)).slice(0, 5).map((k) => ({
-      k, label: t(FANS[k]?.[0] ?? k), ic: FANS[k]?.[1] ?? "mdi:fan", active: fan === k,
+    const fanModes: string[] = e?.attributes.fan_modes ?? [];
+    const wantedFans = cfg.fan_modes?.length ? cfg.fan_modes : fanModes;
+    const fans = fanModes.filter((k) => wantedFans.includes(k)).map((k) => ({
+      k, label: FANS[k] ? t(FANS[k][0]) : k, ic: FANS[k]?.[1] ?? (/^\d+$/.test(k) ? `mdi:fan-speed-${Math.min(3, Number(k))}` : "mdi:fan"), active: fan === k,
       on: () => {
         if (off || una) return;
         this.haptic();
         this.setPending(cfg.entity);
         this.call("climate", "set_fan_mode", { fan_mode: k }, cfg.entity);
+      },
+    }));
+    const swing = e?.attributes.swing_mode;
+    const swings = ((e?.attributes.swing_modes as string[] | undefined) ?? []).map((k) => ({
+      k, label: SWINGS[k] ? t(SWINGS[k][0]) : k, ic: SWINGS[k]?.[1] ?? "mdi:arrow-oscillating", active: swing === k,
+      on: () => {
+        if (off || una) return;
+        this.haptic();
+        this.setPending(cfg.entity);
+        this.call("climate", "set_swing_mode", { swing_mode: k }, cfg.entity);
+      },
+    }));
+    const preset = e?.attributes.preset_mode;
+    const allPresets = (e?.attributes.preset_modes as string[] | undefined) ?? [];
+    const presets = allPresets.filter((k) => !cfg.preset_modes?.length || cfg.preset_modes.includes(k)).map((k) => ({
+      k, label: PRESETS[k] ? t(PRESETS[k][0]) : k, ic: PRESETS[k]?.[1] ?? "mdi:tune-variant", active: preset === k,
+      on: () => {
+        if (una) return;
+        this.haptic();
+        this.setPending(cfg.entity);
+        this.call("climate", "set_preset_mode", { preset_mode: k }, cfg.entity);
       },
     }));
     const power = () => {
@@ -304,20 +393,30 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       }
       this.call("climate", "turn_off", {}, cfg.entity);
     };
-    const modeLabel = (m: string) => t(MODE_LABEL[m] ?? m);
-    const fanLabel = (f: string) => (FANS[f] ? t(FANS[f][0]) : f).toLowerCase();
-    const state = una ? t("card.climate.unavailable") : busy ? t("common.sending_command") : off ? t("card.climate.off") : `${modeLabel(mode)} · ${t("card.climate.fan_inline")} ${fanLabel(fan)}`;
+    const modeLabel = (m: string) => (MODES[m] ? label(m) : t(MODE_LABEL[m] ?? m));
+    const roomPart = cfg.show_current_temp !== false && room !== "—" ? t("card.climate.in_room", { t: room }) : "";
+    const head = una ? t("card.climate.unavailable") : busy ? t("common.sending_command") : off ? t("card.climate.off") : modeLabel(mode);
+    const state = [head, roomPart].filter(Boolean).join(" · ");
     const roomLine = t("card.climate.room", { t: room });
+    const act = una || off ? undefined : ACTIONS[String(e?.attributes.hvac_action ?? "")];
+    const action = act ? { label: t(act[0]), color: act[1], pulse: act[2] } : null;
+    // Compact line: what it does now (hvac_action, else the mode) and the room.
+    const short = [una ? t("card.climate.unavailable") : off ? t("card.climate.off") : action?.label ?? modeLabel(mode), cfg.show_current_temp !== false && room !== "—" ? room : ""].filter(Boolean).join(" · ");
     const r = this.rangeTarget ?? this.range(e);
-    const range = r ? { low: `${formatNumber(r.low)}°`, high: `${formatNumber(r.high)}°` } : null;
-    return { c, mode, off, una, busy, target: target === undefined ? "—" : `${formatNumber(target)}°`, range, modes, fans, power, state, roomLine, sel };
+    const range = r ? { low: formatTemp(r.low, f), high: formatTemp(r.high, f) } : null;
+    const lim = e ? this.limits(e) : null;
+    const stepVal = Number(e?.attributes.target_temp_step ?? (f ? 1 : 0.5));
+    const rangeLine = lim ? t("card.climate.range", { min: formatTemp(lim[0]).replace("°", ""), max: formatTemp(lim[1]).replace("°", ""), unit: f ? "°F" : "°C", step: Number.isInteger(stepVal) ? String(stepVal) : formatNumber(stepVal) }) : "";
+    const heatOnly = hvac.every((m) => m === "heat" || m === "off");
+    const ic = cfg.icon ?? (mode === "heat_cool" || mode === "auto" ? "mdi:thermostat-auto" : heatOnly ? "mdi:radiator" : "mdi:air-conditioner");
+    return { c, ic, mode, off, una, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, action, rangeLine, sel };
   }
 
   private get name() {
     return this._config.name || this.entity(this._config.entity)?.attributes.friendly_name || t("card.climate.name");
   }
 
-  /** Setpoint: one number, or low–high with the end the ± buttons move picked by a tap. */
+  /** Setpoint: one number, or low–high with the end the ± buttons move picked by a tap (FAB dialog). */
   private setpoint(a: ReturnType<LumenClimateCard["ac"]>, size: number, color = "inherit") {
     const num = (v: string, side?: "low" | "high") => {
       const on = !side || this._side === side;
@@ -328,28 +427,74 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     return a.range ? html`<span style="display:inline-flex;align-items:baseline;gap:2px">${num(a.range.low, "low")}<span style="font-size:${size * 0.6}px;opacity:.5">–</span>${num(a.range.high, "high")}</span>` : num(a.target);
   }
 
+  /** heat_cool: two fields, the selected one is raised and moved by −/+; a tap on the other selects it. */
+  private rangeFields(a: ReturnType<LumenClimateCard["ac"]>) {
+    const field = (side: "low" | "high", label: string, color: string, v: string) => {
+      const on = this._side === side;
+      return html`<button aria-pressed=${on ? "true" : "false"} aria-label="${label} ${v}" @click=${() => (this._side = side)}
+        style="display:flex;flex-direction:column;align-items:center;padding:6px 4px;border:0;border-radius:16px;background:${on ? "var(--lumen-surface-solid)" : "transparent"};box-shadow:${on ? "var(--lumen-shadow-1)" : "none"};color:var(--lumen-text-1);cursor:pointer;font-family:inherit;transition:background-color 200ms, box-shadow 200ms">
+        <span style="font-size:11px;font-weight:700;color:${color}">${label}</span><span style="font-size:30px;font-weight:300;letter-spacing:-0.04em;line-height:1.1;font-variant-numeric:tabular-nums">${v}</span></button>`;
+    };
+    return html`<div style="display:flex;align-items:center;gap:8px;opacity:${a.off ? 0.4 : 1};transition:opacity 400ms">
+      <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${STEP_BTN};flex:none;width:44px">${icon("mdi:minus")}</button>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px">${field("low", t("card.climate.heat_to"), "var(--lumen-orange)", a.range!.low)}${field("high", t("card.climate.cool_from"), "var(--lumen-info)", a.range!.high)}</div>
+      <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${STEP_BTN};flex:none;width:44px">${icon("mdi:plus")}</button>
+    </div>`;
+  }
+
   private card() {
     const a = this.ac();
     const cfg = this._config;
-    return html`<div data-fx style="padding:16px;border-radius:22px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};display:flex;flex-direction:column;gap:14px">${WFX}
+    const seg = (o: { label: string; ic: string; active: boolean; on: () => void }, color: string, column = false) =>
+      html`<button aria-pressed=${o.active} @click=${o.on} style="${column ? "flex:1;min-width:0;flex-direction:column;gap:1px;font:700 11px var(--lumen-font);" : "gap:6px;font:700 12px var(--lumen-font);"}min-height:44px;padding:0 4px;display:flex;align-items:center;justify-content:center;border:0;border-radius:12px;${a.sel(o.active, color)};cursor:pointer;white-space:nowrap;transition:background-color 300ms, color 300ms">${icon(o.ic, column ? "font-size:17px;line-height:18px" : "font-size:16px")}<span style="overflow:hidden;text-overflow:ellipsis">${o.label}</span></button>`;
+    // Up to 4 modes in one row, more in a grid of 3 (catalog section 09).
+    const cols = a.modes.length <= 4 ? a.modes.length : 3;
+    const fanSelect = html`<label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1}">
+      ${icon(a.fans.find((o) => o.active)?.ic ?? "mdi:fan", "font-size:18px;color:var(--lumen-text-2)")}
+      <select aria-label=${t("card.climate.fans")} ?disabled=${a.off || a.una} @change=${(ev: Event) => a.fans.find((o) => o.k === (ev.target as HTMLSelectElement).value)?.on()}
+        style="flex:1;min-width:0;height:40px;border:0;background:transparent;color:var(--lumen-text-1);font:700 13px var(--lumen-font);cursor:pointer;outline:none">${a.fans.map((o) => html`<option value=${o.k} ?selected=${o.active}>${o.label}</option>`)}</select>
+    </label>`;
+    return html`<div data-fx style="padding:16px;border-radius:22px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1);display:flex;flex-direction:column;gap:14px">${WFX}
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};transition:background-color 500ms, color 500ms">${icon(cfg.icon ?? "mdi:air-conditioner")}</div>
-        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.state}</div>${cfg.show_current_temp !== false ? html`<div style="font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-3);white-space:nowrap">${a.roomLine}</div>` : nothing}</div>
-        <button class="press" @click=${a.power} aria-label=${t("card.climate.power")} style="width:48px;height:48px;border-radius:50%;border:0;display:grid;place-items:center;font-size:22px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms, color 400ms, transform 220ms var(--lumen-ease-spring)">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>
+        <div style="flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};transition:background-color 500ms, color 500ms">${icon(a.ic)}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.state}</div></div>
+        <button class="press" @click=${a.power} aria-label=${t("card.climate.power")} aria-pressed=${a.off ? "false" : "true"} style="flex:none;width:48px;height:48px;border-radius:50%;border:0;display:grid;place-items:center;font-size:22px;background:${a.off ? "var(--lumen-surface-2)" : "var(--lumen-accent)"};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms, color 400ms, transform 220ms var(--lumen-ease-spring)">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;opacity:${a.off ? 0.45 : 1};transition:opacity 400ms">
-        <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="width:48px;height:48px;border-radius:16px;border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:22px;cursor:pointer;display:grid;place-items:center">${icon("mdi:minus")}</button>
-        <div style="text-align:center"><div style="line-height:1">${this.setpoint(a, 40)}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);margin-top:4px">${t("card.climate.target")}</div></div>
-        <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="width:48px;height:48px;border-radius:16px;border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:22px;cursor:pointer;display:grid;place-items:center">${icon("mdi:plus")}</button>
-      </div>
-      ${cfg.show_modes !== false && a.modes.length ? html`<div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3);margin-bottom:-8px">${t("card.climate.modes")}</div>
-      <div class="modes" role="group" aria-label=${t("card.climate.modes")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2)">${a.modes.map(
-        (o) => html`<button aria-pressed=${o.active} @click=${o.on} style="flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;${a.sel(o.active, o.color)};font:700 12px var(--lumen-font);cursor:pointer;transition:background-color 300ms, color 300ms">${icon(o.ic, "font-size:16px")}${o.label}</button>`,
+      ${a.action && cfg.show_action !== false
+        ? html`<span role="status" style="align-self:flex-start;margin:-6px 0 -2px 52px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:color-mix(in srgb, ${a.action.color} 14%, transparent);color:${a.action.color};font:750 12px var(--lumen-font)"><span style="width:7px;height:7px;border-radius:50%;background:${a.action.color};animation:${a.action.pulse ? "lumenBreath 2.4s ease-in-out infinite" : "none"}"></span>${a.action.label}</span>`
+        : nothing}
+      ${a.range
+        ? this.rangeFields(a)
+        : html`<div style="display:flex;align-items:center;justify-content:space-between;opacity:${a.off ? 0.4 : 1};transition:opacity 400ms">
+            <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${STEP_BTN};width:48px">${icon("mdi:minus")}</button>
+            <div style="text-align:center"><div style="font-size:40px;font-weight:300;letter-spacing:-0.04em;line-height:1;font-variant-numeric:tabular-nums">${a.target}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);margin-top:4px">${t("card.climate.target")}</div></div>
+            <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${STEP_BTN};width:48px">${icon("mdi:plus")}</button>
+          </div>`}
+      ${cfg.show_modes !== false && a.modes.length ? html`<div style=${SECTION}>${t("card.climate.modes")}</div>
+      <div class="modes" role="group" aria-label=${t("card.climate.modes")} style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2)">${a.modes.map((o) => seg(o, o.color))}</div>` : nothing}
+      ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style=${SECTION}>${t("card.climate.fans")}</div>
+      ${a.fans.length > 5 ? fanSelect : html`<div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1};transition:opacity 400ms">${a.fans.map((o) => seg(o, "var(--lumen-text-1)", true))}</div>`}` : nothing}
+      ${cfg.show_swing !== false && a.swings.length ? html`<div style=${SECTION}>${t("card.climate.swing")}</div>
+      <div role="group" aria-label=${t("card.climate.swing")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1}">${a.swings.map((o) => html`<div style="flex:1;min-width:0;display:flex">${seg(o, "var(--lumen-text-1)")}</div>`)}</div>` : nothing}
+      ${cfg.show_presets !== false && a.presets.length ? html`<div style=${SECTION}>${t("card.climate.preset")}</div>
+      <div role="group" aria-label=${t("card.climate.preset")} style="display:flex;flex-wrap:wrap;gap:6px">${a.presets.map(
+        (o) => html`<button aria-pressed=${o.active} @click=${o.on} style="display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px 0 10px;border-radius:999px;background:${o.active ? "var(--lumen-accent-soft)" : "transparent"};color:${o.active ? "var(--lumen-accent)" : "var(--lumen-text-2)"};border:${o.active ? "1px solid color-mix(in srgb, var(--lumen-accent) 40%, transparent)" : "1px solid var(--lumen-border)"};font:700 12px var(--lumen-font);cursor:pointer">${icon(o.ic, "font-size:15px")}${o.label}</button>`,
       )}</div>` : nothing}
-      ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3);margin-bottom:-8px">${t("card.climate.fans")}</div>
-      <div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.45 : 1};transition:opacity 400ms">${a.fans.map(
-        (o) => html`<button aria-pressed=${o.active} @click=${o.on} style="flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0;border-radius:12px;${a.sel(o.active, a.c)};font:700 11px var(--lumen-font);cursor:pointer;transition:background-color 300ms, color 300ms">${icon(o.ic, "font-size:17px;line-height:18px")}${o.label}</button>`,
-      )}</div>` : nothing}
+      ${cfg.show_range && a.rangeLine ? html`<div style="font:500 11px var(--lumen-mono);color:var(--lumen-text-3)">${a.rangeLine}</div>` : nothing}
+    </div>`;
+  }
+
+  /** Compact row (under 300 px): name, what it does now, −, setpoint, +. */
+  private compactRow() {
+    const a = this.ac();
+    const btn = "flex:none;width:40px;height:40px;border-radius:12px;border:0;display:grid;place-items:center;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:20px;cursor:pointer";
+    const value = a.range ? (this._side === "low" ? a.range.low : a.range.high) : a.target;
+    return html`<div data-fx style="display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:20px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1)">${WFX}
+      <button class="press" @click=${() => this.moreInfo(this._config.entity)} aria-label=${this.name} style="flex:none;width:34px;height:34px;border-radius:12px;border:0;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};cursor:pointer">${icon(a.ic)}</button>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.short}</div></div>
+      <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:minus")}</button>
+      <span style="flex:none;min-width:46px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;opacity:${a.off ? 0.4 : 1}">${value}</span>
+      <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:plus")}</button>
     </div>`;
   }
 
@@ -419,7 +564,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
 
   render() {
     if (!this._config || !this._hass) return nothing;
-    return this.useFab ? nothing : this.card();
+    if (this.useFab) return nothing;
+    return this.compact ? this.compactRow() : this.card();
   }
 
   getCardSize() {
@@ -455,6 +601,10 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         name: "fan_modes",
         selector: { select: { multiple: true, mode: "list", custom_value: true, options: Object.keys(FANS).map((value) => ({ value, label: t(FANS[value][0]) })) } },
       },
+      {
+        name: "preset_modes",
+        selector: { select: { multiple: true, mode: "list", custom_value: true, options: Object.keys(PRESETS).map((value) => ({ value, label: t(PRESETS[value][0]) })) } },
+      },
       { name: "", type: "expandable", flatten: true, title: t("editor.fab"), icon: "mdi:gesture-tap-button", schema: fabFields() },
       {
         name: "",
@@ -472,12 +622,16 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
               { name: "show_current_temp", default: true, selector: { boolean: {} } },
               { name: "show_modes", default: true, selector: { boolean: {} } },
               { name: "show_fan_modes", default: true, selector: { boolean: {} } },
+              { name: "show_swing", default: true, selector: { boolean: {} } },
+              { name: "show_presets", default: true, selector: { boolean: {} } },
+              { name: "show_action", default: true, selector: { boolean: {} } },
+              { name: "show_range", default: false, selector: { boolean: {} } },
             ],
           },
           { name: "styles", selector: { text: { multiline: true } } },
         ],
       },
-      appearance({ layout: false }),
+      appearance({ layout: "width" }),
     ]);
   }
 }
