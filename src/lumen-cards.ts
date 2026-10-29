@@ -14,6 +14,15 @@ import "./cards/button";
 import "./cards/sensor";
 import "./cards/climate";
 import "./cards/air-quality";
+// Section 14 of the catalog (new domains).
+import "./cards/cover";
+import "./cards/media";
+import "./cards/select";
+import "./cards/fan";
+import "./cards/number";
+import "./cards/calendar";
+import "./cards/nav";
+import "./cards/popup";
 
 declare const __LUMEN_VERSION__: string;
 

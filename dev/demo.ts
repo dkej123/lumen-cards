@@ -7,6 +7,7 @@
 //   (demo code for the alarm and the locks: 1234)
 import type { HassEntities, HassEntity, HassLike } from "../src/hass/types";
 import { injectLocalFonts } from "./local-fonts";
+import { DOMAINS, DOMAIN_GALLERY, domainApi, domainService, domainStates, listenActions, type DemoCtx } from "./demo-domains";
 
 injectLocalFonts();
 const params = new URLSearchParams(location.search);
@@ -113,6 +114,7 @@ let states: HassEntities = Object.fromEntries(
     e("input_boolean.window", "on", { friendly_name: "Window open" }),
     e("sensor.window_min", "25", { unit_of_measurement: "min" }),
     e("sensor.bike_battery", "18", { unit_of_measurement: "%" }),
+    ...domainStates(e),
   ].map((x) => [x.entity_id, x]),
 );
 
@@ -151,6 +153,7 @@ const make = (): HassLike => ({
   },
   callService: async (domain, service, data = {}, target) => {
     const id = String((target as { entity_id?: string })?.entity_id ?? "");
+    if (domainService(ctx, domain, service, data, id)) return undefined;
     if (domain === "light")
       set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin, color_mode: "color_temp" } : data.hs_color ? { hs_color: data.hs_color, color_mode: "hs", rgb_color: undefined } : {});
     // Gate with a response sensor: every third press fails (catalog live demo).
@@ -178,6 +181,7 @@ const make = (): HassLike => ({
     if (domain === "climate" && service === "set_temperature") set(id, states[id].state, data);
     return undefined;
   },
+  ...({ callApi: domainApi } as object),
   callWS: async <T>() => {
     // A day of made-up history for the sparklines.
     const hist: Record<string, { s: string; lu: number }[]> = {};
@@ -186,6 +190,9 @@ const make = (): HassLike => ({
     return hist as T;
   },
 });
+
+const ctx: DemoCtx = { get: (id) => states[id], set };
+listenActions(ctx, (domain, service, data, id) => domainService(ctx, domain, service, data, id));
 
 type Card = HTMLElement & { hass: HassLike; setConfig(c: unknown): void };
 type Spec = [type: string, cfg: Record<string, unknown>, span?: number];
@@ -287,6 +294,8 @@ const GALLERY: Record<string, Spec[]> = {
   "weather": [["weather-background", { weather_entity: "weather.home", show_controls: true }], ["sensor", { entity: "sensor.outside_temp", color: "light-blue" }, 6], ["entity", { entity: "binary_sensor.front_door" }, 6], ["light", { entity: "light.sofa", icon: "mdi:sofa" }, 6], ["light", { entity: "light.ceiling", icon: "mdi:ceiling-light" }, 6]],
 };
 
+Object.assign(GALLERY, DOMAIN_GALLERY);
+
 /** Example dashboards of the README (same cards as the YAML there). */
 const PHONE: Spec[] = [
   bg,
@@ -365,6 +374,8 @@ const ALL: Spec[] = [
   ...GALLERY["air-quality"],
   ...GALLERY.sensor,
   ...GALLERY.climate,
+  ["title", { title: "New domains" }],
+  ...DOMAINS,
 ];
 
 const grid = document.getElementById("grid")!;

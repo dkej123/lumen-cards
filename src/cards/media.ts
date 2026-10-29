@@ -1,0 +1,254 @@
+import { css, html, nothing, unsafeCSS } from "lit";
+import { handleAction, type ActionConfig } from "../core/actions";
+import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { callOrToast, entityName } from "../core/call";
+import { advanced, appearance, firstOf, stub } from "../core/form";
+import { formX, nameIcon, tapHold } from "../core/form-extra";
+import { t } from "../core/i18n";
+import { icon } from "../core/lumen-icon";
+import { Presses, pressable } from "../core/press";
+import { registerCard } from "../core/register";
+import { SlideDrag, TILE_CSS, thinBar } from "../core/slider-tile";
+import { glass, stop } from "../core/styles";
+import type { HassLike } from "../hass/types";
+import { stateText } from "../logic/format";
+import { MEDIA, formatTrackTime, mediaDuration, mediaInfo, mediaOff, mediaPlaying, mediaPosition, mediaSupports, volumeIcon, volumeLevel } from "../logic/media";
+
+export interface MediaConfig extends BaseConfig {
+  entity: string;
+  name?: string;
+  icon?: string;
+  /** Track progress row (default true). */
+  show_progress?: boolean;
+  /** Volume bar (default true). */
+  show_volume?: boolean;
+  /** Player name / last source line (default true). */
+  show_source?: boolean;
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+}
+
+const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
+/** Artwork stand-in (design `ART`). */
+const ART = "linear-gradient(135deg, oklch(0.64 0.17 35), oklch(0.46 0.16 300))";
+
+export function validateMedia(c: Partial<MediaConfig>): void {
+  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+}
+
+/**
+ * media_player (catalog section 14): artwork 64 px, title / artist / player, progress, previous ·
+ * play/pause · next and a draggable volume bar; compact = one row with a play button. Off and
+ * unavailable players dim the controls (play turns the player on when it can).
+ */
+export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
+  static properties = { ...LumenBaseCard.properties, _artFailed: { state: true } };
+  static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}.mbtn:active:not(:disabled){transform:scale(.9)}.mbtn{transition:transform 220ms var(--lumen-ease-spring), opacity 300ms}`];
+  protected static compactBelow = 280;
+  private _artFailed = "";
+  private presses = new Presses((type) => this.haptic(type));
+
+  private vol = new SlideDrag(this, {
+    enabled: () => !mediaOff(this.player) && mediaSupports(this.player, MEDIA.VOLUME_SET),
+    source: () => this.player,
+    tapSets: true,
+    threshold: 3,
+    commit: (f) => this.call("volume_set", { volume_level: Math.round(f * 100) / 100 }),
+    step: (d) => this.call("volume_set", { volume_level: Math.max(0, Math.min(1, Math.round(((volumeLevel(this.player) ?? 0) + d * 0.05) * 100) / 100)) }),
+  });
+
+  private seek = new SlideDrag(this, {
+    enabled: () => mediaPlaying(this.player) || this.player?.state === "paused" ? mediaSupports(this.player, MEDIA.SEEK) && mediaDuration(this.player) !== null : false,
+    source: () => this.player,
+    tapSets: true,
+    threshold: 3,
+    commit: (f) => this.call("media_seek", { seek_position: Math.round(f * (mediaDuration(this.player) ?? 0)) }),
+    step: (d, big) => {
+      const pos = mediaPosition(this.player) ?? 0;
+      this.call("media_seek", { seek_position: Math.max(0, Math.min(mediaDuration(this.player) ?? 0, Math.round(pos + d * (big ? 60 : 10)))) });
+    },
+  });
+
+  protected entityIds() {
+    return [this._config.entity];
+  }
+
+  protected validate(c: MediaConfig) {
+    validateMedia(c);
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    // The progress moves on with the clock while playing.
+    this.every(1000, () => {
+      if (mediaPlaying(this.player) && this._config?.show_progress !== false && !this.compact) this.requestUpdate();
+    });
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.presses.dispose();
+    this.vol.dispose();
+    this.seek.dispose();
+  }
+
+  private get player() {
+    return this.entity(this._config.entity);
+  }
+
+  private call(service: string, data: Record<string, unknown> = {}) {
+    return callOrToast(this, this._hass, "media_player", service, data, this._config.entity).then(() => this.requestUpdate());
+  }
+
+  private playPause() {
+    const e = this.player;
+    if (!e || e.state === "unavailable") return;
+    this.haptic();
+    if (mediaOff(e)) {
+      if (mediaSupports(e, MEDIA.TURN_ON)) this.call("turn_on");
+      return;
+    }
+    if (mediaPlaying(e)) this.call(mediaSupports(e, MEDIA.PAUSE) ? "media_pause" : "media_stop");
+    else this.call("media_play");
+  }
+
+  private canPlay(): boolean {
+    const e = this.player;
+    if (!e || e.state === "unavailable") return false;
+    if (mediaOff(e)) return mediaSupports(e, MEDIA.TURN_ON);
+    return mediaPlaying(e) ? mediaSupports(e, MEDIA.PAUSE) || mediaSupports(e, MEDIA.STOP) : mediaSupports(e, MEDIA.PLAY) || mediaSupports(e, MEDIA.PAUSE);
+  }
+
+  private handlers() {
+    const c = this._config;
+    return this.presses.handlers(
+      `media:${c.entity}`,
+      () => (c.tap_action ? handleAction(this, c.tap_action, c.entity, "tap") : this.moreInfo(c.entity)),
+      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
+    );
+  }
+
+  private art(size: number, radius: number, off: boolean, picture?: string) {
+    const c = this._config;
+    const showPic = !off && picture && this._artFailed !== picture;
+    const glyph = off ? "mdi:speaker-off" : c.icon || "mdi:music-note";
+    return html`<span aria-hidden="true" style="position:relative;flex:none;width:${size}px;height:${size}px;border-radius:${radius}px;overflow:hidden;background:${off ? "var(--lumen-surface-2)" : ART};display:grid;place-items:center;color:${off ? "var(--lumen-text-3)" : "rgba(255,255,255,.9)"};font-size:${Math.round(size * 0.4)}px">
+      ${showPic ? html`<img src=${picture} alt="" @error=${() => (this._artFailed = picture!)} style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />` : size >= 48 || off ? icon(glyph, "display:block") : nothing}
+    </span>`;
+  }
+
+  private ctl(ic: string, label: string, enabled: boolean, click: () => void) {
+    return html`<button class="mbtn" aria-label=${label} title=${label} ?disabled=${!enabled} @click=${(ev: Event) => {
+      ev.stopPropagation();
+      this.haptic();
+      click();
+    }} style="flex:none;width:44px;height:44px;border:0;border-radius:14px;background:transparent;display:grid;place-items:center;font-size:22px;color:var(--lumen-text-2);padding:0;cursor:pointer">${icon(ic, "display:block")}</button>`;
+  }
+
+  private playButton(size: number, playing: boolean) {
+    const label = playing ? t("card.media.pause") : t("card.media.play");
+    const ok = this.canPlay();
+    return html`<button class="mbtn" aria-label=${label} title=${label} ?disabled=${!ok} @pointerdown=${stop} @pointerup=${stop} @keydown=${stop} @click=${(ev: Event) => {
+      ev.stopPropagation();
+      this.playPause();
+    }} style="flex:none;width:${size}px;height:${size}px;border:0;border-radius:50%;display:grid;place-items:center;font-size:${size >= 52 ? 26 : 22}px;background:var(--lumen-text-1);color:var(--lumen-bg);padding:0;cursor:pointer">${icon(playing ? "mdi:pause" : "mdi:play", "display:block")}</button>`;
+  }
+
+  render() {
+    if (!this._config || !this._hass) return nothing;
+    const c = this._config;
+    const e = this.player;
+    const una = !e || e.state === "unavailable";
+    const off = mediaOff(e);
+    const playing = mediaPlaying(e);
+    const name = entityName(c.name, e, c.entity);
+    const hasMedia = !off && !!(e?.attributes.media_title || e?.attributes.media_series_title);
+    const info = mediaInfo(e, name);
+    const stateLabel = una ? t("card.cover.unavailable") : off ? t("card.media.off") : stateText(this._hass, e, e!.state);
+    const title = hasMedia ? info.title : name;
+    const artist = hasMedia ? info.artist : stateLabel;
+    const last = String(e?.attributes.app_name || e?.attributes.source || "");
+    const src = off ? (last ? t("card.media.last", { x: last }) : "") : hasMedia ? name : last;
+    const h = this.handlers();
+
+    if (this.compact) {
+      return html`<div data-fx ${pressable(h)} class="ltile" aria-label="${name} · ${title}${artist ? ` · ${artist}` : ""}"
+        style="position:relative;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 8px 8px 10px;box-sizing:border-box;border-radius:20px;background:${una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};border:${una ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};box-shadow:${una ? "none" : "var(--lumen-shadow-1)"};${glass};cursor:pointer;user-select:none;touch-action:pan-y;transition:transform 240ms var(--lumen-ease-spring)">${WFX}
+        ${this.art(36, 11, off, info.picture)}
+        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${artist}</div></div>
+        <span style="opacity:${off ? 0.38 : 1};display:contents">${this.playButton(40, playing)}</span>
+      </div>`;
+    }
+
+    const op = off ? 0.38 : 1;
+    const dur = mediaDuration(e);
+    const sf = this.seek.value();
+    const pos = sf !== null && dur ? sf * dur : mediaPosition(e);
+    const progF = dur && pos !== null ? pos / dur : 0;
+    const vl = volumeLevel(e);
+    const vf = this.vol.value() ?? (off ? 0 : (vl ?? 0));
+    const muted = !!e?.attributes.is_volume_muted;
+    const canMute = !off && mediaSupports(e, MEDIA.VOLUME_MUTE);
+    const showVol = c.show_volume !== false && (mediaSupports(e, MEDIA.VOLUME_SET) || mediaSupports(e, MEDIA.VOLUME_MUTE) || off);
+    return html`<div data-fx class="ltile" style="position:relative;display:flex;flex-direction:column;gap:12px;padding:14px;box-sizing:border-box;border-radius:22px;background:${una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};border:${una ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};box-shadow:${una ? "none" : "var(--lumen-shadow-1)"};${glass};color:var(--lumen-text-1)">${WFX}
+      <div ${pressable(h)} aria-label="${name} · ${title}${artist ? ` · ${artist}` : ""}" style="display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;touch-action:pan-y;border-radius:14px">
+        ${this.art(64, 14, off, info.picture)}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:750;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+          <div style="font-size:13px;font-weight:600;line-height:18px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${artist}</div>
+          ${c.show_source !== false && src ? html`<div style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-3);white-space:nowrap;overflow:hidden"><span style="flex:none;display:grid">${icon("mdi:speaker", "font-size:14px")}</span><span style="overflow:hidden;text-overflow:ellipsis">${src}</span></div>` : nothing}
+        </div>
+        ${una ? icon("mdi:power-plug-off-outline", "flex:none;font-size:18px;color:var(--lumen-text-3)") : nothing}
+      </div>
+      ${c.show_progress !== false
+        ? html`<div style="display:flex;align-items:center;gap:8px;font:600 11px var(--lumen-font);color:var(--lumen-text-3);font-variant-numeric:tabular-nums;opacity:${op}">
+            <span>${formatTrackTime(off ? null : pos)}</span>
+            <div style="flex:1;min-width:0">${thinBar({ drag: this.seek, frac: off ? 0 : progF, color: "var(--lumen-text-1)", height: 4, name: t("card.media.progress"), valueText: `${formatTrackTime(pos)} / ${formatTrackTime(dur)}`, disabled: !mediaSupports(e, MEDIA.SEEK) || off, now: Math.round(pos ?? 0), max: Math.round(dur ?? 0) })}</div>
+            <span>${formatTrackTime(off ? null : dur)}</span>
+          </div>`
+        : nothing}
+      <div style="display:flex;align-items:center;gap:6px;opacity:${op}">
+        ${this.ctl("mdi:skip-previous", t("card.media.previous"), !off && mediaSupports(e, MEDIA.PREVIOUS_TRACK), () => this.call("media_previous_track"))}
+        ${this.playButton(52, playing)}
+        ${this.ctl("mdi:skip-next", t("card.media.next"), !off && mediaSupports(e, MEDIA.NEXT_TRACK), () => this.call("media_next_track"))}
+        <span style="flex:1"></span>
+        ${showVol
+          ? html`<button class="mbtn" aria-label=${muted ? t("card.media.unmute") : t("card.media.mute")} aria-pressed=${muted} ?disabled=${!canMute} @click=${() => {
+                this.haptic();
+                this.call("volume_mute", { is_volume_muted: !muted });
+              }} style="flex:none;width:32px;height:44px;margin-right:-4px;border:0;background:transparent;padding:0;display:grid;place-items:center;font-size:18px;color:var(--lumen-text-3);cursor:${canMute ? "pointer" : "default"}">${icon(volumeIcon(off ? null : vl, muted), "display:block")}</button>
+              ${thinBar({ drag: this.vol, frac: vf, color: "var(--lumen-accent)", width: "76px", name: t("card.media.volume"), valueText: `${Math.round(vf * 100)}%`, disabled: off || !mediaSupports(e, MEDIA.VOLUME_SET) })}`
+          : nothing}
+      </div>
+    </div>`;
+  }
+
+  getCardSize() {
+    return 3;
+  }
+
+  getGridOptions() {
+    return { columns: 12, rows: "auto", min_columns: 6 };
+  }
+
+  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
+    return { entity: stub(hass, "media_player", entities, fallback) ?? firstOf(hass, "media_player", "media_player.example") };
+  }
+
+  static getConfigForm() {
+    return formX([
+      { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
+      nameIcon(),
+      tapHold(),
+      advanced([["show_progress"], ["show_volume"], ["show_source"]]),
+      appearance({ layout: "width" }),
+    ]);
+  }
+}
+
+registerCard("lumen-media-card", LumenMediaCard, {
+  name: "card.media.name",
+  description: "card.media.description",
+  domains: ["media_player"],
+});
+
