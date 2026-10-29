@@ -2,29 +2,33 @@ name: Validate
 
 on:
   push:
+    branches:
+      - main
   pull_request:
-  schedule:
-    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions: {}
 
 jobs:
-  hacs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: hacs/action@main
-        with:
-          category: plugin
-          ignore: brands
-
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run build
       - run: npm test
       - name: Committed dist/ is up to date
         run: git diff --exit-code -- dist/
+
+  hacs:
+    # Docker action: needs Docker on the runner (label `docker`).
+    runs-on: [self-hosted, docker]
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: plugin
+          ignore: brands
