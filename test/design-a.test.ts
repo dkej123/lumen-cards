@@ -200,8 +200,8 @@ describe("sub-buttons", () => {
     await el.updateComplete;
     expect(el.shadowRoot!.querySelector('.subbtns [role="note"]')!.textContent).toContain("+1");
     const compact = await mount("entity", { entity: "fan.purifier", layout: "compact", sub_buttons: subs });
-    // Compact entity = access bar cell: no room for sub-buttons.
-    expect(compact.shadowRoot!.querySelectorAll(".subbtns > [aria-disabled]").length).toBe(0);
+    // Compact entity = access bar cell with one sub-button beside it.
+    expect(compact.shadowRoot!.querySelectorAll(".subbtns > [aria-disabled]").length).toBe(1);
   });
 
   it("a press on a sub-button does not reach the card", async () => {
@@ -316,6 +316,21 @@ describe("reminder", () => {
   it("accent_color colours the pill (over `color`)", async () => {
     const el = await mount("reminder", { entity: "input_boolean.night", state: "off", color: "danger", accent_color: "#ff0000" });
     expect(el.shadowRoot!.innerHTML).toContain("var(--lumen-accent)");
+  });
+});
+
+describe("sub-buttons on every card that offers them", () => {
+  const sub = [{ entity: "input_boolean.night", icon: "mdi:weather-night" }];
+  const count = (el: Card) => el.shadowRoot!.querySelectorAll(".subbtns > [aria-disabled]").length;
+  it.each([
+    ["entity", { entity: "fan.purifier" }],
+    ["button", { entity: "script.gate" }],
+    ["person", { entity: "person.ann" }],
+    ["alarm", { entity: "alarm_control_panel.home" }],
+  ])("%s: wide and compact", async (type, cfg) => {
+    const h = hass([...STATES, ent("alarm_control_panel.home", "disarmed")]);
+    expect(count(await mount(type, { ...cfg, layout: "wide", sub_buttons: sub }, h))).toBe(1);
+    expect(count(await mount(type, { ...cfg, layout: "compact", sub_buttons: sub }, h))).toBe(1);
   });
 });
 

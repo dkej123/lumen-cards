@@ -37,13 +37,14 @@ export const alarmRing = () => html`<div style="position:absolute;inset:0;z-inde
  * Compact phone cell (design access bar B7, one item per card): a 52 px glass frame with the
  * tinted icon cell inside. Several of these side by side in the HA grid make up the bar.
  */
-export function compactCell(o: { title: string; color: string; body: unknown; handlers?: PressHandlers; onClick?: () => void; disabled?: boolean; alert?: boolean }) {
+export function compactCell(o: { title: string; color: string; body: unknown; handlers?: PressHandlers; onClick?: () => void; disabled?: boolean; alert?: boolean; extra?: unknown }) {
   const h = o.handlers;
   const action = !!(h || o.onClick);
   const click = o.onClick ? activate(o.onClick) : undefined;
-  return html`<div data-fx style="height:52px;padding:4px;box-sizing:border-box;border-radius:18px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};animation:${o.alert ? "lumenAlarmPulse 1.1s ease-in-out infinite" : "none"}">${WFX}
+  // `extra`: sub-buttons to the right of the cell (one fits on a compact card).
+  return html`<div data-fx style="display:flex;align-items:center;gap:4px;height:52px;padding:4px;box-sizing:border-box;border-radius:18px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};animation:${o.alert ? "lumenAlarmPulse 1.1s ease-in-out infinite" : "none"}">${WFX}
     <div ${pressable(h)} role=${action ? "button" : nothing} tabindex=${action ? 0 : nothing} class=${action ? "acc" : ""} title=${o.title} aria-label=${o.title} aria-disabled=${o.disabled ?? nothing}
       @click=${click?.click} @keydown=${click?.key} @contextmenu=${prevent}
-      style="position:relative;height:100%;display:grid;place-items:center;border-radius:14px;background:color-mix(in srgb, ${o.color} ${action ? 16 : 14}%, transparent);color:${o.color};font-size:24px;cursor:${action ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:opacity 200ms, background-color 400ms, transform 220ms var(--lumen-ease-spring)">${o.body}</div>
+      style="position:relative;flex:1;min-width:0;height:100%;display:grid;place-items:center;border-radius:14px;background:color-mix(in srgb, ${o.color} ${action ? 16 : 14}%, transparent);color:${o.color};font-size:24px;cursor:${action ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:opacity 200ms, background-color 400ms, transform 220ms var(--lumen-ease-spring)">${o.body}</div>${o.extra ?? nothing}
   </div>`;
 }

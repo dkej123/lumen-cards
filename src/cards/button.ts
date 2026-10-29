@@ -263,7 +263,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     const out = this.outcome(compact || tiny);
     const sub = una ? t("common.unavailable") : out ?? (c.show_state === false ? "" : this.sub(e));
     if (tiny) {
-      return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: look.iconFg, handlers: h, disabled: una, body: icon(busy ? "mdi:loading" : ic, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`) });
+      return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: look.iconFg, handlers: h, disabled: una, extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(busy ? "mdi:loading" : ic, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`) });
     }
     const opts = {
       title: this.name,

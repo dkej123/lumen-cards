@@ -116,6 +116,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
         style="display:flex;align-items:center;gap:7px;height:36px;padding:0 10px 0 5px;border-radius:14px;box-sizing:border-box;background:var(--lumen-surface);border:${s.unavailable ? "1.5px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${glass};cursor:pointer;min-width:0;user-select:none;touch-action:pan-y;transition:transform 220ms var(--lumen-ease-spring)">${WFX}
         ${this.avatar(name, s, true)}
         <div style="min-width:0;display:flex;flex-direction:column;white-space:nowrap">${c.show_name !== false ? html`<span style="font-size:11px;font-weight:700;line-height:13px;overflow:hidden;text-overflow:ellipsis">${name}</span>` : nothing}${c.show_status !== false ? html`<span style="font-size:10px;font-weight:600;line-height:12px;color:var(--lumen-text-2);overflow:hidden;text-overflow:ellipsis">${s.short}</span>` : nothing}</div>
+        <span style="margin-left:auto"></span>${this.subs.render(c.sub_buttons, { compact: true, max: 1 })}
       </div>`;
     }
     const badge = c.presence_entity && !s.unavailable ? (c.presence_badge ?? "BLE") : "";
