@@ -1,0 +1,223 @@
+import { css, html, nothing, unsafeCSS } from "lit";
+import { handleAction, type ActionConfig } from "../core/actions";
+import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { callOrToast, entityName } from "../core/call";
+import { advanced, appearance, firstOf, stub } from "../core/form";
+import { formX, nameIcon, tapHold } from "../core/form-extra";
+import { t } from "../core/i18n";
+import { registerCard } from "../core/register";
+import { SlideDrag, TILE_CSS, segButtons, sliderTile, thinBar } from "../core/slider-tile";
+import type { HassEntity, HassLike } from "../hass/types";
+import { COVER, activeButton, coverIcon, coverState, coverSupports, tiltDegrees } from "../logic/cover";
+
+export interface CoverConfig extends BaseConfig {
+  entity: string;
+  name?: string;
+  icon?: string;
+  /** Open / Stop / Close row (default true). */
+  show_buttons?: boolean;
+  /** Slat bar of tilting blinds (default true). */
+  show_tilt?: boolean;
+  /** Value line (default true). */
+  show_state?: boolean;
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+}
+
+export function validateCover(c: Partial<CoverConfig>): void {
+  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+}
+
+/**
+ * Roller shutter / blind (catalog section 14): the tile fill is the position, a horizontal drag
+ * sets it (set_cover_position on release), Open / Stop / Close in a second row, a separate slat
+ * bar for tilting blinds. Tap toggles, hold opens more-info.
+ */
+export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
+  protected static compactBelow = 200;
+  /** Open / close just pressed: shows Opening… / Closing… before HA reports it. */
+  private target: { pos: number; from?: HassEntity; until: number } | null = null;
+
+  private pos = new SlideDrag(this, {
+    enabled: () => this.canSetPosition,
+    source: () => this.cover,
+    commit: (f) => this.setPosition(Math.round(f * 100)),
+    tap: () => this.tap(),
+    hold: () => this.hold(),
+    step: (d, big) => {
+      const f = this.pos.value();
+      const p = f !== null ? f * 100 : (coverState(this.cover).position ?? 0);
+      this.setPosition(Math.max(0, Math.min(100, Math.round(p) + d * (big ? 25 : 10))));
+    },
+  });
+
+  private tilt = new SlideDrag(this, {
+    enabled: () => !this.offline,
+    source: () => this.cover,
+    tapSets: true,
+    commit: (f) => this.call("set_cover_tilt_position", { tilt_position: Math.round(f * 100) }),
+    step: (d, big) => {
+      const cur = coverState(this.cover).tilt ?? 0;
+      this.call("set_cover_tilt_position", { tilt_position: Math.max(0, Math.min(100, cur + d * (big ? 25 : 10))) });
+    },
+  });
+
+  static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}`];
+
+  protected entityIds() {
+    return [this._config.entity];
+  }
+
+  protected validate(c: CoverConfig) {
+    validateCover(c);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.pos.dispose();
+    this.tilt.dispose();
+  }
+
+  private get cover() {
+    return this.entity(this._config.entity);
+  }
+
+  private get offline() {
+    return !this.cover || this.cover.state === "unavailable";
+  }
+
+  private get canSetPosition() {
+    return !this.offline && coverSupports(this.cover, COVER.SET_POSITION);
+  }
+
+  private call(service: string, data: Record<string, unknown> = {}) {
+    this.requestUpdate();
+    return callOrToast(this, this._hass, "cover", service, data, this._config.entity).then((ok) => {
+      if (!ok) this.target = null;
+      this.requestUpdate();
+    });
+  }
+
+  private setPosition(p: number) {
+    this.target = { pos: p, from: this.cover, until: Date.now() + 10_000 };
+    this.call("set_cover_position", { position: p });
+  }
+
+  private open() {
+    this.target = { pos: 100, from: this.cover, until: Date.now() + 10_000 };
+    this.call("open_cover");
+  }
+
+  private close() {
+    this.target = { pos: 0, from: this.cover, until: Date.now() + 10_000 };
+    this.call("close_cover");
+  }
+
+  private stop() {
+    this.target = null;
+    this.call("stop_cover");
+  }
+
+  private tap() {
+    const c = this._config;
+    if (this.offline && !c.tap_action) return;
+    handleAction(this, c.tap_action ?? { action: "toggle" }, c.entity, "tap");
+  }
+
+  private hold() {
+    const c = this._config;
+    if (c.hold_action) handleAction(this, c.hold_action, c.entity, "hold");
+    else this.moreInfo(c.entity);
+  }
+
+  /** The pressed command until HA sends a new state for the cover (or 10 s). */
+  private liveTarget(): number | null {
+    const tg = this.target;
+    if (!tg) return null;
+    if (tg.from !== this.cover || Date.now() > tg.until) {
+      this.target = null;
+      return null;
+    }
+    return tg.pos;
+  }
+
+  render() {
+    if (!this._config || !this._hass) return nothing;
+    const c = this._config;
+    const e = this.cover;
+    const s = coverState(e, this.liveTarget());
+    const una = s.key === "unavailable";
+    const name = entityName(c.name, e, c.entity);
+    const dragged = this.pos.value();
+    const pos = dragged !== null ? Math.round(dragged * 100) : s.position;
+    const tilting = !una && coverSupports(e, COVER.SET_TILT_POSITION) && s.tilt !== null && c.show_tilt !== false;
+    const slats = tilting && s.key === "closed";
+    const tiltF = this.tilt.value() ?? (s.tilt ?? 0) / 100;
+    const meta = una ? "" : slats ? t("card.cover.slats", { deg: tiltDegrees(Math.round(tiltF * 100)) }) : pos !== null ? `${pos}%` : "";
+    const active = activeButton(s);
+    const showButtons = !una && c.show_buttons !== false && (coverSupports(e, COVER.OPEN) || coverSupports(e, COVER.CLOSE));
+    const buttons = showButtons
+      ? segButtons(
+          [
+            { icon: "mdi:arrow-up", label: t("card.cover.open_btn"), on: active === "open", click: () => this.open() },
+            ...(coverSupports(e, COVER.STOP) ? [{ icon: "mdi:stop", label: t("card.cover.stop"), on: active === "stop", click: () => this.stop() }] : []),
+            { icon: "mdi:arrow-down", label: t("card.cover.close_btn"), on: active === "close", click: () => this.close() },
+          ],
+          name,
+        )
+      : nothing;
+    const tiltBar = tilting
+      ? thinBar({ drag: this.tilt, frac: tiltF, color: "var(--lumen-accent)", name: t("card.cover.tilt"), valueText: `${tiltDegrees(Math.round(tiltF * 100))}°`, label: `${tiltDegrees(Math.round(tiltF * 100))}°` })
+      : nothing;
+    const below = buttons === nothing && tiltBar === nothing ? undefined : html`${buttons}${tiltBar}`;
+    const showState = c.show_state !== false;
+    return sliderTile(
+      {
+        title: name,
+        sub: showState ? s.label : "",
+        meta: showState ? meta : "",
+        subColor: una ? "var(--lumen-text-3)" : undefined,
+        icon: c.icon || (e?.attributes.icon as string | undefined) || coverIcon(e, s),
+        iconBg: una ? "transparent" : "var(--lumen-accent-soft)",
+        iconFg: una ? "var(--lumen-unavailable)" : "var(--lumen-accent)",
+        fill: una || slats ? 0 : pos,
+        fillColor: "var(--lumen-accent)",
+        una,
+        spin: s.moving,
+        compact: this.compact,
+        label: `${name} · ${s.label}${meta ? ` ${meta}` : ""}`,
+        keys: this.canSetPosition ? "ArrowLeft ArrowRight Shift+Enter" : "Shift+Enter",
+        below,
+      },
+      this.pos,
+    );
+  }
+
+  getCardSize() {
+    return 2;
+  }
+
+  getGridOptions() {
+    return { columns: 12, rows: "auto", min_columns: 3 };
+  }
+
+  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
+    return { entity: stub(hass, "cover", entities, fallback) ?? firstOf(hass, "cover", "cover.example") };
+  }
+
+  static getConfigForm() {
+    return formX([
+      { name: "entity", required: true, selector: { entity: { domain: "cover" } } },
+      nameIcon(),
+      tapHold(),
+      advanced([["show_state"], ["show_buttons"], ["show_tilt"]]),
+      appearance({ layout: "width" }),
+    ]);
+  }
+}
+
+registerCard("lumen-cover-card", LumenCoverCard, {
+  name: "card.cover.name",
+  description: "card.cover.description",
+  domains: ["cover"],
+});

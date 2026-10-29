@@ -1,0 +1,405 @@
+// @vitest-environment happy-dom
+// Catalog section 14 ("Nowe domeny"): cover, media, select, fan, number, calendar, nav, pop-up.
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { setLanguage, setLocale } from "../src/core/i18n";
+import type { HassEntity, HassLike } from "../src/hass/types";
+import { dayLabel, eventTime, eventTone, groupByDay, parseEvents, rangeQuery } from "../src/logic/calendar";
+import { COVER, activeButton, coverIcon, coverPosition, coverState, tiltDegrees } from "../src/logic/cover";
+import { MEDIA, formatTrackTime, mediaInfo, mediaOff, mediaPosition, volumeIcon } from "../src/logic/media";
+import { activeIndex, resolvePath } from "../src/logic/nav";
+import { cardSpan, hashMatches, innerConfig, normalizeHash } from "../src/logic/popup";
+import { fractionAt, fractionOf, numberRange, numberText, snap, stepDecimals, valueAt } from "../src/logic/slider";
+
+const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
+  entity_id,
+  state,
+  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
+  last_changed: "2026-10-29T10:00:00Z",
+  last_updated: "2026-10-29T10:00:00Z",
+});
+
+afterEach(() => {
+  setLanguage("en");
+  setLocale(undefined);
+});
+
+describe("slider math", () => {
+  it("fraction follows the finger and is clamped", () => {
+    expect(fractionAt(150, { left: 100, width: 200 })).toBe(0.25);
+    expect(fractionAt(50, { left: 100, width: 200 })).toBe(0);
+    expect(fractionAt(400, { left: 100, width: 200 })).toBe(1);
+    expect(fractionAt(10, { left: 0, width: 0 })).toBe(0);
+  });
+  it("snaps to the step without float noise", () => {
+    expect(stepDecimals(0.5)).toBe(1);
+    expect(stepDecimals(1)).toBe(0);
+    expect(stepDecimals(1e-7)).toBe(7);
+    expect(snap(0.1 + 0.2, 0, 1, 0.1)).toBe(0.3);
+    expect(snap(21.26, 16, 30, 0.5)).toBe(21.5);
+    expect(snap(99, 0, 10, 1)).toBe(10);
+    expect(valueAt(0.55, 30, 80, 1)).toBe(58);
+    expect(fractionOf(55, 30, 80)).toBeCloseTo(0.5);
+    expect(fractionOf(5, 5, 5)).toBe(0);
+  });
+  it("range defaults and value text (%, unit, „3 of 10”)", () => {
+    expect(numberRange({})).toEqual({ min: 0, max: 100, step: 1 });
+    expect(numberRange({ min: 5, max: 1, step: 0 })).toEqual({ min: 5, max: 6, step: 1 });
+    const r = numberRange({ min: 0, max: 10, step: 1 });
+    expect(numberText(55, "%", numberRange({}))).toBe("55%");
+    expect(numberText(21.5, "°C", { min: 10, max: 30, step: 0.5 })).toBe("21.5 °C");
+    expect(numberText(3, undefined, r)).toBe("3 of 10");
+    setLanguage("pl");
+    setLocale({ language: "pl" });
+    expect(numberText(3, undefined, r)).toBe("3 z 10");
+    expect(numberText(21.5, "°C", { min: 10, max: 30, step: 0.5 })).toBe("21,5 °C");
+  });
+});
+
+describe("cover", () => {
+  it("position from current_position or the end state", () => {
+    expect(coverPosition(ent("cover.a", "open", { current_position: 40 }))).toBe(40);
+    expect(coverPosition(ent("cover.a", "open"))).toBe(100);
+    expect(coverPosition(ent("cover.a", "closed"))).toBe(0);
+    expect(coverPosition(ent("cover.a", "opening"))).toBeNull();
+  });
+  it("states: open, partial, closed, moving, unavailable, unknown", () => {
+    expect(coverState(ent("cover.a", "open", { current_position: 100 })).key).toBe("open");
+    expect(coverState(ent("cover.a", "open", { current_position: 40 })).label).toBe("Partly open");
+    expect(coverState(ent("cover.a", "closed")).key).toBe("closed");
+    expect(coverState(ent("cover.a", "closing", { current_position: 40 }))).toMatchObject({ key: "closing", moving: true, label: "Closing…" });
+    expect(coverState(ent("cover.a", "unavailable")).key).toBe("unavailable");
+    expect(coverState(undefined).key).toBe("unavailable");
+    expect(coverState(ent("cover.a", "unknown")).label).toBe("No data");
+  });
+  it("a pressed command shows the direction before HA reports it", () => {
+    const e = ent("cover.a", "open", { current_position: 100 });
+    expect(coverState(e, 0).key).toBe("closing");
+    expect(coverState(ent("cover.a", "closed"), 100).key).toBe("opening");
+    expect(coverState(e, 100).key).toBe("open");
+    expect(coverState(ent("cover.a", "open", { current_position: 40 }), 70).key).toBe("opening");
+  });
+  it("pressed segment button: Stop while moving, else the end it rests at", () => {
+    expect(activeButton(coverState(ent("cover.a", "opening")))).toBe("stop");
+    expect(activeButton(coverState(ent("cover.a", "open", { current_position: 100 })))).toBe("open");
+    expect(activeButton(coverState(ent("cover.a", "closed")))).toBe("close");
+    expect(activeButton(coverState(ent("cover.a", "open", { current_position: 50 })))).toBeNull();
+  });
+  it("tilt in degrees, icons by device class", () => {
+    expect(tiltDegrees(50)).toBe(45);
+    const blind = ent("cover.b", "closed", { current_tilt_position: 50, supported_features: COVER.SET_TILT_POSITION });
+    expect(coverIcon(blind, coverState(blind))).toBe("mdi:blinds-horizontal-closed");
+    const sh = ent("cover.s", "open", { current_position: 100 });
+    expect(coverIcon(sh, coverState(sh))).toBe("mdi:window-shutter-open");
+    const g = ent("cover.g", "closed", { device_class: "garage" });
+    expect(coverIcon(g, coverState(g))).toBe("mdi:garage");
+  });
+});
+
+describe("media", () => {
+  const now = Date.parse("2026-10-29T10:00:10Z");
+  it("position moves on while playing, stops at the duration", () => {
+    const e = ent("media_player.a", "playing", { media_position: 100, media_position_updated_at: "2026-10-29T10:00:00Z", media_duration: 105 });
+    expect(mediaPosition(e, now)).toBe(105);
+    expect(mediaPosition({ ...e, attributes: { ...e.attributes, media_duration: 600 } }, now)).toBe(110);
+    expect(mediaPosition({ ...e, state: "paused" }, now)).toBe(100);
+    expect(mediaPosition(ent("media_player.a", "playing"), now)).toBeNull();
+  });
+  it("track time, off states, volume glyph", () => {
+    expect(formatTrackTime(134)).toBe("2:14");
+    expect(formatTrackTime(3729)).toBe("1:02:09");
+    expect(formatTrackTime(null)).toBe("–");
+    expect(mediaOff(ent("m.a", "off"))).toBe(true);
+    expect(mediaOff(ent("m.a", "standby"))).toBe(true);
+    expect(mediaOff(ent("m.a", "idle"))).toBe(false);
+    expect(volumeIcon(0.2, false)).toBe("mdi:volume-low");
+    expect(volumeIcon(0.9, false)).toBe("mdi:volume-high");
+    expect(volumeIcon(0.5, true)).toBe("mdi:volume-off");
+  });
+  it("title / artist with fallbacks", () => {
+    expect(mediaInfo(ent("m.a", "playing", { media_title: "Kind of Blue", media_artist: "Miles Davis", entity_picture: "/api/x" }), "Sonos")).toEqual({ title: "Kind of Blue", artist: "Miles Davis", picture: "/api/x" });
+    expect(mediaInfo(ent("m.a", "playing", { app_name: "Netflix" }), "TV")).toMatchObject({ title: "Netflix", artist: "" });
+    expect(mediaInfo(ent("m.a", "playing", { media_title: "Ep. 1", app_name: "Netflix" }), "TV").artist).toBe("Netflix");
+  });
+});
+
+describe("calendar", () => {
+  const now = new Date(2026, 9, 29, 12, 0).getTime();
+  const at = (d: number, h: number, m = 0) => new Date(2026, 9, 29 + d, h, m).toISOString();
+  const raw = [
+    { summary: "Dinner", start: { dateTime: at(1, 19, 30) }, end: { dateTime: at(1, 19, 30) } },
+    { summary: "Bins", start: { date: "2026-10-29" }, end: { date: "2026-10-30" } },
+    { summary: "Boiler", start: { dateTime: at(0, 14) }, end: { dateTime: at(0, 15) } },
+    { summary: "Past", start: { dateTime: at(0, 8) }, end: { dateTime: at(0, 9) } },
+    { summary: "Running", start: { dateTime: at(-1, 20) }, end: { dateTime: at(0, 13) } },
+    { start: "nonsense" },
+  ];
+  it("parses date and dateTime, drops invalid, sorts by start", () => {
+    const ev = parseEvents(raw);
+    expect(ev.map((e) => e.summary)).toEqual(["Running", "Bins", "Past", "Boiler", "Dinner"]);
+    expect(ev.find((e) => e.summary === "Bins")).toMatchObject({ allDay: true, start: new Date(2026, 9, 29).getTime() });
+    expect(parseEvents(null)).toEqual([]);
+  });
+  it("groups the coming events by day, running events under today, max events", () => {
+    const days = groupByDay(parseEvents(raw), now, 5);
+    expect(days.map((d) => d.events.map((e) => e.summary))).toEqual([["Running", "Bins", "Boiler"], ["Dinner"]]);
+    expect(days[0].label).toMatch(/^Today · /);
+    expect(days[1].label).toMatch(/^Tomorrow · /);
+    expect(groupByDay(parseEvents(raw), now, 2).flatMap((d) => d.events).length).toBe(2);
+  });
+  it("labels and times", () => {
+    const [bins, boiler, dinner] = ["Bins", "Boiler", "Dinner"].map((s) => parseEvents(raw).find((e) => e.summary === s)!);
+    expect(eventTime(bins)).toBe("all day");
+    expect(eventTime(boiler)).toBe("14:00–15:00");
+    expect(eventTime(dinner)).toBe("19:30");
+    setLanguage("pl");
+    setLocale({ language: "pl" });
+    expect(dayLabel(now, now)).toBe("Dziś · czw 29.10");
+    expect(eventTime(bins)).toBe("cały dzień");
+    expect(dayLabel(new Date(2026, 9, 31).getTime(), now)).toBe("sob 31.10");
+  });
+  it("stable colour per title, API range from midnight", () => {
+    expect(eventTone("Bins")).toBe(eventTone("bins"));
+    expect(["accent", "ok", "orange", "info", "warning"]).toContain(eventTone("Dentist"));
+    const r = rangeQuery(now, 7);
+    expect(new Date(r.start).getHours()).toBe(0);
+    expect((Date.parse(r.end) - Date.parse(r.start)) / 86_400_000).toBeCloseTo(7, 0);
+  });
+});
+
+describe("nav + pop-up logic", () => {
+  const items = [{ navigation_path: "home" }, { navigation_path: "/lovelace/rooms" }, { navigation_path: "#salon" }, { navigation_path: "/lovelace" }];
+  it("resolves relative paths against the dashboard", () => {
+    expect(resolvePath("rooms", "/dashboard-dom/home")).toBe("/dashboard-dom/rooms");
+    expect(resolvePath("/lovelace/rooms/", "/x")).toBe("/lovelace/rooms");
+    expect(resolvePath("#a", "/x")).toBe("#a");
+  });
+  it("active item: exact, then the longest prefix, hash items by hash", () => {
+    expect(activeIndex(items, { pathname: "/lovelace/home" })).toBe(0);
+    expect(activeIndex(items, { pathname: "/lovelace/rooms/kitchen" })).toBe(1);
+    expect(activeIndex(items, { pathname: "/lovelace/other" })).toBe(3);
+    expect(activeIndex(items, { pathname: "/lovelace/home", hash: "#salon" })).toBe(2);
+    expect(activeIndex([{ navigation_path: "/a" }], { pathname: "/b" })).toBe(-1);
+  });
+  it("hash normalising and matching", () => {
+    expect(normalizeHash(" salon ")).toBe("#salon");
+    expect(normalizeHash("##salon")).toBe("#salon");
+    expect(normalizeHash(undefined)).toBe("");
+    expect(hashMatches("#salon", "#salon")).toBe(true);
+    expect(hashMatches("#caf%C3%A9", "#café")).toBe(true);
+    expect(hashMatches("", "")).toBe(false);
+    expect(hashMatches("#%E0%A4%A", "#x")).toBe(false);
+  });
+  it("inner cards: span from grid_options or the card, weather off for Lumen cards", () => {
+    expect(cardSpan({ grid_options: { columns: 6 } }, { columns: 12 })).toBe(6);
+    expect(cardSpan({}, { columns: 6 })).toBe(6);
+    expect(cardSpan({}, { columns: "full" })).toBe(12);
+    expect(cardSpan(undefined, undefined)).toBe(12);
+    expect(innerConfig({ type: "custom:lumen-light-card" })).toEqual({ type: "custom:lumen-light-card", weather_effects: false });
+    expect(innerConfig({ type: "custom:lumen-light-card", weather_effects: true }).weather_effects).toBe(true);
+    expect(innerConfig({ type: "tile" })).toEqual({ type: "tile" });
+  });
+});
+
+// ------------------------------------------------------------------ cards
+
+type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean> };
+type Entry = { type: string; getEntitySuggestion?(h: HassLike, id: string): { config: Record<string, unknown> }[] | null };
+
+const STATES = [
+  ent("cover.shutter", "open", { current_position: 100, supported_features: 15 }),
+  ent("cover.blind", "closed", { current_position: 0, current_tilt_position: 50, supported_features: 255 }),
+  ent("cover.off", "unavailable", { supported_features: 15 }),
+  ent("fan.f", "on", { percentage: 60, percentage_step: 10, supported_features: 1 }),
+  ent("input_number.n", "55", { min: 30, max: 80, step: 1, unit_of_measurement: "%" }),
+  ent("number.v", "3", { min: 0, max: 10, step: 1 }),
+  ent("input_select.s", "Quiet", { options: ["Quiet", "Normal", "Strong"] }),
+  ent("media_player.m", "playing", { media_title: "Kind of Blue", media_artist: "Miles Davis", volume_level: 0.4, supported_features: MEDIA.PAUSE | MEDIA.VOLUME_SET | MEDIA.NEXT_TRACK | MEDIA.PLAY }),
+  ent("calendar.c", "off"),
+];
+
+const mkHass = (api?: (path: string) => unknown): HassLike & { calls: unknown[]; api: string[] } => {
+  const calls: unknown[] = [];
+  const apiCalls: string[] = [];
+  return {
+    calls,
+    api: apiCalls,
+    states: Object.fromEntries(STATES.map((e) => [e.entity_id, e])),
+    user: { id: "u1", name: "Ann", is_admin: true },
+    language: "en",
+    locale: { language: "en", time_format: "24" },
+    themes: { darkMode: false },
+    formatEntityState: (e) => e.state,
+    callService: async (...args) => {
+      calls.push(args);
+      return undefined;
+    },
+    callWS: async () => ({}) as never,
+    ...(api ? { callApi: async (_m: string, path: string) => (apiCalls.push(path), api(path)) } : {}),
+  } as HassLike & { calls: unknown[]; api: string[] };
+};
+
+const mount = async (type: string, cfg: Record<string, unknown>, h = mkHass()) => {
+  const el = document.createElement(`lumen-${type}-card`) as Card;
+  el.setConfig({ type: `custom:lumen-${type}-card`, ...cfg });
+  el.hass = h;
+  document.body.append(el);
+  await el.updateComplete;
+  return { el, h, root: el.shadowRoot! };
+};
+
+const press = (el: Element, key: string, extra: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, ...extra }));
+
+beforeAll(async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
+  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
+  await import("../src/lumen-cards");
+});
+
+describe("section 14 cards", () => {
+  it("are in the picker and suggested for their domains", () => {
+    const entries = (window as unknown as { customCards: Entry[] }).customCards;
+    const h = mkHass();
+    const sug = (type: string, id: string) => entries.find((e) => e.type === type)!.getEntitySuggestion?.(h, id)?.[0].config;
+    expect(sug("lumen-cover-card", "cover.shutter")).toMatchObject({ entity: "cover.shutter" });
+    expect(sug("lumen-media-card", "media_player.m")).toMatchObject({ entity: "media_player.m" });
+    expect(sug("lumen-select-card", "input_select.s")).toMatchObject({ entity: "input_select.s" });
+    expect(sug("lumen-fan-card", "fan.f")).toMatchObject({ entity: "fan.f" });
+    expect(sug("lumen-number-card", "number.v")).toMatchObject({ entity: "number.v" });
+    expect(sug("lumen-calendar-card", "calendar.c")).toMatchObject({ entity: "calendar.c" });
+    for (const t of ["lumen-nav-card", "lumen-popup-card"]) expect(entries.some((e) => e.type === t)).toBe(true);
+  });
+
+  it("cover: state, buttons call the services, tilt bar only with tilt", async () => {
+    const { el, h, root } = await mount("cover", { entity: "cover.shutter", layout: "wide" });
+    expect(root.textContent).toContain("Open");
+    expect(root.textContent).toContain("100%");
+    const btns = [...root.querySelectorAll<HTMLButtonElement>("button")];
+    expect(btns.map((b) => b.textContent!.trim())).toEqual(["Open", "Stop", "Close"]);
+    expect(btns[0].getAttribute("aria-pressed")).toBe("true");
+    btns[2].click();
+    await el.updateComplete;
+    expect(h.calls.at(-1)).toEqual(["cover", "close_cover", {}, { entity_id: "cover.shutter" }]);
+    expect(root.textContent).toContain("Closing…");
+    expect(root.querySelector('[role="slider"]')).toBeNull();
+    el.remove();
+    const blind = await mount("cover", { entity: "cover.blind", layout: "wide" });
+    expect(blind.root.textContent).toContain("slats 45°");
+    press(blind.root.querySelector('[role="slider"]')!, "ArrowRight");
+    expect(blind.h.calls.at(-1)).toEqual(["cover", "set_cover_tilt_position", { tilt_position: 60 }, { entity_id: "cover.blind" }]);
+    blind.el.remove();
+    const off = await mount("cover", { entity: "cover.off", layout: "wide" });
+    expect(off.root.querySelectorAll("button").length).toBe(0);
+    expect(off.root.textContent).toContain("Unavailable");
+    off.el.remove();
+  });
+
+  it("cover: arrow keys move the position, compact hides the buttons", async () => {
+    const { el, h, root } = await mount("cover", { entity: "cover.shutter", layout: "compact" });
+    expect(root.querySelectorAll("button").length).toBe(0);
+    press(root.querySelector(".ltile")!, "ArrowLeft");
+    expect(h.calls.at(-1)).toEqual(["cover", "set_cover_position", { position: 90 }, { entity_id: "cover.shutter" }]);
+    el.remove();
+  });
+
+  it("fan: tap is HA's toggle, arrows step the speed by the fan's step", async () => {
+    const { el, h, root } = await mount("fan", { entity: "fan.f" });
+    const tile = root.querySelector(".ltile")!;
+    expect(tile.getAttribute("aria-pressed")).toBe("true");
+    expect(root.textContent).toContain("60%");
+    const fired: unknown[] = [];
+    el.addEventListener("hass-action", (e) => fired.push((e as CustomEvent).detail));
+    press(tile, "Enter");
+    expect(fired).toEqual([{ config: { entity: "fan.f", tap_action: { action: "toggle" } }, action: "tap" }]);
+    press(tile, "ArrowRight");
+    expect(h.calls.at(-1)).toEqual(["fan", "set_percentage", { percentage: 70 }, { entity_id: "fan.f" }]);
+    el.remove();
+  });
+
+  it("number: value text and steps on its own scale", async () => {
+    const a = await mount("number", { entity: "number.v" });
+    expect(a.root.textContent).toContain("3 of 10");
+    press(a.root.querySelector(".ltile")!, "ArrowRight");
+    expect(a.h.calls.at(-1)).toEqual(["number", "set_value", { value: 4 }, { entity_id: "number.v" }]);
+    a.el.remove();
+    const b = await mount("number", { entity: "input_number.n" });
+    expect(b.root.textContent).toContain("55%");
+    press(b.root.querySelector(".ltile")!, "ArrowLeft");
+    expect(b.h.calls.at(-1)).toEqual(["input_number", "set_value", { value: 54 }, { entity_id: "input_number.n" }]);
+    b.el.remove();
+  });
+
+  it("select: the list opens in the layer and a choice calls select_option", async () => {
+    const { el, h, root } = await mount("select", { entity: "input_select.s" });
+    const pick = root.querySelector<HTMLButtonElement>(".pick")!;
+    expect(pick.textContent).toContain("Quiet");
+    pick.click();
+    await el.updateComplete;
+    const layer = document.querySelector("lumen-cards-layer")!.shadowRoot!;
+    const opts = [...layer.querySelectorAll<HTMLElement>('[role="option"]')];
+    expect(opts.map((o) => o.textContent!.trim())).toEqual(["Quiet", "Normal", "Strong"]);
+    expect(opts[0].getAttribute("aria-selected")).toBe("true");
+    opts[2].click();
+    await el.updateComplete;
+    expect(h.calls.at(-1)).toEqual(["input_select", "select_option", { option: "Strong" }, { entity_id: "input_select.s" }]);
+    expect(document.querySelector("lumen-cards-layer")).toBeNull();
+    expect(root.querySelector(".pick")!.textContent).toContain("Strong");
+    el.remove();
+  });
+
+  it("media: play/pause and next call the player", async () => {
+    const { el, h, root } = await mount("media", { entity: "media_player.m", layout: "wide" });
+    expect(root.textContent).toContain("Kind of Blue");
+    root.querySelector<HTMLButtonElement>('button[aria-label="Pause"]')!.click();
+    expect(h.calls.at(-1)).toEqual(["media_player", "media_pause", {}, { entity_id: "media_player.m" }]);
+    root.querySelector<HTMLButtonElement>('button[aria-label="Next"]')!.click();
+    expect(h.calls.at(-1)).toEqual(["media_player", "media_next_track", {}, { entity_id: "media_player.m" }]);
+    expect(root.querySelector<HTMLButtonElement>('button[aria-label="Previous"]')!.disabled).toBe(true);
+    el.remove();
+  });
+
+  it("calendar: asks HA's calendar API and lists the events", async () => {
+    const today = new Date();
+    today.setHours(23, 30, 0, 0);
+    const h = mkHass(() => [{ summary: "Boiler service", start: { dateTime: today.toISOString() }, end: { dateTime: new Date(today.getTime() + 600_000).toISOString() } }]);
+    const { el, root } = await mount("calendar", { entity: "calendar.c" }, h);
+    await new Promise((r) => setTimeout(r, 0));
+    await el.updateComplete;
+    expect(h.api[0]).toMatch(/^calendars\/calendar\.c\?start=.*&end=/);
+    expect(root.textContent).toContain("Boiler service");
+    expect(root.textContent).toContain("23:30–23:40");
+    el.remove();
+  });
+
+  it("nav: the current view is active, a tap navigates through HA", async () => {
+    const { el, root } = await mount("nav", { position: "inline", items: [{ navigation_path: location.pathname, name: "Home", icon: "mdi:home" }, { navigation_path: "/rooms", name: "Rooms" }] });
+    const links = [...root.querySelectorAll<HTMLAnchorElement>("a")];
+    expect(links[0].getAttribute("aria-current")).toBe("page");
+    expect(links[1].getAttribute("aria-current")).toBeNull();
+    const fired: unknown[] = [];
+    el.addEventListener("hass-action", (e) => fired.push((e as CustomEvent).detail));
+    links[1].dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+    expect(fired).toEqual([{ config: { entity: undefined, tap_action: { action: "navigate", navigation_path: "/rooms" } }, action: "tap" }]);
+    el.remove();
+  });
+
+  it("pop-up: opens on its #hash with the cards inside, close drops the hash", async () => {
+    history.replaceState(null, "", "/lovelace/home");
+    const { el } = await mount("popup", { hash: "salon", name: "Living room", cards: [{ type: "custom:lumen-fan-card", entity: "fan.f" }] });
+    expect(el.shadowRoot!.textContent!.trim()).toBe("");
+    history.pushState(null, "", "/lovelace/home#salon");
+    window.dispatchEvent(new CustomEvent("location-changed"));
+    await new Promise((r) => setTimeout(r, 0));
+    await el.updateComplete;
+    const layer = document.querySelector("lumen-cards-layer")!.shadowRoot!;
+    expect(layer.querySelector('[role="dialog"]')!.getAttribute("aria-label")).toBe("Living room");
+    const fan = layer.querySelector("lumen-fan-card") as Card;
+    expect(fan).toBeTruthy();
+    expect(fan.hass).toBeTruthy();
+    (el as unknown as { close(): void }).close();
+    expect(location.hash).toBe("");
+    await new Promise((r) => setTimeout(r, 300));
+    await el.updateComplete;
+    expect(document.querySelector("lumen-cards-layer")).toBeNull();
+    el.remove();
+  });
+});

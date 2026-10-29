@@ -5,6 +5,7 @@
 //   &weather=rainy|snowy|…   weather state;  &alarm=triggered   alarm state;  &code   lock asks for a code
 import type { HassEntities, HassEntity, HassLike } from "../src/hass/types";
 import { injectLocalFonts } from "./local-fonts";
+import { DOMAINS, DOMAIN_GALLERY, domainApi, domainService, domainStates, listenActions, type DemoCtx } from "./demo-domains";
 
 injectLocalFonts();
 const params = new URLSearchParams(location.search);
@@ -59,6 +60,7 @@ let states: HassEntities = Object.fromEntries(
     e("climate.bedroom_ac", "cool", { friendly_name: "Bedroom AC", hvac_modes: ["off", "heat", "cool"], fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 23.4, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }),
     e("input_boolean.bike_battery", "on", { friendly_name: "Bike battery low" }, 10),
     e("sensor.bike_battery", "18", { unit_of_measurement: "%" }),
+    ...domainStates(e),
   ].map((x) => [x.entity_id, x]),
 );
 
@@ -96,6 +98,7 @@ const make = (): HassLike => ({
   },
   callService: async (domain, service, data = {}, target) => {
     const id = String((target as { entity_id?: string })?.entity_id ?? "");
+    if (domainService(ctx, domain, service, data, id)) return undefined;
     if (domain === "light") set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin } : {});
     if (domain === "homeassistant" && service.startsWith("turn_")) set(id, service === "turn_on" ? "on" : "off");
     if (domain === "lock") set(id, service === "lock" ? "locked" : "unlocked");
@@ -103,6 +106,7 @@ const make = (): HassLike => ({
     if (domain === "climate" && service === "set_temperature") set(id, states[id].state, data);
     return undefined;
   },
+  ...({ callApi: domainApi } as object),
   callWS: async <T>() => {
     // A day of made-up history for the sparklines.
     const hist: Record<string, { s: string; lu: number }[]> = {};
@@ -111,6 +115,9 @@ const make = (): HassLike => ({
     return hist as T;
   },
 });
+
+const ctx: DemoCtx = { get: (id) => states[id], set };
+listenActions(ctx, (domain, service, data, id) => domainService(ctx, domain, service, data, id));
 
 type Card = HTMLElement & { hass: HassLike; setConfig(c: unknown): void };
 type Spec = [type: string, cfg: Record<string, unknown>, span?: number];
@@ -149,6 +156,8 @@ const GALLERY: Record<string, Spec[]> = {
   "greeting": [["greeting", {}]],
   "weather": [["weather-background", { weather_entity: "weather.home", show_controls: true }], ["sensor", { entity: "sensor.outside_temp", color: "light-blue" }, 6], ["entity", { entity: "binary_sensor.front_door" }, 6], ["light", { entity: "light.sofa", icon: "mdi:sofa" }, 6], ["light", { entity: "light.ceiling", icon: "mdi:ceiling-light" }, 6]],
 };
+
+Object.assign(GALLERY, DOMAIN_GALLERY);
 
 /** Example dashboards of the README (same cards as the YAML there). */
 const PHONE: Spec[] = [
@@ -228,6 +237,8 @@ const ALL: Spec[] = [
   ...GALLERY["air-quality"],
   ...GALLERY.sensor,
   ...GALLERY.climate,
+  ["title", { title: "New domains" }],
+  ...DOMAINS,
 ];
 
 const grid = document.getElementById("grid")!;
