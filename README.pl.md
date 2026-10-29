@@ -93,9 +93,7 @@ Duży kafel jednego światła, który świeci kolorem żarówki.
 - **Kółko** po prawej zmienia biel na cieplejszą lub chłodniejszą.
 - **Dotknięcie ikony albo przytrzymanie** otwiera pełne sterowanie: jasność, cztery odcienie bieli rozłożone na zakresie Twojej żarówki, a w kolorowych żarówkach osiem kolorów i koło barw.
 
-Grupa świateł pokazuje, ile z nich świeci („2 z 3 włączone”). W małym miejscu kafel staje się kwadratem, a poniżej 100 px zostaje sama ikona:
-
-<img src="docs/images/light-compact.png" alt="Kompaktowe kwadratowe kafle świateł i kafle z samą ikoną" width="480">
+Grupa świateł pokazuje, ile z nich świeci („2 z 3 włączone”). W małym miejscu (poniżej 220 px) kafel robi się niższy, a nazwa może zająć dwie linie.
 
 <img src="docs/images/light-sheet.png" alt="Panel jasności, odcieni bieli i kolorów" width="260">
 
@@ -146,7 +144,7 @@ Czy zamek jest zamknięty, z przyciskami **Zablokuj** i **Odblokuj** (oraz **Otw
 
 <img src="docs/images/entity.png" alt="Drzwi wejściowe zamknięte, tylne otwarte" width="480">
 
-Mały kafel dla czegokolwiek, co ma stan. Drzwi i okna robią się **czerwone, gdy są otwarte**, a włączone urządzenia dostają kolor akcentu. Po prawej mieszczą się do czterech małych dodatkowych przycisków (dwa na wąskiej karcie, jeden na kompaktowej). W małym miejscu karta staje się kwadratowym kaflem.
+Mały kafel dla czegokolwiek, co ma stan. Drzwi i okna robią się **czerwone, gdy są otwarte**, a włączone urządzenia dostają kolor akcentu. Po prawej mieszczą się do czterech małych dodatkowych przycisków (dwa na wąskiej karcie). W małym miejscu karta zamienia się w mały kwadratowy przycisk z ikoną, jak w pasku dostępu.
 
 ### Przycisk
 

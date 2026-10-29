@@ -7,8 +7,9 @@ import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { Presses, pressable } from "../core/press";
 import { registerCard } from "../core/register";
-import { codePad, compactTile, dangerBorder, iconTile, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type Seg } from "../core/parts";
+import { codePad, dangerBorder, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type Seg } from "../core/parts";
 import { tone } from "../core/styles";
+import { compactCell } from "../core/status-row";
 import { toast } from "../core/toast";
 import type { HassEntity, HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
@@ -342,10 +343,14 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
       },
       () => this.moreInfo(this._config.entity),
     );
-    // Tiles keep the plain frame (catalog C / I); locked reads calm (text-2 caption).
-    const base: Look = { ...l, border: l.una ? l.border : undefined };
-    const look: Look = busy ? { ...base, icon: "mdi:loading", iconAnim: "lumenSpin 800ms linear infinite" } : this.lock?.state === "locked" ? { ...base, subC: "var(--lumen-text-2)" } : base;
-    return this.iconOnly ? iconTile({ title: this.name, look, handlers }) : compactTile({ title: this.name, look, handlers });
+    // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
+    return compactCell({
+      title: `${this.name} · ${l.sub}`,
+      color: l.iconFg ?? "var(--lumen-text-2)",
+      disabled: busy || una,
+      handlers,
+      body: icon(busy ? "mdi:loading" : l.icon, `display:block;font-size:24px;animation:${busy ? "lumenSpin 800ms linear infinite" : "none"}`),
+    });
   }
 
   getCardSize() {

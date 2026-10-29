@@ -119,11 +119,11 @@ describe("light card", () => {
     expect(text(await mount("light", { entity: "light.gone", layout: "wide" }))).toContain("Unavailable");
   });
 
-  it("compact square tile with the short off text", async () => {
+  it("compact is the low 52 px tile (owner: no square tiles)", async () => {
     const el = await mount("light", { entity: "light.c", layout: "compact" });
     expect(text(el)).toContain("Off");
     const tile = el.shadowRoot!.querySelector<HTMLElement>(".tile")!;
-    expect(tile.style.height).toBe("120px");
+    expect(tile.getAttribute("style")).toContain("52px");
   });
 
   it("horizontal drag sets the brightness from the finger position", async () => {
@@ -200,7 +200,8 @@ describe("sub-buttons", () => {
     await el.updateComplete;
     expect(el.shadowRoot!.querySelector('.subbtns [role="note"]')!.textContent).toContain("+1");
     const compact = await mount("entity", { entity: "fan.purifier", layout: "compact", sub_buttons: subs });
-    expect(compact.shadowRoot!.querySelectorAll(".subbtns > [aria-disabled]").length).toBe(1);
+    // Compact entity = access bar cell: no room for sub-buttons.
+    expect(compact.shadowRoot!.querySelectorAll(".subbtns > [aria-disabled]").length).toBe(0);
   });
 
   it("a press on a sub-button does not reach the card", async () => {

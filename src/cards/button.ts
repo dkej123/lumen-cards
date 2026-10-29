@@ -8,7 +8,7 @@ import { t } from "../core/i18n";
 import { Presses } from "../core/press";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
-import { ACCENT, ICON_ONLY_BELOW, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneBorder, toneLook, type TileLook } from "../core/tile";
+import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneBorder, toneLook, type TileLook } from "../core/tile";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
@@ -257,8 +257,9 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
         );
     const ic = c.icon ?? e?.attributes.icon ?? ICONS[this.domain] ?? "mdi:gesture-tap";
     const look = this.look(e);
-    const tiny = this.compact && this._width > 0 && this._width < ICON_ONLY_BELOW;
-    const compact = this.compact && !tiny;
+    // Owner 2026-10-29: compact is always the access bar cell (no square tile).
+    const tiny = this.compact;
+    const compact = false;
     const out = this.outcome(compact || tiny);
     const sub = una ? t("common.unavailable") : out ?? (c.show_state === false ? "" : this.sub(e));
     if (tiny) {

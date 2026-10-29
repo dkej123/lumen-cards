@@ -9,7 +9,7 @@ import { Presses } from "../core/press";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { tone } from "../core/styles";
-import { ACCENT, ICON_ONLY_BELOW, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneLook, type TileLook } from "../core/tile";
+import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneLook, type TileLook } from "../core/tile";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
 import { binaryStatus, type Status } from "../logic/status";
@@ -119,7 +119,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     );
     const una = !e || e.state === "unavailable";
     const label = una ? t("common.unavailable") : s.label;
-    if (this.compact && this._width > 0 && this._width < ICON_ONLY_BELOW) {
+    if (this.compact) {
       const glyph = s.icon === "mdi:door-closed-lock" ? "mdi:door-closed" : s.icon;
       return compactCell({
         title: `${name} ${label}`,

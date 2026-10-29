@@ -93,9 +93,7 @@ A large tile for one light. The tile glows in the colour of the bulb.
 - **Tap the small circle** to choose a warmer or cooler white.
 - **Tap the icon or hold** to open the full controls: brightness, four white tones spread over your bulb's range, eight colours and a colour wheel for colour bulbs.
 
-A light group shows how many lights are on ("2 of 3 on"). In a small space the tile becomes a square, and below 100 px just the icon:
-
-<img src="docs/images/light-compact.png" alt="Compact square light tiles and icon-only tiles" width="480">
+A light group shows how many lights are on ("2 of 3 on"). In a small space (under 220 px) the tile gets lower and the name may take two lines.
 
 <img src="docs/images/light-sheet.png" alt="Brightness, white tones and colours panel" width="260">
 
@@ -146,7 +144,7 @@ Shows whether a lock is locked, with **Lock** and **Unlock** buttons (and **Open
 
 <img src="docs/images/entity.png" alt="Front door closed, back door open" width="480">
 
-A small tile for anything with a state. Doors and windows turn **red when open**, switched-on things get the accent colour. Up to four small extra buttons fit on the right (two on a narrow card, one on a compact one). In a small space the card becomes a square tile.
+A small tile for anything with a state. Doors and windows turn **red when open**, switched-on things get the accent colour. Up to four small extra buttons fit on the right (two on a narrow card). In a small space the card becomes a small square icon button, like in an access bar.
 
 ### Button
 

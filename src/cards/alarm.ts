@@ -7,11 +7,12 @@ import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { Presses, pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
-import { alarmBanner, alarmRing } from "../core/status-row";
+import { alarmBanner, alarmRing, compactCell } from "../core/status-row";
+import { icon } from "../core/lumen-icon";
 import { tone } from "../core/styles";
-import { codePad, compactTile, countdown, iconTile, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type PadMode, type Seg } from "../core/parts";
+import { codePad, countdown, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type PadMode, type Seg } from "../core/parts";
 import type { HassEntity, HassLike } from "../hass/types";
-import { ARMED_ICON, alarmStatus, armModes, isArmed, modeLabel, type Status } from "../logic/status";
+import { ARMED_ICON, alarmBarIcon, alarmStatus, armModes, isArmed, modeLabel, type Status } from "../logic/status";
 
 export interface AlarmConfig extends BaseConfig {
   entity: string;
@@ -340,8 +341,11 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
       c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
     );
-    if (this.iconOnly) return iconTile({ title: this.name, look: { ...this.look(s, e, true), una: s.tone === "unavailable" }, handlers });
-    if (this.compact) return compactTile({ title: this.name, look: this.look(s, e, true), handlers });
+    // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
+    if (this.compact) {
+      const anim = s.alert ? "lumenShake 900ms ease-in-out infinite" : s.busy ? "lumenBreath 2400ms ease-in-out infinite" : "none";
+      return compactCell({ title: `${this.name} · ${s.label}`, color: tone(s.tone), handlers, alert: s.alert, body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
+    }
     const l = this.look(s, e, false);
     const cd = alarmCountdown(e, c);
     const btns = this.buttons(e, s);

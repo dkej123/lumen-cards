@@ -6,7 +6,6 @@ import { registerCard } from "../core/register";
 import type { HassLike } from "../hass/types";
 import { LightsController, type LightItem } from "../lights/controller";
 import { groupMembers } from "../logic/light";
-import { ICON_ONLY_BELOW } from "../core/tile";
 
 export interface LightTileConfig extends BaseConfig, LightItem {
   /** Tile height in px (default 64; compact tile 120, at least 96; icon-only tile 84, at least 52). */
@@ -37,10 +36,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
 
   /** wide | compact | icon (layout + card width). */
   get look(): "wide" | "compact" | "icon" {
-    const tiny = this._width > 0 && this._width < ICON_ONLY_BELOW;
-    const layout = this._config?.layout ?? "auto";
-    if (layout === "wide") return "wide";
-    if (tiny) return "icon";
+    // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 52 px tile.
     return this.compact ? "compact" : "wide";
   }
 
@@ -55,7 +51,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
       case "icon":
         return this.lights.iconTile(c, Math.max(52, c.height ?? 84));
       case "compact":
-        return this.lights.compactTile(c, Math.max(96, c.height ?? 120));
+        return this.lights.tile(c, 0, c.height ?? 52, true);
       default:
         return this.lights.tile(c, 0, c.height ?? 64, false);
     }

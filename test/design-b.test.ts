@@ -147,14 +147,15 @@ describe("05 alarm", () => {
     expect(layer()).toBeNull();
   });
 
-  it("triggered row is red with Disarm; compact tile and icon tile", async () => {
+  it("triggered row is red with Disarm; compact = access bar cell", async () => {
     const h = hass(ent("alarm_control_panel.home", "triggered"));
     const el = await mount("alarm", { entity: "alarm_control_panel.home", layout: "wide", screen_ring: false }, h);
     const row = root(el).querySelector<HTMLElement>(".alarmrow")!;
     expect(row.getAttribute("style")).toContain("background:var(--lumen-danger)");
     expect(button(root(el), "Disarm")).toBeTruthy();
     const tile = await mount("alarm", { entity: "alarm_control_panel.home", layout: "compact", screen_ring: false, banner: false }, h);
-    expect(root(tile).querySelector<HTMLElement>('[role="button"]')!.getAttribute("style")).toContain("height:120px");
+    expect(root(tile).querySelector(".alarmrow")).toBeNull();
+    expect(root(tile).querySelector<HTMLElement>('[role="button"]')!.getAttribute("style")).not.toContain("height:120px");
   });
 });
 
