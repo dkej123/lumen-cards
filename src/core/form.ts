@@ -70,6 +70,7 @@ const LABELS: Record<string, string> = {
   haptics: "editor.haptics",
   haptic_tick: "editor.haptic_tick",
   fab_side: "editor.fab_side",
+  fab_icon: "editor.fab_icon",
   device_class: "editor.device_class",
   battery_low: "editor.battery_low",
   show_battery: "editor.show_battery",

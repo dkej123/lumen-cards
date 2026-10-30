@@ -40,6 +40,8 @@ export interface ChipsConfig extends BaseConfig {
   fab_narrow_only?: boolean;
   /** Heading of the speed-dial list. Default "Scenes". */
   title?: string;
+  /** Icon of the floating button (default mdi:palette-outline). */
+  fab_icon?: string;
 }
 
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
@@ -215,7 +217,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
         this._fab = !open;
       }} aria-label=${title} aria-expanded=${open} style="position:absolute;${fabEdge(side)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:${this.strong.bg};color:${this.strong.fg};font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
         <span style="position:absolute;inset:0;display:grid;place-items:center;transform:${open ? "rotate(90deg)" : "none"};transition:transform 460ms var(--lumen-ease-spring)">
-          ${icon("mdi:palette-outline", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms`)}
+          ${icon(this._config.fab_icon || "mdi:palette-outline", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms`)}
           ${icon("mdi:close", `position:absolute;opacity:${open ? 1 : 0};transition:opacity 200ms`)}
         </span>
       </button>`;
@@ -315,7 +317,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
           flatten: true,
           title: t("editor.fab"),
           icon: "mdi:gesture-tap-button",
-          schema: [...fabFields(), { name: "title", selector: { text: {} } }],
+          schema: [...fabFields(), { name: "", type: "grid", flatten: true, schema: [{ name: "fab_icon", selector: { icon: {} } }, { name: "title", selector: { text: {} } }] }],
         },
         advanced(),
         appearance({ layout: "screen" }),

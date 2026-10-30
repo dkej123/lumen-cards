@@ -358,6 +358,7 @@
   "editor.done_action": "“Done” action",
   "editor.entity": "Entity",
   "editor.fab": "Floating button",
+  "editor.fab_icon": "Button icon",
   "editor.fab_narrow_only": "Auto: only on narrow screens",
   "editor.fab_on": "Show as a floating button",
   "editor.fab_side": "Button side",
