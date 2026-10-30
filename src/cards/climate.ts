@@ -3,6 +3,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { Tweens } from "../core/controllers/tween";
+import { deviceStore } from "../core/device-store";
 import { icon } from "../core/lumen-icon";
 import { appearance, entityStub, fabFields, form, hapticsField, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
@@ -70,7 +71,8 @@ export interface ClimateConfig extends BaseConfig {
 
 /** The setpoint goes out this long after the last −/+ tap. */
 export const SETPOINT_DEBOUNCE_MS = 1000;
-const AC_LAST_KEY = "lumen-ac-last:";
+/** Last mode per unit (per device): turning on restores it. */
+const acLast = deviceStore("lumen-ac-last:");
 
 /** Modes in the catalog's order. */
 const MODES: Record<string, [string, string]> = {
@@ -132,21 +134,6 @@ const FANS: Record<string, [string, string]> = {
   turbo: ["card.climate.fan.turbo", "mdi:fan-plus"],
 };
 
-/** Last mode per unit (per device): turning on restores it. */
-const readAcLast = (entity: string): string => {
-  try {
-    return localStorage.getItem(AC_LAST_KEY + entity) ?? "cool";
-  } catch {
-    return "cool";
-  }
-};
-const writeAcLast = (entity: string, mode: string) => {
-  try {
-    localStorage.setItem(AC_LAST_KEY + entity, mode);
-  } catch {
-    /* per-device convenience only */
-  }
-};
 
 export function validateClimate(c: Partial<ClimateConfig>): void {
   requireEntity(c, { domains: ["climate"], msg: "card.climate.error.entity" });
@@ -195,7 +182,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
 
   setConfig(config: ClimateConfig): void {
     super.setConfig(config);
-    this.acLast = readAcLast(config.entity);
+    this.acLast = (acLast.get(config.entity) ?? "cool");
   }
 
   private floating = new FabController(this, FAB_ORDER.climate, () => this.useFab, () => fabSideOf(this._config));
@@ -224,7 +211,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     super.willUpdate(changed);
     if (!this._config || !this._hass) return;
     const ac = this.entity(this._config.entity);
-    if (ac && ac.state !== "off" && !isUnavailable(ac) && ac.state !== this.acLast) writeAcLast(ac.entity_id, (this.acLast = ac.state));
+    if (ac && ac.state !== "off" && !isUnavailable(ac) && ac.state !== this.acLast) acLast.set(ac.entity_id, (this.acLast = ac.state));
     const reported = typeof ac?.attributes.temperature === "number" ? ac.attributes.temperature : null;
     if (this.acSentAt && Date.now() - this.acSentAt > PENDING_MS) {
       this.acTarget = null;
@@ -342,7 +329,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       on: () => {
         if (una) return;
         this.haptic();
-        if (k !== "off") writeAcLast(cfg.entity, (this.acLast = k));
+        if (k !== "off") acLast.set(cfg.entity, (this.acLast = k));
         this.pending.set(true);
         this.call("climate", "set_hvac_mode", { hvac_mode: k }, cfg.entity);
       },

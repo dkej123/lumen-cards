@@ -4,6 +4,7 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
+import { deviceStore } from "../core/device-store";
 import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { SubButtons } from "../core/sub-buttons";
 import { t } from "../core/i18n";
@@ -49,7 +50,8 @@ export interface AlarmConfig extends BaseConfig {
   pending_time?: number;
 }
 
-const MODE_KEY = "lumen-alarm-mode:";
+/** Last arm mode per alarm (per device): the pad starts with it. */
+const lastMode = deviceStore("lumen-alarm-mode:");
 const WHITE = "#fff";
 
 export function validateAlarm(c: Partial<AlarmConfig>): void {
@@ -79,21 +81,6 @@ export function alarmCountdown(e: HassEntity | undefined, cfg: { arming_time?: n
   return { left, pct: arming ? Math.min(100, (elapsed / total) * 100) : (left / total) * 100 };
 }
 
-const readMode = (entity: string): string | null => {
-  try {
-    return localStorage.getItem(MODE_KEY + entity);
-  } catch {
-    return null;
-  }
-};
-
-const writeMode = (entity: string, mode: string) => {
-  try {
-    localStorage.setItem(MODE_KEY + entity, mode);
-  } catch {
-    /* per-device convenience only */
-  }
-};
 
 /**
  * One alarm (catalog section 05): a row with the state and Arm / Disarm when wide, a tile when
@@ -200,7 +187,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   private arm() {
     if (this.ownAction) return this.runTap();
     const modes = armModes(this.alarm, this._config.arm_modes);
-    const last = readMode(this._config.entity);
+    const last = lastMode.get(this._config.entity);
     const mode = last && modes.includes(last) ? last : modes.includes("armed_away") ? "armed_away" : modes[0];
     this.pad.show({ kind: "arm", mode });
   }
@@ -223,7 +210,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     this.haptic();
     try {
       await this._hass.callService("alarm_control_panel", service, code ? { code } : {}, { entity_id: c.entity });
-      if (kind === "arm") writeMode(c.entity, mode);
+      if (kind === "arm") lastMode.set(c.entity, mode);
       this.pad.close();
     } catch (err) {
       const msg = (err as Error)?.message ?? String(err);

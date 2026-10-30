@@ -1,4 +1,5 @@
 import { html, render } from "lit";
+import { deviceStore } from "./device-store";
 import { viewOf, type HuiWrapper } from "./dom";
 import { t } from "./i18n";
 import { icon } from "./lumen-icon";
@@ -12,7 +13,7 @@ import { visibleAt } from "./visibility";
  */
 export type PreviewMode = "all" | "narrow" | "wide";
 const WIDTH: Record<Exclude<PreviewMode, "all">, number> = { narrow: 390, wide: 1440 };
-const KEY = "lumen-edit-preview";
+const store = deviceStore("lumen-edit-preview");
 
 /** Outermost wrapper that holds only `el` (edit-mode frame, grid cell), in the same root. */
 function frameOf(el: HTMLElement): HTMLElement {
@@ -41,12 +42,8 @@ class EditPreview {
   private padded?: HTMLElement;
 
   constructor() {
-    try {
-      const m = localStorage.getItem(KEY);
-      if (m === "narrow" || m === "wide") this.mode = m;
-    } catch {
-      /* storage blocked: start with "all" */
-    }
+    const m = store.get();
+    if (m === "narrow" || m === "wide") this.mode = m;
   }
 
   /**
@@ -100,11 +97,7 @@ class EditPreview {
 
   private set(mode: PreviewMode): void {
     this.mode = mode;
-    try {
-      localStorage.setItem(KEY, mode);
-    } catch {
-      /* not remembered */
-    }
+    store.set("", mode);
     this.syncTimer();
     this.apply();
   }
