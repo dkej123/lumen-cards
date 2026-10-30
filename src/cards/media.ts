@@ -46,7 +46,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}.mbtn:active:not(:disabled){transform:scale(.9)}.mbtn{transition:transform 220ms var(--lumen-ease-spring), opacity 300ms}`];
   protected static compactBelow = 280;
   private _artFailed = "";
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
 
   private vol = new SlideDrag(this, {
     enabled: () => !mediaOff(this.player) && mediaSupports(this.player, MEDIA.VOLUME_SET),
@@ -85,12 +85,6 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     });
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.presses.dispose();
-    this.vol.dispose();
-    this.seek.dispose();
-  }
 
   private get player() {
     return this.entity(this._config.entity);

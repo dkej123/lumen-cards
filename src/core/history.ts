@@ -1,3 +1,4 @@
+import type { ReactiveController, ReactiveControllerHost } from "lit";
 import type { HassLike } from "../hass/types";
 import { num } from "../logic/format";
 import { sparkPath, type Point } from "../logic/spark";
@@ -41,15 +42,20 @@ async function flush() {
   }
 }
 
-export class History {
-  constructor(private onLoad: () => void) {}
+/** A card's view of the shared history: it hears about loads while the card is in the page. */
+export class History implements ReactiveController {
+  constructor(
+    private onLoad: () => void,
+    host: ReactiveControllerHost,
+  ) {
+    host.addController(this);
+  }
 
-  /** Start receiving loads (connectedCallback). */
-  connect() {
+  hostConnected() {
     listeners.add(this.onLoad);
   }
 
-  disconnect() {
+  hostDisconnected() {
     listeners.delete(this.onLoad);
   }
 

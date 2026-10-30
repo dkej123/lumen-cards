@@ -61,14 +61,9 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
   /** Full look in any grid width (catalog section 17); compact only when chosen. */
   protected static compactBelow = 0;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "21.5", attributes: { friendly_name: t("card.sensor.name"), unit_of_measurement: "°C", device_class: "temperature" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
-  private history = new History(() => this.requestUpdate());
-  private presses = new Presses((type) => this.haptic(type));
+  private history = new History(() => this.requestUpdate(), this);
+  private presses = new Presses((type) => this.haptic(type), this);
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.history.disconnect();
-    this.presses.dispose();
-  }
 
   protected entityIds() {
     return [this._config.entity];
@@ -80,7 +75,6 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.history.connect();
     this.every(60_000, () => this.history.load(this._hass, this.entityIds()));
   }
 

@@ -112,7 +112,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   protected static iconBelow = 100;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "armed_home", attributes: { friendly_name: t("card.alarm.name"), supported_features: 7, code_format: "number" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
 
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
   private pending: { from?: HassEntity; until: number } | null = null;
   private _pad: Pad | null = null;
@@ -144,8 +144,6 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.presses.dispose();
-    this.subs.dispose();
     this._pad = null;
   }
 

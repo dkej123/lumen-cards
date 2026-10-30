@@ -65,10 +65,6 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     validateFan(c);
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.drag.dispose();
-  }
 
   private get fan() {
     return this.entity(this._config.entity);

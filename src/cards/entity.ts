@@ -83,14 +83,9 @@ export function entityLook(e: HassEntity | undefined, s: Status): TileLook {
 /** A state tile with optional sub-buttons; compact a square tile, below 100 px the access bar cell. */
 export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   protected static compactBelow = 120;
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.presses.dispose();
-    this.subs.dispose();
-  }
 
   protected entityIds() {
     return [this._config.entity, ...(this._config.sub_buttons ?? []).map((b) => b.entity)];

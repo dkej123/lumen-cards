@@ -1,4 +1,4 @@
-import { html, nothing, type ReactiveControllerHost, type TemplateResult } from "lit";
+import { html, nothing, type ReactiveController, type ReactiveControllerHost, type TemplateResult } from "lit";
 import type { HassLike } from "../hass/types";
 import { cardSpan } from "../logic/popup";
 import { t } from "./i18n";
@@ -128,7 +128,7 @@ export interface SheetHead {
 }
 
 /** Open / closing state, the header drag and the look of the sheet. The host decides what closing means. */
-export class Sheet {
+export class Sheet implements ReactiveController {
   open = false;
   closing = false;
   private dy = 0;
@@ -140,7 +140,13 @@ export class Sheet {
     private host: ReactiveControllerHost,
     /** ✕, scrim, Escape or a drag down asked to close. */
     private requestClose: () => void,
-  ) {}
+  ) {
+    host.addController(this);
+  }
+
+  hostDisconnected(): void {
+    this.dispose();
+  }
 
   show(): void {
     window.clearTimeout(this.timer);

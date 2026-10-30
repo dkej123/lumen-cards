@@ -91,7 +91,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   private _dialog = false;
   /** Command waiting for the code (PIN pad). */
   private _pad: { cmd: Cmd; code: string; error?: string; shake: number; busy: boolean } | null = null;
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
 
   protected layer = new LayerController(
     this,
@@ -114,10 +114,6 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     });
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.presses.dispose();
-  }
 
   private get name() {
     const c = this._config;

@@ -64,7 +64,6 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.press.dispose();
     this.unlisten();
   }
 

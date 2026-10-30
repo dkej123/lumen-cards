@@ -1,4 +1,4 @@
-import { noChange } from "lit";
+import { noChange, type ReactiveController, type ReactiveControllerHost } from "lit";
 import { Directive, directive, PartType, type ElementPart, type PartInfo } from "lit/directive.js";
 
 // Generic tap / hold (500 ms) / double tap with scroll protection – design `pressHandlers`
@@ -8,11 +8,21 @@ interface Press { key: string; el: HTMLElement; x: number; y: number; moved: boo
 
 const DOUBLE_MS = 250;
 
-export class Presses {
+/** Tap / hold / double tap state of a card; with a host it clears its timers when the card leaves the page. */
+export class Presses implements ReactiveController {
   private press: Press | null = null;
   private lastTap?: { key: string; t: number };
 
-  constructor(private haptic: (type?: string) => void) {}
+  constructor(
+    private haptic: (type?: string) => void,
+    host?: ReactiveControllerHost,
+  ) {
+    host?.addController(this);
+  }
+
+  hostDisconnected(): void {
+    this.dispose();
+  }
 
   handlers(key: string, tap?: (el: HTMLElement) => void, hold?: (el: HTMLElement) => void, double?: (el: HTMLElement) => void) {
     const fireTap = (el: HTMLElement) => {

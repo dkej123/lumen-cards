@@ -78,7 +78,7 @@ type Phase = "idle" | "wait" | "ok" | "err";
 export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
   static properties = { ...LumenBaseCard.properties, _phase: { state: true } };
   protected static compactBelow = 120;
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
   private _phase: Phase = "idle";
   /** Outcome of the last use: response code and text. */
@@ -113,8 +113,6 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.presses.dispose();
-    this.subs.dispose();
     window.clearTimeout(this.okTimer);
     if (this._phase === "ok") this._phase = "idle";
   }

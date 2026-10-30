@@ -45,8 +45,8 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
       if (last && !this.lastAir.has(id)) this.lastAir.set(id, { value: last.v, at: new Date(last.t).toISOString() });
     }
     this.requestUpdate();
-  });
-  private presses = new Presses((type) => this.haptic(type));
+  }, this);
+  private presses = new Presses((type) => this.haptic(type), this);
   private lastAir = new Map<string, AirReading>();
   private disp = new Map<string, number>();
   private tweens = new Map<string, number>();
@@ -70,15 +70,12 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.history.connect();
     this.every(30_000, () => this.requestUpdate());
     this.every(60_000, () => this.history.load(this._hass, this.ids));
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.history.disconnect();
-    this.presses.dispose();
     this.tweens.clear();
     window.clearTimeout(this.closeTimer);
     this._sheet = null;

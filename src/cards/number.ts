@@ -61,10 +61,6 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
     validateNumber(c);
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.drag.dispose();
-  }
 
   private get num() {
     return this.entity(this._config.entity);

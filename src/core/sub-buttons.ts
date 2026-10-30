@@ -42,11 +42,8 @@ export class SubButtons {
   private presses: Presses;
 
   constructor(private host: LumenBaseCard) {
-    this.presses = new Presses((type) => haptic(host, type ?? "light"));
-  }
-
-  dispose() {
-    this.presses.dispose();
+    // its timers are cleared with the card (Presses is a controller of the host)
+    this.presses = new Presses((type) => haptic(host, type ?? "light"), host);
   }
 
   private tap(b: SubButton) {

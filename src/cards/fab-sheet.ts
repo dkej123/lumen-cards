@@ -113,7 +113,6 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.sheet.dispose();
     releaseFab(this);
   }
 

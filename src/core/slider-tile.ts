@@ -1,4 +1,4 @@
-import { html, nothing, type ReactiveControllerHost } from "lit";
+import { html, nothing, type ReactiveController, type ReactiveControllerHost } from "lit";
 import type { HassEntity } from "../hass/types";
 import { fractionAt } from "../logic/slider";
 import { DragTicks, haptic } from "./actions";
@@ -35,14 +35,23 @@ export interface SlideOpts {
 interface Press { x0: number; y0: number; rect: DOMRect; el: HTMLElement; id: number; dragging: boolean; held: boolean; moved: boolean }
 
 /** Pointer + keyboard logic of one slider; the card keeps one per slider. */
-export class SlideDrag {
+export class SlideDrag implements ReactiveController {
   /** Live fraction while dragging. */
   frac: number | null = null;
   private press: Press | null = null;
   private holdTimer?: number;
   private pend?: { f: number; from?: HassEntity; until: number };
 
-  constructor(private host: ReactiveControllerHost & HTMLElement, private opts: SlideOpts) {}
+  constructor(
+    private host: ReactiveControllerHost & HTMLElement,
+    private opts: SlideOpts,
+  ) {
+    host.addController(this);
+  }
+
+  hostDisconnected(): void {
+    this.dispose();
+  }
 
   get dragging(): boolean {
     return !!this.press?.dragging;
@@ -61,7 +70,7 @@ export class SlideDrag {
   }
 
   private haptic(type = "light") {
-    haptic(this.host as unknown as EventTarget, type);
+    haptic(this.host, type);
   }
 
   /** Gentle ticks every 1 % while the value is dragged. */

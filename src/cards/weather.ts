@@ -131,7 +131,7 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
   private subs: Promise<() => Promise<void>>[] = [];
   private subKey?: string;
   private subTimer?: number;
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
   private drag = new StripDrag();
   private sheetView = new Sheet(this, () => this.close());
   protected layer = new LayerController(this, () => (this.sheetView.open && !this.preview ? this.sheet() : nothing), () => this.close());
@@ -155,8 +155,6 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.unsubscribe();
-    this.presses.dispose();
-    this.sheetView.dispose();
   }
 
   protected onHass(hass: HassLike): void {

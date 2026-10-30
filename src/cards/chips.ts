@@ -98,7 +98,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   private pulseTimer?: number;
   private fabTimer?: number;
   private lights = new LightsController(this);
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
 
   protected layer = new LayerController(
     this,
@@ -129,7 +129,6 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.presses.dispose();
     window.clearTimeout(this.pulseTimer);
     window.clearTimeout(this.fabTimer);
     releaseFab(this);

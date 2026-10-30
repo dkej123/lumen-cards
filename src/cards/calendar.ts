@@ -48,7 +48,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
   private fetchedFor?: HassEntity;
   private fetchedAt = 0;
   private loading = false;
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
 
   protected entityIds() {
     return [this._config.entity];
@@ -78,10 +78,6 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
     });
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.presses.dispose();
-  }
 
   protected onHass(): void {
     this.load();

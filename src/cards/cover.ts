@@ -72,11 +72,6 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     validateCover(c);
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.pos.dispose();
-    this.tilt.dispose();
-  }
 
   private get cover() {
     return this.entity(this._config.entity);

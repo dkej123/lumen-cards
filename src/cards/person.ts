@@ -39,7 +39,7 @@ export function validatePerson(c: Partial<PersonConfig>): void {
 export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
   protected static compactBelow = 240;
   private failed = false;
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
 
   protected entityIds() {
@@ -60,11 +60,6 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     this.every(30_000, () => this.requestUpdate());
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.presses.dispose();
-    this.subs.dispose();
-  }
 
   /** The presence sensor, or the person's / tracker's own state, as on/off (home = on). */
   private sensor(): HassEntity | undefined {

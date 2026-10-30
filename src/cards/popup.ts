@@ -85,8 +85,6 @@ export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
     window.removeEventListener("popstate", this.onLocation);
     window.removeEventListener("hashchange", this.onLocation);
     window.clearTimeout(this.autoTimer);
-    this.press.dispose();
-    this.sheetView.dispose();
   }
 
   /** Open / close with the URL hash. */

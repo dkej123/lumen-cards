@@ -218,7 +218,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     window.clearTimeout(this.acHold);
     this.tweenTo = undefined;
     this._dlg = false;
-    this.presses.dispose();
     releaseFab(this);
   }
 
@@ -534,7 +533,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
    * and 19): icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
    */
   /** Compact row icon: tap = power on / off, hold = details. */
-  private presses = new Presses((type) => this.haptic(type));
+  private presses = new Presses((type) => this.haptic(type), this);
 
   private compactRow() {
     const a = this.ac();
