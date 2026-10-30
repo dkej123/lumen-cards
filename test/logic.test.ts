@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { maxWidthCss } from "../src/core/base-card";
-import { visibilityLabels } from "../src/core/visibility";
+import { visibilityLabels, visibleAt } from "../src/core/visibility";
 import { setLanguage, setLocale } from "../src/core/i18n";
 import { cssColor, tone } from "../src/core/styles";
 import type { HassEntity } from "../src/hass/types";
@@ -212,5 +212,19 @@ describe("edit-mode visibility labels", () => {
     expect(visibilityLabels([{ condition: "screen", media_query: "(orientation: portrait)" }])).toEqual([{ kind: "screen", text: "(orientation: portrait)" }]);
     expect(visibilityLabels([{ condition: "and", conditions: [{ condition: "user", users: ["a"] }, { condition: "state", entity: "x", state: "on" }] }])).toEqual([{ kind: "user" }, { kind: "other" }]);
     expect(visibilityLabels(undefined)).toEqual([]);
+  });
+});
+
+describe("edit-mode layout preview", () => {
+  it("screen conditions at a phone / computer width; other conditions count as met", () => {
+    const narrow = [{ condition: "screen", media_query: "(min-width: 0px) and (max-width: 1023px)" }];
+    const wide = [{ condition: "screen", media_query: "(min-width: 1024px)" }];
+    expect(visibleAt(narrow, 390)).toBe(true);
+    expect(visibleAt(narrow, 1440)).toBe(false);
+    expect(visibleAt(wide, 390)).toBe(false);
+    expect(visibleAt(wide, 1440)).toBe(true);
+    expect(visibleAt([{ condition: "user", users: ["x"] }], 390)).toBe(true);
+    expect(visibleAt([{ condition: "or", conditions: [...narrow, { condition: "state", entity: "a", state: "on" }] }], 1440)).toBe(true);
+    expect(visibleAt(undefined, 390)).toBe(true);
   });
 });

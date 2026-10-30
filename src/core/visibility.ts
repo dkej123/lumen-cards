@@ -65,3 +65,22 @@ export function haConditions(host: Element): unknown[] | undefined {
   }
   return undefined;
 }
+
+/**
+ * Whether HA's visibility conditions would show the card at a screen `width` (edit-mode preview).
+ * Only screen queries with min / max width are evaluated; every other condition counts as met.
+ */
+export function visibleAt(conds: unknown, width: number): boolean {
+  if (!Array.isArray(conds)) return true;
+  const one = (c: Condition): boolean => {
+    if (!c || typeof c !== "object") return true;
+    if (c.condition === "and") return (c.conditions ?? []).every(one);
+    if (c.condition === "or") return !c.conditions?.length || c.conditions.some(one);
+    if (c.condition !== "screen") return true;
+    const q = String(c.media_query ?? "");
+    const min = /min-width:\s*(\d+)px/.exec(q)?.[1];
+    const max = /max-width:\s*(\d+)px/.exec(q)?.[1];
+    return (min === undefined || width >= Number(min)) && (max === undefined || width <= Number(max));
+  };
+  return (conds as Condition[]).every(one);
+}

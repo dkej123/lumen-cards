@@ -10,6 +10,7 @@ import "./form-editor";
 import type { CardForm, LumenFormEditor } from "./form-editor";
 import { editLabel, errorCard, sampleBadge, skeleton } from "./parts";
 import { haConditions, visibilityLabels } from "./visibility";
+import { editPreview } from "./edit-preview";
 import type { SubButton } from "./sub-buttons";
 
 /** Options every card has (editor section "Appearance"). */
@@ -312,6 +313,7 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     super.disconnectedCallback();
     wideQuery?.removeEventListener("change", this.onWide);
     weather.unregister(this);
+    editPreview.remove(this);
     this.resize?.disconnect();
     this.resize = undefined;
     this.timers.forEach((t) => window.clearInterval(t));
@@ -363,6 +365,8 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
 
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
+    if (this.preview && haConditions(this)) editPreview.add(this);
+    else editPreview.remove(this);
     this.applyUserStyles();
     weather.scan(this);
   }
