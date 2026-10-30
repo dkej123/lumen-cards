@@ -1,15 +1,16 @@
 import { html, nothing } from "lit";
-import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
+import { actions, advanced, appearance, entityStub, form } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { entityName } from "../core/call";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { colorOr, glass } from "../core/styles";
 import { WFX } from "../core/parts";
 import { NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile } from "../core/tile";
-import type { HassEntity, HassLike } from "../hass/types";
+import type { HassEntity } from "../hass/types";
 import { avatarColor, presence, type Presence } from "../logic/presence";
 
 export interface PersonConfig extends BaseConfig {
@@ -59,7 +60,6 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     this.every(30_000, () => this.requestUpdate());
   }
 
-
   /** The presence sensor, or the person's / tracker's own state, as on/off (home = on). */
   private sensor(): HassEntity | undefined {
     const c = this._config;
@@ -96,7 +96,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     const c = this._config;
     const compact = this.compact;
     const key = c.entity ?? c.presence_entity ?? "";
-    const name = c.name || this.entity(c.entity)?.attributes.friendly_name || key;
+    const name = entityName(c.name, this.entity(c.entity), key);
     const s = presence(this.sensor(), this.entity(c.entity), Date.now());
     const h = this.actions(`person:${key}`, c, key);
     if (compact) {
@@ -125,17 +125,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     return rowTile(opts);
   }
 
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "person", entities, fallback) ?? firstOf(hass, "person", "person.example") };
-  }
+  static getStubConfig = entityStub("person", "person.example");
 
   static getConfigForm() {
     return form([

@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { advanced, appearance, form } from "../core/form";
 import { locale, t } from "../core/i18n";
 import { registerCard } from "../core/register";
@@ -14,6 +14,8 @@ export interface HeaderConfig extends BaseConfig {
 
 /** Greeting by day phase + date (design header). */
 export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
+  protected static grid = GRID.full;
+  protected static cardSize = 2;
   protected entityIds() {
     return [this._config.sun_entity ?? "sun.sun"];
   }
@@ -45,14 +47,6 @@ export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
       ${c.show_date ? html`<div style="font-size:13px;font-weight:600;color:var(--lumen-text-2);text-transform:capitalize">${date}</div>` : nothing}
       <div style="font-size:30px;line-height:1.1;font-weight:700;letter-spacing:-0.03em;text-wrap:balance">${this.greeting()}</div>
     </div>`;
-  }
-
-  getCardSize() {
-    return 2;
-  }
-
-  getGridOptions() {
-    return { columns: "full", rows: "auto" };
   }
 
   static getStubConfig() {

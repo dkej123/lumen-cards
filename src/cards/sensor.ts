@@ -1,12 +1,14 @@
 import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { entityName } from "../core/call";
 import { actions, advanced, appearance, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { History } from "../core/history";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { colorOr, glass } from "../core/styles";
+import { requireEntity } from "../core/validate";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { num, stateText, temp } from "../logic/format";
@@ -36,7 +38,7 @@ const ONE_LINE_BELOW = 48;
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 export function validateSensor(c: Partial<SensorConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("card.sensor.error.entity"));
+  requireEntity(c, { msg: "card.sensor.error.entity" });
 }
 
 /** Temperatures as "22.3°", other numbers as value + unit, text states as HA formats them. */
@@ -58,11 +60,11 @@ export const sensorStale = (e: HassEntity | undefined, hours: number, now = Date
  * a 36 px row without the chart (only with `layout: compact`).
  */
 export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
+  protected static grid = GRID.half;
   /** Full look in any grid width (catalog section 17); compact only when chosen. */
   protected static compactBelow = 0;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "21.5", attributes: { friendly_name: t("card.sensor.name"), unit_of_measurement: "°C", device_class: "temperature" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
   private history = new History(this, () => (this._config ? [this._config.entity] : []));
-
 
   protected entityIds() {
     return [this._config.entity];
@@ -78,7 +80,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
     const e = this.entity(c.entity);
     const sp = this.history.spark(c.entity, Number(c.hours ?? 12), 120, 36, 1);
     const color = colorOr(c.color, "var(--lumen-accent)");
-    const name = c.name || e?.attributes.friendly_name || c.entity;
+    const name = entityName(c.name, e, c.entity);
     const value = sensorValue(e, this._hass);
     const h = this.actions(`sensor:${c.entity}`, c, c.entity);
     const una = isUnavailable(e);
@@ -103,14 +105,6 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
       <div style="position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none">${chart}</div>
       <div style="position:relative;display:flex;flex-direction:column;min-width:0"><span style="font-size:11px;font-weight:700;line-height:14px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name2}</span><span style="font-size:18px;font-weight:650;line-height:22px;letter-spacing:-0.02em;color:${ink};font-variant-numeric:tabular-nums">${value}</span></div>
     </div>`;
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {

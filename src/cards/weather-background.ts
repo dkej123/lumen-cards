@@ -1,10 +1,11 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { appearance, firstOf, form, stub } from "../core/form";
 import { icon } from "../core/lumen-icon";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { registerCard } from "../core/register";
+import { requireEntity } from "../core/validate";
 import type { HassEntity, HassLike } from "../hass/types";
 import { phaseFromSun, weatherCondition } from "../logic/sky";
 import { readSettings, SETTINGS_KEY, weather, type EffectSettings } from "../weather/engine";
@@ -20,7 +21,7 @@ export interface WeatherBackgroundConfig extends BaseConfig {
 const LEVEL_FULL_MIN = 30;
 
 export function validateWeatherBackground(c: Partial<WeatherBackgroundConfig>): void {
-  if (!c.weather_entity || !String(c.weather_entity).startsWith("weather.")) throw new Error(t("card.weather.error.entity"));
+  requireEntity(c, { key: "weather_entity", domains: ["weather"], msg: "card.weather.error.entity" });
 }
 
 /**
@@ -30,6 +31,7 @@ export function validateWeatherBackground(c: Partial<WeatherBackgroundConfig>): 
  * every Lumen card in the view. One per view; takes no space unless it shows its switches.
  */
 export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundConfig> {
+  protected static grid = GRID.full;
   /** A full-screen layer, not a card in the grid: no loading skeleton. */
   protected static skeletonHeight = 0;
   static properties = { ...LumenBaseCard.properties, _settings: { state: true } };
@@ -185,10 +187,6 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
 
   getCardSize() {
     return this._config?.show_controls ? 1 : 0;
-  }
-
-  getGridOptions() {
-    return { columns: "full", rows: "auto" };
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {

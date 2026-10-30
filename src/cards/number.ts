@@ -1,13 +1,14 @@
 import { css, nothing, unsafeCSS } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, firstOf, stub } from "../core/form";
+import { advanced, appearance, entityStub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, sliderTile } from "../core/slider-tile";
-import { isUnavailable, type HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
+import { isUnavailable } from "../hass/types";
 import { fractionOf, numberRange, numberText, snap, valueAt } from "../logic/slider";
 
 export interface NumberConfig extends BaseConfig {
@@ -20,7 +21,7 @@ export interface NumberConfig extends BaseConfig {
 }
 
 export function validateNumber(c: Partial<NumberConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /**
@@ -29,6 +30,7 @@ export function validateNumber(c: Partial<NumberConfig>): void {
  * open more-info unless actions are set.
  */
 export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
+  protected static grid = GRID.half;
   protected static compactBelow = 200;
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}`];
 
@@ -60,7 +62,6 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
   protected validate(c: NumberConfig) {
     validateNumber(c);
   }
-
 
   private get num() {
     return this.entity(this._config.entity);
@@ -105,17 +106,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
     );
   }
 
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, ["input_number", "number"], entities, fallback) ?? firstOf(hass, "input_number", firstOf(hass, "number", "input_number.example")) };
-  }
+  static getStubConfig = entityStub(["input_number", "number"], "input_number.example", ["input_number", "number"]);
 
   static getConfigForm() {
     return formX([

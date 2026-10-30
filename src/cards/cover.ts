@@ -3,12 +3,12 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { Pending } from "../core/controllers/pending";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, firstOf, stub } from "../core/form";
+import { advanced, appearance, entityStub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, segButtons, sliderTile, thinBar } from "../core/slider-tile";
-import type { HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
 import { COVER, activeButton, coverIcon, coverState, coverSupports, tiltDegrees } from "../logic/cover";
 
 export interface CoverConfig extends BaseConfig {
@@ -26,7 +26,7 @@ export interface CoverConfig extends BaseConfig {
 }
 
 export function validateCover(c: Partial<CoverConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /**
@@ -35,6 +35,7 @@ export function validateCover(c: Partial<CoverConfig>): void {
  * bar for tilting blinds. Tap toggles, hold opens more-info.
  */
 export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
+  protected static cardSize = 2;
   protected static compactBelow = 200;
   /** Open / close just pressed: shows Opening… / Closing… before HA reports it. */
   /** The pressed command (position %) until HA sends a new state for the cover (or 10 s). */
@@ -73,7 +74,6 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   protected validate(c: CoverConfig) {
     validateCover(c);
   }
-
 
   private get cover() {
     return this.entity(this._config.entity);
@@ -173,17 +173,7 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     );
   }
 
-  getCardSize() {
-    return 2;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "cover", entities, fallback) ?? firstOf(hass, "cover", "cover.example") };
-  }
+  static getStubConfig = entityStub("cover", "cover.example");
 
   static getConfigForm() {
     return formX([

@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, form } from "../core/form";
 import { t } from "../core/i18n";
@@ -52,6 +52,7 @@ const OVERLINE = "font-size:12px;font-weight:700;letter-spacing:.06em;text-trans
  * `sectionLabel`) – the community pattern of a title card with entity values.
  */
 export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
+  protected static grid = GRID.full;
   protected entityIds() {
     return [...this.items().map((x) => x.entity), this._config.entity];
   }
@@ -113,14 +114,6 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
         : nothing}</div></div>`;
     }
     return html`<div role=${a ? "button" : "heading"} aria-level=${a ? nothing : 2} tabindex=${a ? 0 : nothing} @click=${a?.click} @keydown=${a?.key} style="${OVERLINE};padding:0 2px;${cursor}">${title}${meta ? html`<span style="margin-left:8px;letter-spacing:0;text-transform:none;font-weight:600">${meta}</span>` : nothing}</div>`;
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: "full", rows: "auto" };
   }
 
   static getStubConfig() {

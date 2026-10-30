@@ -1,17 +1,18 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
-import { appearance, fabFields, firstOf, form, hapticsField, stub } from "../core/form";
+import { appearance, entityStub, fabFields, form, hapticsField } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
 import { toast } from "../core/toast";
-import type { HassEntity, HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
+import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { formatNumber } from "../logic/time";
 import { BATTERY_LOW, batteryLevel } from "../logic/battery";
@@ -136,7 +137,6 @@ const FANS: Record<string, [string, string]> = {
   turbo: ["card.climate.fan.turbo", "mdi:fan-plus"],
 };
 
-
 /** Last mode per unit (per device): turning on restores it. */
 const readAcLast = (entity: string): string => {
   try {
@@ -154,11 +154,13 @@ const writeAcLast = (entity: string, mode: string) => {
 };
 
 export function validateClimate(c: Partial<ClimateConfig>): void {
-  if (!c.entity || !String(c.entity).startsWith("climate.")) throw new Error(t("card.climate.error.entity"));
+  requireEntity(c, { domains: ["climate"], msg: "card.climate.error.entity" });
 }
 
 /** Air conditioner / thermostat of the design: a card, or a FAB + dialog B9. */
 export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
+  protected static grid = GRID.full;
+  protected static cardSize = 5;
   protected static compactBelow = 300;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "cool", attributes: { friendly_name: t("card.climate.name"), hvac_modes: ["off", "heat", "cool", "dry"], hvac_action: "cooling", fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 24.1, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
   static properties = { ...LumenBaseCard.properties, _dlg: { state: true }, _side: { state: true } };
@@ -621,17 +623,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     return this.compact ? this.compactRow() : this.card();
   }
 
-  getCardSize() {
-    return 5;
-  }
-
-  getGridOptions() {
-    return { columns: "full", rows: "auto" };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "climate", entities, fallback) ?? firstOf(hass, "climate", "climate.example") };
-  }
+  static getStubConfig = entityStub("climate", "climate.example");
 
   static getConfigForm() {
     return form([

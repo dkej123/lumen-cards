@@ -289,10 +289,6 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
     return this.useFab || !this.hasCards ? 0 : 1;
   }
 
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
   static getStubConfig(hass?: HassLike) {
     const ids = Object.keys(hass?.states ?? {}).filter((id) => id.startsWith("climate.")).slice(0, 3);
     return {

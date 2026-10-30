@@ -147,10 +147,6 @@ export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
     return this._config?.show_trigger ? 1 : 0;
   }
 
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
   static getStubConfig() {
     return { hash: "#living-room", name: "Living room", show_trigger: true, cards: [] };
   }

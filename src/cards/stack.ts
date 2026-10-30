@@ -98,10 +98,6 @@ abstract class LumenStackCard extends LumenContainerCard<StackConfig> {
     return this.row ? 1 : Math.max(1, (this._config?.cards ?? []).length);
   }
 
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
   static getStubConfig() {
     return { cards: [] };
   }

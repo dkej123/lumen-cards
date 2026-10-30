@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, fabFields, form } from "../core/form";
 import { t } from "../core/i18n";
@@ -92,6 +93,7 @@ export function validateChips(c: Partial<ChipsConfig>): void {
  * optionally as a floating speed-dial button) and the light pills of the design rooms.
  */
 export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
+  protected static grid = GRID.full;
   static properties = { ...LumenBaseCard.properties, _fab: { state: true }, _pulse: { state: true } };
   private _fab = false;
   private _pulse: string | null = null;
@@ -137,7 +139,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   // ---------------------------------------------------------------- action chips
 
   private chipName(s: ActionChip) {
-    return s.name || this.entity(s.entity)?.attributes.friendly_name || s.entity;
+    return entityName(s.name, this.entity(s.entity), s.entity);
   }
 
   private chipIcon(s: ActionChip) {
@@ -249,14 +251,6 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     const gap = onlyActions ? 8 : compact ? 6 : 8;
     const justify = JUSTIFY[c.alignment ?? "start"] ?? "flex-start";
     return html`<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:${justify};gap:${gap}px">${items}${ct ? this.lights.ctOverlay(ct.entity, this.lights.light(ct).k, compact, true) : nothing}</div>`;
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: "full", rows: "auto" };
   }
 
   static getStubConfig(hass?: HassLike) {

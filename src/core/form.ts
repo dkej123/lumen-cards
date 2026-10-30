@@ -290,3 +290,13 @@ export const stub = (hass: { states: Record<string, unknown> } | undefined, doma
 /** First entity of a domain for getStubConfig. */
 export const firstOf = (hass: { states: Record<string, unknown> } | undefined, domain: string, fallback = ""): string =>
   Object.keys(hass?.states ?? {}).find((id) => id.startsWith(`${domain}.`)) ?? fallback;
+
+/**
+ * getStubConfig of a card with one `entity`: an entity of `domains` not on the dashboard yet,
+ * else the first of `firstDomains` (default the first domain), else `fallbackId`.
+ */
+export const entityStub =
+  (domains: string | string[], fallbackId: string, firstDomains: string[] = [Array.isArray(domains) ? domains[0] : domains]) =>
+  (hass?: { states: Record<string, unknown> }, entities?: string[], fallback?: string[]) => ({
+    entity: stub(hass, domains, entities, fallback) ?? firstDomains.reduceRight((acc, d) => firstOf(hass, d, acc), fallbackId),
+  });

@@ -37,14 +37,6 @@ export class LumenBarCard extends LumenContainerCard<BarConfig> {
     </div>`;
   }
 
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
   static getStubConfig() {
     return { cards: [] };
   }

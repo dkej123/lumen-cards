@@ -1,9 +1,10 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
-import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
+import { actions, advanced, appearance, entityStub, form } from "../core/form";
 import { SubButtons } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -13,7 +14,8 @@ import { alarmBanner, alarmRing, compactCell } from "../core/status-row";
 import { icon } from "../core/lumen-icon";
 import { cssColor, tone } from "../core/styles";
 import { codePad, countdown, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type PadMode, type Seg } from "../core/parts";
-import type { HassEntity, HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
+import type { HassEntity } from "../hass/types";
 import { ARMED_ICON, alarmBarIcon, alarmStatus, armModes, isArmed, modeLabel, type Status } from "../logic/status";
 
 export interface AlarmConfig extends BaseConfig {
@@ -51,7 +53,7 @@ const MODE_KEY = "lumen-alarm-mode:";
 const WHITE = "#fff";
 
 export function validateAlarm(c: Partial<AlarmConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("card.alarm.error.entity"));
+  requireEntity(c, { msg: "card.alarm.error.entity" });
 }
 
 /** First number among the entity's attributes (integrations name the delays differently). */
@@ -156,7 +158,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
 
   private get name() {
     const c = this._config;
-    return c.name || this.alarm?.attributes.friendly_name || c.entity;
+    return entityName(c.name, this.alarm, c.entity);
   }
 
   /** A tap_action of its own (script, service…) replaces the built-in pad. */
@@ -331,13 +333,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     return this.compact ? 2 : 1;
   }
 
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "alarm_control_panel", entities, fallback) ?? firstOf(hass, "alarm_control_panel", "alarm_control_panel.home") };
-  }
+  static getStubConfig = entityStub("alarm_control_panel", "alarm_control_panel.home");
 
   static getConfigForm() {
     return form([

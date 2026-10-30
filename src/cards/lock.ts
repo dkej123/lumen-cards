@@ -1,9 +1,10 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { icon } from "../core/lumen-icon";
-import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
+import { actions, advanced, appearance, entityStub, form } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { pressable } from "../core/press";
@@ -12,7 +13,8 @@ import { codePad, dangerBorder, rowFrame, rowIcon, rowText, segs, toned, unavail
 import { tone } from "../core/styles";
 import { compactCell } from "../core/status-row";
 import { toast } from "../core/toast";
-import type { HassEntity, HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
+import type { HassEntity } from "../hass/types";
 import { stateText } from "../logic/format";
 import { ageMs, formatDuration } from "../logic/time";
 
@@ -34,7 +36,7 @@ type Cmd = "lock" | "unlock" | "open";
 const FEATURE_OPEN = 1;
 
 export function validateLock(c: Partial<LockConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("card.lock.error.entity"));
+  requireEntity(c, { msg: "card.lock.error.entity" });
 }
 
 interface LockLook {
@@ -83,6 +85,7 @@ export const lockPadKind = (format: unknown): "pin" | "text" =>
  * when the command went through.
  */
 export class LumenLockCard extends LumenBaseCard<LockConfig> {
+  protected static cardSize = 2;
   static properties = { ...LumenBaseCard.properties, _cmd: { state: true }, _dialog: { state: true } };
   protected static compactBelow = 200;
   protected static iconBelow = 100;
@@ -114,10 +117,9 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     });
   }
 
-
   private get name() {
     const c = this._config;
-    return c.name || this.entity(c.entity)?.attributes.friendly_name || c.entity;
+    return entityName(c.name, this.entity(c.entity), c.entity);
   }
 
   private get lock() {
@@ -340,17 +342,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     });
   }
 
-  getCardSize() {
-    return 2;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "lock", entities, fallback) ?? firstOf(hass, "lock", "lock.front_door") };
-  }
+  static getStubConfig = entityStub("lock", "lock.front_door");
 
   static getConfigForm() {
     return form([

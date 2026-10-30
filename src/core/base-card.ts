@@ -54,6 +54,13 @@ export interface CardActions {
   double_tap_action?: ActionConfig;
 }
 
+/** Sizes in HA's sections grid: half a section (6 of 12 columns), a row (12), or the whole section. */
+export const GRID = {
+  half: { columns: 6, rows: "auto", min_columns: 3 },
+  row: { columns: 12, rows: "auto", min_columns: 3 },
+  full: { columns: "full", rows: "auto" },
+} as const;
+
 /** Narrow screen (phones, portrait tablets): sheets instead of dialogs, text scale, FAB auto mode. */
 export const WIDE_PX = 1024;
 const wideQuery: MediaQueryList | undefined = typeof matchMedia === "undefined" ? undefined : matchMedia(`(min-width: ${WIDE_PX}px)`);
@@ -97,6 +104,20 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
    * Only cards that have an icon tile set it.
    */
   protected static iconBelow = 0;
+
+  /** Default size in the sections grid (getGridOptions). */
+  protected static grid: Record<string, unknown> = GRID.row;
+
+  /** Height in masonry rows of 50 px (getCardSize), when it does not depend on the state. */
+  protected static cardSize = 1;
+
+  getGridOptions(): Record<string, unknown> {
+    return { ...(this.constructor as typeof LumenBaseCard).grid };
+  }
+
+  getCardSize(): number {
+    return (this.constructor as typeof LumenBaseCard).cardSize;
+  }
 
   /** Height of the loading skeleton (section 15), 0 = none (background / text cards). */
   protected static skeletonHeight = 58;

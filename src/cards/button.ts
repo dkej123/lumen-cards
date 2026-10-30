@@ -1,15 +1,17 @@
 import { nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { cssColor } from "../core/styles";
-import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
+import { actions, advanced, appearance, entityStub, form } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneBorder, toneLook, type TileLook } from "../core/tile";
-import type { HassEntity, HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
+import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
 import { waitForResponse, type EntitySource } from "../logic/response";
@@ -63,7 +65,7 @@ const TOGGLE = new Set(["switch", "input_boolean", "light", "fan", "cover", "sir
 const ICONS: Record<string, string> = { script: "mdi:script-text-play", scene: "mdi:palette", button: "mdi:gesture-tap-button", input_button: "mdi:gesture-tap-button", automation: "mdi:robot" };
 
 export function validateButton(c: Partial<ButtonConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
   if (c.feedback !== undefined && (typeof c.feedback !== "object" || !c.feedback?.status_entity)) throw new Error(t("card.button.error.feedback"));
 }
 
@@ -75,6 +77,7 @@ type Phase = "idle" | "wait" | "ok" | "err";
  * line with the code for 6 s, or a red frame with the error until the next use.
  */
 export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
+  protected static grid = GRID.half;
   static properties = { ...LumenBaseCard.properties, _phase: { state: true } };
   protected static compactBelow = 120;
   private subs = new SubButtons(this);
@@ -117,7 +120,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
 
   private get name() {
     const c = this._config;
-    return c.name || this.entity(c.entity)?.attributes.friendly_name || c.entity;
+    return entityName(c.name, this.entity(c.entity), c.entity);
   }
 
   private get domain() {
@@ -277,17 +280,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     return compact ? squareTile(opts) : rowTile(opts);
   }
 
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, ["script", "button", "input_button", "scene"], entities, fallback) ?? firstOf(hass, "script", "script.open_gate") };
-  }
+  static getStubConfig = entityStub(["script", "button", "input_button", "scene"], "script.open_gate");
 
   static getConfigForm() {
     return form(

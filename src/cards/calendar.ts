@@ -1,14 +1,15 @@
 import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { entityName } from "../core/call";
-import { advanced, appearance, firstOf, stub } from "../core/form";
+import { advanced, appearance, entityStub } from "../core/form";
 import { formX, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, tone } from "../core/styles";
+import { requireEntity } from "../core/validate";
 import type { HassEntity, HassLike } from "../hass/types";
 import { eventTime, eventTone, groupByDay, parseEvents, rangeQuery, type CalEvent } from "../logic/calendar";
 
@@ -32,7 +33,7 @@ const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const REFRESH_MS = 5 * 60_000;
 
 export function validateCalendar(c: Partial<CalendarConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
   if (c.days !== undefined && !(Number(c.days) >= 1)) throw new Error(t("card.calendar.error.days"));
 }
 
@@ -42,6 +43,8 @@ export function validateCalendar(c: Partial<CalendarConfig>): void {
  * 5 minutes and whenever the calendar entity changes.
  */
 export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
+  protected static grid = { ...GRID.row, min_columns: 4 };
+  protected static cardSize = 3;
   static properties = { ...LumenBaseCard.properties, _events: { state: true }, _error: { state: true } };
   private _events: CalEvent[] | null = null;
   private _error = "";
@@ -76,7 +79,6 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
       this.requestUpdate();
     });
   }
-
 
   protected onHass(): void {
     this.load();
@@ -151,17 +153,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
     </div>`;
   }
 
-  getCardSize() {
-    return 3;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 4 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "calendar", entities, fallback) ?? firstOf(hass, "calendar", "calendar.home") };
-  }
+  static getStubConfig = entityStub("calendar", "calendar.home");
 
   static getConfigForm() {
     return formX([

@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
@@ -9,6 +10,7 @@ import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { tone } from "../core/styles";
 import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneLook, type TileLook } from "../core/tile";
+import { requireEntity } from "../core/validate";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
 import { binaryStatus, type Status } from "../logic/status";
@@ -48,7 +50,7 @@ const OPENINGS = new Set(["door", "garage_door", "window", "opening"]);
 const ALERTS = new Set(["moisture", "smoke", "gas", "problem", "battery", ...OPENINGS]);
 
 export function validateEntity(c: Partial<EntityConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /** Openings and alarms look like the design doors; any other entity shows its HA-formatted state. */
@@ -81,9 +83,9 @@ export function entityLook(e: HassEntity | undefined, s: Status): TileLook {
 
 /** A state tile with optional sub-buttons; compact a square tile, below 100 px the access bar cell. */
 export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
+  protected static grid = GRID.half;
   protected static compactBelow = 120;
   private subs = new SubButtons(this);
-
 
   protected entityIds() {
     return [this._config.entity, ...(this._config.sub_buttons ?? []).map((b) => b.entity)];
@@ -107,7 +109,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     const s = entityStatus(e, this._hass, c.icon);
     const look = entityLook(e, s);
     const col = look.iconFg;
-    const name = c.name || e?.attributes.friendly_name || c.entity;
+    const name = entityName(c.name, e, c.entity);
     const h = this.actions(`entity:${c.entity}`, c, c.entity);
     const una = !e || e.state === "unavailable";
     const label = una ? t("common.unavailable") : s.label;
@@ -137,14 +139,6 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
       trailing: this.subs.render(c.sub_buttons, { compact: this.compact, max: this.subMax }),
     };
     return this.compact ? squareTile(opts) : rowTile(opts);
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {

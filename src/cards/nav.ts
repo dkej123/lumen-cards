@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { appearance, type Schema, hapticsField } from "../core/form";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { appearance, hapticsField, type Schema } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -44,6 +44,8 @@ export const navItems = (c: Partial<NavConfig>): NavItem[] =>
  * highlighted; a tap navigates like HA's own navigate action.
  */
 export class LumenNavCard extends LumenBaseCard<NavConfig> {
+  protected static grid = { ...GRID.row, min_columns: 6 };
+  protected static cardSize = 2;
   protected layer = new LayerController(this, () => (this.fixed ? this.bar(true) : nothing));
 
   protected entityIds() {
@@ -132,14 +134,6 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
     if (this.fixed) return html`<div aria-hidden="true" style="height:${BAR_H + GAP}px"></div>`;
     if (c.position !== "inline" && c.narrow_only && !this.narrowScreen && !this.preview && !this.editMode) return nothing;
     return this.bar(false);
-  }
-
-  getCardSize() {
-    return 2;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 6 };
   }
 
   static getStubConfig() {

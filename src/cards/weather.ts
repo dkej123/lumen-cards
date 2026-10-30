@@ -10,6 +10,7 @@ import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { Sheet } from "../core/sheet";
 import { glass } from "../core/styles";
+import { requireEntity } from "../core/validate";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import {
@@ -65,7 +66,7 @@ const TINY_BELOW = 120;
 const FORECAST_TIMEOUT_MS = 8000;
 
 export function validateWeather(c: Partial<WeatherConfig>): void {
-  if (!c.entity || !String(c.entity).startsWith("weather.")) throw new Error(t("card.forecast.error.entity"));
+  requireEntity(c, { domains: ["weather"], msg: "card.forecast.error.entity" });
 }
 
 const pad = (v: number) => String(v).padStart(2, "0");
@@ -657,10 +658,6 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
 
   getCardSize() {
     return this.look === "card" ? 3 : 1;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {

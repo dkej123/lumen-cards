@@ -1,10 +1,10 @@
 import { html } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { actions, advanced, appearance, entityStub, form } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { COMPACT_H } from "../core/status-row";
-import type { HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
 import { LightsController, type LightItem } from "../lights/controller";
 import { groupMembers } from "../logic/light";
 
@@ -14,7 +14,7 @@ export interface LightTileConfig extends BaseConfig, LightItem {
 }
 
 export function validateLightTile(c: Partial<LightTileConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("card.light.error.entity"));
+  requireEntity(c, { msg: "card.light.error.entity" });
   if (c.height !== undefined && (typeof c.height !== "number" || c.height < 40)) throw new Error(t("card.light.error.height"));
 }
 
@@ -23,6 +23,8 @@ export function validateLightTile(c: Partial<LightTileConfig>): void {
  * the sheet. Narrower than 220 px the low 44 px compact tile.
  */
 export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
+  protected static grid = GRID.half;
+  protected static cardSize = 2;
   protected static compactBelow = 220;
   private lights = new LightsController(this);
 
@@ -59,17 +61,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
     }
   }
 
-  getCardSize() {
-    return 2;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "light", entities, fallback) ?? firstOf(hass, "light", "light.example") };
-  }
+  static getStubConfig = entityStub("light", "light.example");
 
   static getConfigForm() {
     return form([

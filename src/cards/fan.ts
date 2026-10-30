@@ -1,13 +1,14 @@
 import { css, nothing, unsafeCSS } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, firstOf, stub } from "../core/form";
+import { advanced, appearance, entityStub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, sliderTile } from "../core/slider-tile";
-import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
+import { isUnavailable, type HassEntity } from "../hass/types";
 import { snap } from "../logic/slider";
 
 export interface FanConfig extends BaseConfig {
@@ -25,7 +26,7 @@ export interface FanConfig extends BaseConfig {
 const SET_SPEED = 1;
 
 export function validateFan(c: Partial<FanConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /** Speed of a fan: percentage (0 when off), its step, whether it can be set. */
@@ -42,6 +43,7 @@ export function fanSpeed(e: HassEntity | undefined): { on: boolean; pct: number;
  * on, a horizontal drag sets the speed from the finger (set_percentage on release), tap toggles.
  */
 export class LumenFanCard extends LumenBaseCard<FanConfig> {
+  protected static grid = GRID.half;
   protected static compactBelow = 200;
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}`];
 
@@ -64,7 +66,6 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
   protected validate(c: FanConfig) {
     validateFan(c);
   }
-
 
   private get fan() {
     return this.entity(this._config.entity);
@@ -116,17 +117,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     );
   }
 
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "fan", entities, fallback) ?? firstOf(hass, "fan", "fan.example") };
-  }
+  static getStubConfig = entityStub("fan", "fan.example");
 
   static getConfigForm() {
     return formX([

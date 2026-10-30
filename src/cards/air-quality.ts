@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, form } from "../core/form";
@@ -36,6 +36,7 @@ export function validateAirQuality(c: Partial<AirQualityConfig>): void {
 
 /** Air quality (design): 6 levels + stale, PM2.5 / PM10 / AQI with tweened numbers, 24 h sheet. */
 export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
+  protected static grid = GRID.full;
   static properties = { ...LumenBaseCard.properties, _sheet: { state: true } };
   private _sheet: { closing: boolean } | null = null;
   private sheetOpenedAt = 0;
@@ -203,14 +204,6 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
         (i) => html`<span style="flex:1;height:${!aq.stale && i === aq.level ? 8 : 5}px;border-radius:3px;background:${aq.stale ? "var(--lumen-unavailable)" : `var(--lumen-aq-${i})`};opacity:${aq.stale ? 0.3 : i === aq.level ? 1 : 0.28};transition:opacity 500ms, height 500ms var(--lumen-ease-spring)"></span>`,
       )}</div><span style="flex:none;font-size:11px;font-weight:600;color:${aq.ageC}">${aq.age}</span></div>
     </div>`;
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: "full", rows: "auto" };
   }
 
   static getStubConfig(hass?: HassLike) {

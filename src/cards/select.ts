@@ -11,6 +11,7 @@ import { icon } from "../core/lumen-icon";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, sliderTile } from "../core/slider-tile";
 import { stop } from "../core/styles";
+import { requireEntity } from "../core/validate";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
 
@@ -25,7 +26,7 @@ export interface SelectConfig extends BaseConfig {
 }
 
 export function validateSelect(c: Partial<SelectConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /** Options of an input_select / select entity. */
@@ -219,14 +220,6 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
       },
       this.press,
     );
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 3 };
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {

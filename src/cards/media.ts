@@ -1,8 +1,8 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, firstOf, stub } from "../core/form";
+import { advanced, appearance, entityStub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
@@ -10,7 +10,7 @@ import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, thinBar } from "../core/slider-tile";
 import { glass, stop } from "../core/styles";
-import type { HassLike } from "../hass/types";
+import { requireEntity } from "../core/validate";
 import { stateText } from "../logic/format";
 import { MEDIA, formatTrackTime, mediaDuration, mediaInfo, mediaOff, mediaPlaying, mediaPosition, mediaSupports, volumeIcon, volumeLevel } from "../logic/media";
 
@@ -33,7 +33,7 @@ const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const ART = "linear-gradient(135deg, oklch(0.64 0.17 35), oklch(0.46 0.16 300))";
 
 export function validateMedia(c: Partial<MediaConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /**
@@ -42,6 +42,8 @@ export function validateMedia(c: Partial<MediaConfig>): void {
  * unavailable players dim the controls (play turns the player on when it can).
  */
 export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
+  protected static grid = { ...GRID.row, min_columns: 6 };
+  protected static cardSize = 3;
   static properties = { ...LumenBaseCard.properties, _artFailed: { state: true } };
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}.mbtn:active:not(:disabled){transform:scale(.9)}.mbtn{transition:transform 220ms var(--lumen-ease-spring), opacity 300ms}`];
   protected static compactBelow = 280;
@@ -83,7 +85,6 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
       if (mediaPlaying(this.player) && this._config?.show_progress !== false && !this.compact) this.requestUpdate();
     });
   }
-
 
   private get player() {
     return this.entity(this._config.entity);
@@ -207,17 +208,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     </div>`;
   }
 
-  getCardSize() {
-    return 3;
-  }
-
-  getGridOptions() {
-    return { columns: 12, rows: "auto", min_columns: 6 };
-  }
-
-  static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
-    return { entity: stub(hass, "media_player", entities, fallback) ?? firstOf(hass, "media_player", "media_player.example") };
-  }
+  static getStubConfig = entityStub("media_player", "media_player.example");
 
   static getConfigForm() {
     return formX([

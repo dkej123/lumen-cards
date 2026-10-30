@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { callOrToast } from "../core/call";
+import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { callOrToast, entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
@@ -9,6 +9,7 @@ import { LayerController } from "../core/layer";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
 import { tone } from "../core/styles";
+import { requireEntity } from "../core/validate";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { alertToShow } from "../logic/alert";
 import { num, stateText } from "../logic/format";
@@ -52,7 +53,7 @@ export function reminderValue(template: string | undefined, e: HassEntity | unde
 const JUSTIFY = { start: "flex-start", center: "center", end: "flex-end" };
 
 export function validateReminder(c: Partial<ReminderConfig>): void {
-  if (!c.entity || typeof c.entity !== "string") throw new Error(t("error.pick_entity"));
+  requireEntity(c);
 }
 
 /**
@@ -60,6 +61,7 @@ export function validateReminder(c: Partial<ReminderConfig>): void {
  * state, and a dialog when it starts and on every entry (app / tab back in front) while it holds.
  */
 export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
+  protected static grid = GRID.half;
   static properties = { ...LumenBaseCard.properties, _open: { state: true } };
   private _open = false;
   /** Occurrence already shown since the last entry (key from `alertToShow`). */
@@ -98,7 +100,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
 
   private get label() {
     const c = this._config;
-    return c.name || this.entity(c.entity)?.attributes.friendly_name || c.entity;
+    return entityName(c.name, this.entity(c.entity), c.entity);
   }
 
   protected willUpdate(changed: Map<string, unknown>): void {
@@ -189,14 +191,6 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${this.label}</span>${value ? html`<span style="flex:none;color:var(--lumen-text-2);font-weight:600;font-variant-numeric:tabular-nums">${value}</span>` : nothing}
       </div>
     </div>${sample}`;
-  }
-
-  getCardSize() {
-    return 1;
-  }
-
-  getGridOptions() {
-    return { columns: 6, rows: "auto", min_columns: 3 };
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {
