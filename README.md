@@ -602,6 +602,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 | `fab_narrow_only` | **Auto: only on narrow screens**: floating button on phones, normal card on big screens | on |
 | `power_action` | What the power button does, if you want your own script instead | turns on the last used mode / turns off |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Show the room temperature / the mode buttons / the fan buttons | on |
+| `battery_entity`, `battery_low`, `show_battery` | Low-battery badge ("Battery 9%"). By default it reads Better Thermostat's battery info on the thermostat itself (the weakest valve); or give a % sensor / battery binary sensor. Low from `battery_low` % down (default 20). | on |
 | `show_swing`, `show_presets`, `show_action` | Show swing / presets / the "heating, cooling, idle" badge | on |
 | `show_range` | Show the device's temperature range under the target | off |
 

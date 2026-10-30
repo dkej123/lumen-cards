@@ -65,6 +65,9 @@ const LABELS: Record<string, string> = {
   state: "editor.state",
   message: "editor.message",
   done_action: "editor.done_action",
+  battery_entity: "editor.battery_entity",
+  battery_low: "editor.battery_low",
+  show_battery: "editor.show_battery",
   dialog: "editor.dialog",
   done: "editor.done",
   snooze_minutes: "editor.snooze_minutes",
@@ -111,6 +114,7 @@ const HELPERS: Record<string, string> = {
   pm25: "editor.help.pm",
   styles: "editor.help.styles",
   max_width: "editor.help.max_width",
+  battery_entity: "editor.help.battery_entity",
   sub_buttons: "editor.help.sub_buttons",
 };
 

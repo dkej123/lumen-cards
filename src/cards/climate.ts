@@ -11,6 +11,11 @@ import { toast } from "../core/toast";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { formatNumber } from "../logic/time";
+import { batteryLevel } from "../logic/battery";
+
+/** Low-battery badge next to the hvac_action badge. */
+const batteryBadge = (text: string) =>
+  html`<span role="status" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:999px;background:color-mix(in srgb, var(--lumen-warning) 16%, transparent);color:var(--lumen-warning);font:750 12px var(--lumen-font)">${icon("mdi:battery-alert-variant-outline", "font-size:15px")}${text}</span>`;
 
 export interface ClimateConfig extends BaseConfig {
   entity: string;
@@ -42,6 +47,13 @@ export interface ClimateConfig extends BaseConfig {
   show_action?: boolean;
   /** "range 16–30 °C · step 0.5" line under the controls. */
   show_range?: boolean;
+  /** Battery of the valve/thermostat: a % sensor or a battery binary_sensor. Default: Better
+   *  Thermostat's `batteries` attribute (or `battery_level`) on the climate entity. */
+  battery_entity?: string;
+  /** Low battery from this % down (default 20). */
+  battery_low?: number;
+  /** Low-battery badge (default on). */
+  show_battery?: boolean;
 }
 
 const PENDING_MS = 10_000;
@@ -409,7 +421,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const rangeLine = lim ? t("card.climate.range", { min: formatTemp(lim[0]).replace("°", ""), max: formatTemp(lim[1]).replace("°", ""), unit: f ? "°F" : "°C", step: Number.isInteger(stepVal) ? String(stepVal) : formatNumber(stepVal) }) : "";
     const heatOnly = hvac.every((m) => m === "heat" || m === "off");
     const ic = cfg.icon ?? (mode === "heat_cool" || mode === "auto" ? "mdi:thermostat-auto" : heatOnly ? "mdi:radiator" : "mdi:air-conditioner");
-    return { c, ic, mode, off, una, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, action, rangeLine, sel };
+    const bat = cfg.show_battery === false ? null : batteryLevel(e, this.entity(cfg.battery_entity), cfg.battery_low ?? 20);
+    const battery = bat?.low ? (bat.pct === null ? t("card.climate.battery_low") : t("card.climate.battery_pct", { pct: Math.round(bat.pct) })) : "";
+    return { c, ic, mode, off, una, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, action, rangeLine, sel, battery };
   }
 
   private get name() {
@@ -460,8 +474,10 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.state}</div></div>
         <button class="press" @click=${a.power} aria-label=${t("card.climate.power")} aria-pressed=${a.off ? "false" : "true"} style="flex:none;width:48px;height:48px;border-radius:50%;border:0;display:grid;place-items:center;font-size:22px;background:${a.off ? "var(--lumen-surface-2)" : "var(--lumen-accent)"};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms, color 400ms, transform 220ms var(--lumen-ease-spring)">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>
       </div>
-      ${a.action && cfg.show_action !== false
-        ? html`<span role="status" style="align-self:flex-start;margin:-6px 0 -2px 52px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:color-mix(in srgb, ${a.action.color} 14%, transparent);color:${a.action.color};font:750 12px var(--lumen-font)"><span style="width:7px;height:7px;border-radius:50%;background:${a.action.color};animation:${a.action.pulse ? "lumenBreath 2.4s ease-in-out infinite" : "none"}"></span>${a.action.label}</span>`
+      ${(a.action && cfg.show_action !== false) || a.battery
+        ? html`<div style="display:flex;flex-wrap:wrap;gap:6px;margin:-6px 0 -2px 52px">${a.action && cfg.show_action !== false
+            ? html`<span role="status" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:color-mix(in srgb, ${a.action.color} 14%, transparent);color:${a.action.color};font:750 12px var(--lumen-font)"><span style="width:7px;height:7px;border-radius:50%;background:${a.action.color};animation:${a.action.pulse ? "lumenBreath 2.4s ease-in-out infinite" : "none"}"></span>${a.action.label}</span>`
+            : nothing}${a.battery ? batteryBadge(a.battery) : nothing}</div>`
         : nothing}
       ${a.range
         ? this.rangeFields(a)
@@ -494,7 +510,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const named = !w || w >= 240, stepper = !w || w >= 170;
     return html`<div data-fx style="display:flex;align-items:center;justify-content:${named ? "flex-start" : "space-between"};gap:${named ? 10 : 6}px;padding:${named ? "8px 8px 8px 12px" : "8px"};border-radius:20px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1)">${WFX}
       <button class="press" @click=${() => this.moreInfo(this._config.entity)} aria-label=${this.name} style="flex:none;width:34px;height:34px;border-radius:12px;border:0;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};cursor:pointer">${icon(a.ic)}</button>
-      ${named ? html`<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.short}</div></div>` : nothing}
+      ${named ? html`<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;line-height:18px;white-space:nowrap"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${this.name}</span>${a.battery ? html`<span role="img" title=${a.battery} aria-label=${a.battery} style="flex:none;display:inline-flex;color:var(--lumen-warning)">${icon("mdi:battery-alert-variant-outline", "font-size:16px")}</span>` : nothing}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.short}</div></div>` : nothing}
       ${stepper ? html`<button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:minus")}</button>` : nothing}
       <span style="flex:none;min-width:${stepper ? 46 : 0}px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;opacity:${a.off ? 0.4 : 1}">${value}</span>
       ${stepper ? html`<button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:plus")}</button>` : nothing}
@@ -629,6 +645,16 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
               { name: "show_presets", default: true, selector: { boolean: {} } },
               { name: "show_action", default: true, selector: { boolean: {} } },
               { name: "show_range", default: false, selector: { boolean: {} } },
+              { name: "show_battery", default: true, selector: { boolean: {} } },
+            ],
+          },
+          {
+            name: "",
+            type: "grid",
+            flatten: true,
+            schema: [
+              { name: "battery_entity", selector: { entity: { domain: ["sensor", "binary_sensor"] } } },
+              { name: "battery_low", selector: { number: { min: 1, max: 99, step: 1, mode: "box", unit_of_measurement: "%" } } },
             ],
           },
           { name: "styles", selector: { text: { multiline: true } } },

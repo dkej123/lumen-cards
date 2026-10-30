@@ -135,3 +135,18 @@ describe("colours from the config", () => {
     expect(tone("x);background:url(y")).toBe("var(--lumen-accent)");
   });
 });
+
+describe("thermostat battery (Better Thermostat)", async () => {
+  const { batteryLevel } = await import("../src/logic/battery");
+  const e = (entity_id: string, state: string, attributes: Record<string, unknown> = {}) => ({ entity_id, state, attributes, last_changed: "", last_updated: "" });
+  it("BT batteries attribute (JSON text): the lowest valve", () => {
+    const c = e("climate.x", "heat", { batteries: '{"climate.a": {"battery": 9, "battery_id": "sensor.a"}, "climate.b": {"battery": 64}}' });
+    expect(batteryLevel(c, undefined)).toEqual({ pct: 9, low: true });
+    expect(batteryLevel(c, undefined, 5)).toEqual({ pct: 9, low: false });
+  });
+  it("sensor wins; binary_sensor on = low; nothing known = null", () => {
+    expect(batteryLevel(e("climate.x", "heat"), e("sensor.b", "55"))).toEqual({ pct: 55, low: false });
+    expect(batteryLevel(e("climate.x", "heat"), e("binary_sensor.b", "on"))).toEqual({ pct: null, low: true });
+    expect(batteryLevel(e("climate.x", "heat"), undefined)).toBeNull();
+  });
+});
