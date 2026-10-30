@@ -61,7 +61,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
   /** Full look in any grid width (catalog section 17); compact only when chosen. */
   protected static compactBelow = 0;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "21.5", attributes: { friendly_name: t("card.sensor.name"), unit_of_measurement: "°C", device_class: "temperature" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
-  private history = new History(() => this.requestUpdate(), this);
+  private history = new History(this, () => (this._config ? [this._config.entity] : []));
 
 
   protected entityIds() {
@@ -70,18 +70,6 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
 
   protected validate(c: SensorConfig) {
     validateSensor(c);
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.every(60_000, () => this.history.load(this._hass, this.entityIds()));
-  }
-
-  protected willUpdate(changed: Map<string, unknown>): void {
-    super.willUpdate(changed);
-    if (!this._hass || !this._config) return;
-    this.history.load(this._hass, this.entityIds());
-    this.history.track(this._hass, this._config.entity);
   }
 
   protected renderCard() {

@@ -39,14 +39,14 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
   static properties = { ...LumenBaseCard.properties, _sheet: { state: true } };
   private _sheet: { closing: boolean } | null = null;
   private sheetOpenedAt = 0;
-  private history = new History(() => {
+  private history = new History(this, () => (this._config ? this.ids : []), () => {
     if (!this._config) return;
     for (const id of this.ids) {
       const last = this.history.last(id);
       if (last && !this.lastAir.has(id)) this.lastAir.set(id, { value: last.v, at: new Date(last.t).toISOString() });
     }
     this.requestUpdate();
-  }, this);
+  });
   private lastAir = new Map<string, AirReading>();
   private tweens = new Tweens(this);
 
@@ -70,7 +70,6 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
   connectedCallback(): void {
     super.connectedCallback();
     this.every(30_000, () => this.requestUpdate());
-    this.every(60_000, () => this.history.load(this._hass, this.ids));
   }
 
   disconnectedCallback(): void {
@@ -82,8 +81,6 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
   protected willUpdate(changed: Map<string, unknown>): void {
     super.willUpdate(changed);
     if (!this._config || !this._hass) return;
-    this.history.load(this._hass, this.ids);
-    this.ids.forEach((id) => this.history.track(this._hass, id));
     this.tweens.to("pm25", this.air(this._config.pm25)?.value ?? null);
     this.tweens.to("pm10", this.air(this._config.pm10)?.value ?? null);
     this.tweens.to("aqi", this.air(this._config.aqi_entity)?.value ?? null);

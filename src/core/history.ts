@@ -42,21 +42,38 @@ async function flush() {
   }
 }
 
-/** A card's view of the shared history: it hears about loads while the card is in the page. */
+/**
+ * A card's view of the shared history. While the card is in the page it hears about loads,
+ * asks for its entities on each update and every minute, and appends their live states.
+ */
 export class History implements ReactiveController {
+  private timer?: number;
+
   constructor(
-    private onLoad: () => void,
-    host: ReactiveControllerHost,
+    private host: ReactiveControllerHost & { hass?: HassLike },
+    /** The entities the card shows history for. */
+    private ids: () => (string | undefined)[],
+    private onLoad: () => void = () => host.requestUpdate(),
   ) {
     host.addController(this);
   }
 
   hostConnected() {
     listeners.add(this.onLoad);
+    this.timer = window.setInterval(() => this.load(this.host.hass, this.ids()), 60_000);
+  }
+
+  hostUpdate() {
+    const hass = this.host.hass;
+    if (!hass) return;
+    const ids = this.ids();
+    this.load(hass, ids);
+    ids.forEach((id) => id && this.track(hass, id));
   }
 
   hostDisconnected() {
     listeners.delete(this.onLoad);
+    window.clearInterval(this.timer);
   }
 
   has(entity: string) {
