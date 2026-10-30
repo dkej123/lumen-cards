@@ -228,7 +228,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     } catch (err) {
       const msg = (err as Error)?.message ?? String(err);
       this.haptic("failure");
-      this.pad.failed(/code/i.test(msg) || code ? t("card.alarm.wrong_code") : msg);
+      this.pad.failed(/code/i.test(msg) || code ? t("pad.wrong_code") : msg);
     }
   }
 
@@ -270,7 +270,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     }
     if (s.tone === "ok") return { icon: s.icon, sub: short && st ? modeLabel(st) : s.label, ...toned("var(--lumen-ok)"), ...(short ? { subC: "var(--lumen-text-2)" } : {}) };
     if (st === "pending") {
-      const sub = short ? (cd ? t("card.alarm.code_left", { s: cd.left }) : t("card.lock.code")) : s.label;
+      const sub = short ? (cd ? t("card.alarm.code_left", { s: cd.left }) : t("pad.code")) : s.label;
       return { icon: s.icon, sub, ...toned("var(--lumen-orange)"), anim: "lumenPendingPulse 1.4s ease-in-out infinite", border: "1px solid color-mix(in srgb, var(--lumen-orange) 45%, var(--lumen-border))" };
     }
     if (st === "arming") {
@@ -291,7 +291,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     const busy = this.pending.active;
     if (st === "disarmed") return [{ icon: "mdi:shield-lock-outline", label: t("card.alarm.arm"), spin: busy, tap: () => this.arm() }];
     if (st === "arming") return [{ icon: "mdi:close", label: t("card.alarm.cancel"), spin: busy, tap: () => this.disarm() }];
-    if (st === "pending") return [{ icon: "mdi:dialpad", label: this.needsCode(false) ? t("card.lock.code") : t("card.alarm.disarm"), spin: busy, tap: () => this.disarm() }];
+    if (st === "pending") return [{ icon: "mdi:dialpad", label: this.needsCode(false) ? t("pad.code") : t("card.alarm.disarm"), spin: busy, tap: () => this.disarm() }];
     if (st === "triggered") return [{ icon: "mdi:dialpad", label: t("card.alarm.disarm"), color: WHITE, spin: busy, tap: () => this.disarm() }];
     if (st === "disarming") return [{ icon: "mdi:shield-off-outline", label: t("card.alarm.disarm"), spin: true }];
     if (isArmed(st) || st === "unknown") return [{ icon: "mdi:shield-off-outline", label: t("card.alarm.disarm"), spin: busy, tap: () => this.disarm() }];

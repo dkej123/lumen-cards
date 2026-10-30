@@ -204,7 +204,7 @@ export class LightsController implements ReactiveController {
           : group && on
             ? t("card.light.group_on", { on: group.on, total: group.total })
             : on
-              ? dim ? `${bb}%` : t("card.light.on")
+              ? dim ? `${bb}%` : t("common.on")
               : t("card.light.off");
     const meta = !on ? "" : group ? (group.avg !== null ? `${group.avg}%` : "") : hs ? t(hueName(hs)) : ct ? `${k} K` : "";
     const glow = on ? (group ? 0.45 : 0.25 + (bb / 100) * 0.75) : 0;
@@ -709,7 +709,7 @@ export class LightsController implements ReactiveController {
                 </div>`
               : html`<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px">
                   <div style="width:40px;height:40px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "var(--lumen-light-ink)" : "var(--lumen-text-2)"};transition:background-color 500ms">${icon(lightIcon(item, l.e))}</div>
-                  <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:12px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[l.on ? (l.dim ? `${l.b}%` : t("card.light.on")) : t("common.off_short"), l.on ? l.meta : ""].filter(Boolean).join(" · ")}</div></div>
+                  <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:12px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[l.on ? (l.dim ? `${l.b}%` : t("common.on")) : t("common.off_short"), l.on ? l.meta : ""].filter(Boolean).join(" · ")}</div></div>
                   <button aria-label=${t("common.close")} @click=${this.closeSheet} style="width:40px;height:40px;flex:none;border-radius:50%;border:0;padding:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;cursor:pointer;display:grid;place-items:center">${icon("mdi:close")}</button>
                 </div>`}
           </div>

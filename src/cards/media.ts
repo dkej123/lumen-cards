@@ -148,7 +148,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     const name = entityName(c.name, e, c.entity);
     const hasMedia = !off && !!(e?.attributes.media_title || e?.attributes.media_series_title);
     const info = mediaInfo(e, name);
-    const stateLabel = una ? t("card.cover.unavailable") : off ? t("card.media.off") : stateText(this._hass, e, e!.state);
+    const stateLabel = una ? t("common.unavailable") : off ? t("card.media.off") : stateText(this._hass, e, e!.state);
     const title = hasMedia ? info.title : name;
     const artist = hasMedia ? info.artist : stateLabel;
     const last = String(e?.attributes.app_name || e?.attributes.source || "");

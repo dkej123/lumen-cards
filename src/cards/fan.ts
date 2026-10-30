@@ -93,7 +93,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     const pct = f !== null ? (f * 100 < s.step / 2 ? 0 : Math.max(s.step, Math.round(snap(f * 100, 0, 100, s.step)))) : s.pct;
     const on = f !== null ? pct > 0 : s.on;
     const name = entityName(c.name, e, c.entity);
-    const value = una ? t("card.cover.unavailable") : isUnavailable(e) ? t("common.no_data") : on ? (s.settable ? `${pct}%` : t("card.light.on")) : t("card.fan.off");
+    const value = una ? t("common.unavailable") : isUnavailable(e) ? t("common.no_data") : on ? (s.settable ? `${pct}%` : t("common.on")) : t("card.fan.off");
     return sliderTile(
       {
         title: name,

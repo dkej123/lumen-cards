@@ -41,7 +41,7 @@ export function coverTilt(e: HassEntity | undefined): number | null {
 export function coverState(e: HassEntity | undefined, target?: number | null): CoverState {
   const position = coverPosition(e);
   const tilt = coverTilt(e);
-  if (!e || e.state === "unavailable") return { key: "unavailable", label: t("card.cover.unavailable"), moving: false, position: null, tilt: null };
+  if (!e || e.state === "unavailable") return { key: "unavailable", label: t("common.unavailable"), moving: false, position: null, tilt: null };
   let key: CoverKey;
   if (target !== undefined && target !== null && position !== target) key = position !== null && target < position ? "closing" : target === 0 ? "closing" : "opening";
   else if (e.state === "opening") key = "opening";

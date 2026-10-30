@@ -189,7 +189,7 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
     const open = !!this._menu;
     const sec = c.secondary_entity ? this.entity(c.secondary_entity) : undefined;
     const sub = c.secondary_entity ? stateText(this._hass, sec, sec ? sec.state : t("common.no_data")) : "";
-    const value = una ? t("card.cover.unavailable") : cur === undefined ? t("common.no_data") : this.optionLabel(cur);
+    const value = una ? t("common.unavailable") : cur === undefined ? t("common.no_data") : this.optionLabel(cur);
     const pick = una
       ? nothing
       : html`<button class="pick" aria-haspopup="listbox" aria-expanded=${open} aria-label="${name}: ${value}" @pointerdown=${stop} @pointerup=${stop} @keydown=${stop}
@@ -203,7 +203,7 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
     return sliderTile(
       {
         title: name,
-        sub: una ? t("card.cover.unavailable") : sub,
+        sub: una ? t("common.unavailable") : sub,
         subColor: una ? "var(--lumen-text-3)" : undefined,
         icon: c.icon || (e?.attributes.icon as string | undefined) || "mdi:format-list-bulleted",
         iconBg: una ? "transparent" : "var(--lumen-surface-2)",

@@ -85,7 +85,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
     const cur = Number(e?.state);
     const v = f !== null ? valueAt(f, r.min, r.max, r.step) : Number.isFinite(cur) && !this.offline ? cur : null;
     const name = entityName(c.name, e, c.entity);
-    const value = una ? t("card.cover.unavailable") : v === null ? t("common.no_data") : numberText(v, e?.attributes.unit_of_measurement as string | undefined, r);
+    const value = una ? t("common.unavailable") : v === null ? t("common.no_data") : numberText(v, e?.attributes.unit_of_measurement as string | undefined, r);
     return sliderTile(
       {
         title: name,

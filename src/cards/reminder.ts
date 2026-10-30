@@ -3,7 +3,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
-import { advanced, appearance, firstOf, form, nameIcon, stub } from "../core/form";
+import { advanced, appearance, firstOf, form, nameIcon, select, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { activate } from "../core/press";
@@ -198,15 +198,9 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
   }
 
   static getConfigForm() {
-    const colors = [
-      ["info", "tone.info"],
-      ["ok", "common.ok"],
-      ["warning", "tone.warning"],
-      ["danger", "card.alarm.name"],
-    ].map(([value, label]) => ({ value, label: t(label) }));
     return form([
       { name: "entity", required: true, selector: { entity: {} } },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", selector: { select: { mode: "dropdown", options: colors } } }] },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", selector: select([["info", "tone.info"], ["ok", "common.ok"], ["warning", "tone.warning"], ["danger", "tone.danger"]]) }] },
       nameIcon(),
       { name: "", type: "grid", flatten: true, schema: [{ name: "value", selector: { text: {} } }, { name: "value_entity", selector: { entity: {} } }] },
       { name: "show_chip", default: true, selector: { boolean: {} } },

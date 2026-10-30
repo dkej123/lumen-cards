@@ -170,7 +170,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
       const msg = (err as Error)?.message ?? String(err);
       this.haptic("failure");
       if (this.pad.state) {
-        this.pad.failed(t("card.alarm.wrong_code"));
+        this.pad.failed(t("pad.wrong_code"));
       } else if (cmd === "lock" && this.lock?.attributes.code_format) {
         // A lock that wants the code for locking too.
         this.pad.show({ cmd });

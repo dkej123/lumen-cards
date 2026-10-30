@@ -209,7 +209,7 @@ export function codePad(o: PadOptions): TemplateResult {
         ? html`${keyed(o.shakeKey ?? 0, html`<div aria-hidden="true" style="display:flex;justify-content:center;gap:14px;padding:4px 0;animation:${err ? "lumenNudge 500ms ease-in-out" : "none"}">${dots}</div>`)}`
         : nothing}
       ${o.kind === "text"
-        ? html`<form @submit=${submitText} style="display:flex;flex-direction:column"><input name="code" type="password" autocomplete="off" aria-label=${t("card.lock.code")} placeholder=${t("card.lock.code")} .value=${o.code}
+        ? html`<form @submit=${submitText} style="display:flex;flex-direction:column"><input name="code" type="password" autocomplete="off" aria-label=${t("pad.code")} placeholder=${t("pad.code")} .value=${o.code}
             @input=${(e: Event) => o.onText((e.target as HTMLInputElement).value)}
             style="height:52px;border-radius:16px;border:1px solid ${err ? "var(--lumen-danger)" : "var(--lumen-border)"};background:var(--lumen-surface-2);color:var(--lumen-text-1);font:700 20px var(--lumen-font);text-align:center;letter-spacing:.2em;outline:none;animation:${err ? "lumenNudge 500ms ease-in-out" : "none"}" /></form>`
         : nothing}
