@@ -1,6 +1,7 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { keyed } from "lit/directives/keyed.js";
 import { icon } from "./lumen-icon";
+import type { VisibilityLabel } from "./visibility";
 import { t } from "./i18n";
 import type { PressHandlers } from "./press";
 import { pressable } from "./press";
@@ -151,6 +152,18 @@ export const skeleton = (height = 58) =>
 /** Section 15: "Example" badge of a card picker preview that shows sample data. */
 export const sampleBadge = () =>
   html`<span style="position:absolute;top:8px;right:10px;z-index:4;padding:1px 6px;border-radius:6px;background:var(--lumen-surface-2);font:500 10px/14px var(--lumen-mono);color:var(--lumen-text-2);pointer-events:none">${t("common.example")}</span>`;
+
+/** Dashboard edit mode: where the card shows (HA visibility) and its `edit_note`, top left. */
+export const editLabel = (labels: VisibilityLabel[], note: string) => {
+  const text = (l: VisibilityLabel) =>
+    l.kind === "narrow" ? t("edit.narrow", { px: l.max! + 1 })
+    : l.kind === "wide" ? t("edit.wide", { px: l.min! })
+    : l.kind === "screen" ? (l.text ?? t("edit.screen", { min: l.min!, max: l.max! }))
+    : t(`edit.${l.kind}`);
+  const ico = labels.some((l) => l.kind === "narrow") ? "mdi:cellphone" : labels.some((l) => l.kind === "wide") ? "mdi:monitor" : "mdi:eye-outline";
+  const parts = [...labels.map(text), ...(note ? [note] : [])];
+  return html`<span style="position:absolute;top:-6px;left:8px;z-index:5;display:flex;align-items:center;gap:4px;max-width:calc(100% - 16px);padding:2px 7px 2px 5px;box-sizing:border-box;border-radius:8px;background:var(--lumen-info);color:#fff;box-shadow:var(--lumen-shadow-1);font:700 10px/14px var(--lumen-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none">${icon(labels.length ? ico : "mdi:note-text-outline", "display:block;flex:none;font-size:12px")}<span style="overflow:hidden;text-overflow:ellipsis">${parts.join(" · ")}</span></span>`;
+};
 
 /** A choice above the code pad (alarm modes). */
 export interface PadMode {

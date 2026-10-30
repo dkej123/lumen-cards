@@ -92,6 +92,7 @@ const LABELS: Record<string, string> = {
   show_greeting_name: "editor.show_greeting_name",
   sub_buttons: "editor.sub_buttons",
   styles: "editor.styles",
+  edit_note: "editor.edit_note",
   max_width: "editor.max_width",
   max_width_unit: "editor.max_width_unit",
   disarmed_color: "editor.disarmed_color",
@@ -127,6 +128,7 @@ const HELPERS: Record<string, string> = {
   max_temp: "editor.help.temp_range",
   pm25: "editor.help.pm",
   styles: "editor.help.styles",
+  edit_note: "editor.help.edit_note",
   max_width: "editor.help.max_width",
   battery_entity: "editor.help.battery_entity",
   step: "editor.help.step",
@@ -214,6 +216,7 @@ export const advanced = (shows: [string, boolean?][] = [], opts: { subButtons?: 
     ...(opts.extra ?? []),
     ...(opts.subButtons ? [subButtonsField()] : []),
     hapticsField,
+    { name: "edit_note", selector: { text: {} } },
     { name: "styles", selector: { text: { multiline: true } } },
   ],
 });

@@ -8,7 +8,8 @@ import { haptic, openMoreInfo } from "./actions";
 import { colorVars, cssColor, shared } from "./styles";
 import "./form-editor";
 import type { CardForm, LumenFormEditor } from "./form-editor";
-import { errorCard, sampleBadge, skeleton } from "./parts";
+import { editLabel, errorCard, sampleBadge, skeleton } from "./parts";
+import { haConditions, visibilityLabels } from "./visibility";
 import type { SubButton } from "./sub-buttons";
 
 /** Options every card has (editor section "Appearance"). */
@@ -38,6 +39,8 @@ export interface BaseConfig {
   haptic_tick?: string;
   /** Extra CSS inside the card (advanced, like Bubble Card `styles` / card-mod). */
   styles?: string;
+  /** Note shown on the card only while the dashboard is being edited (e.g. "phone copy"). */
+  edit_note?: string;
   /** Small extra buttons on the right (cards that have room for them). */
   sub_buttons?: SubButton[];
 }
@@ -123,7 +126,7 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     // General states of every card (section 15) before the card's own render: config error,
     // loading skeleton, entity not found. Wrapping keeps every subclass' render() unchanged.
     const own = this.render;
-    this.render = () => this.generalState() ?? this.withBadge(own.call(this));
+    this.render = () => this.withEditLabel(this.generalState() ?? this.withBadge(own.call(this)));
   }
 
   /** Entities whose state changes re-render the card. */
@@ -188,6 +191,20 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     const id = this.mainEntity();
     if (!id || !this._hass || this._hass.states[id] || !this.sampleFor(id)) return content;
     return html`<div style="position:relative">${content}${sampleBadge()}</div>`;
+  }
+
+  /**
+   * Dashboard edit mode: HA shows every card, also the ones its visibility conditions hide (one
+   * copy per screen size), without telling them apart – label them, plus the card's `edit_note`.
+   */
+  private withEditLabel(content: unknown) {
+    if (!this.preview || !this.isConnected) return content;
+    const conds = haConditions(this);
+    if (!conds) return content;
+    const labels = visibilityLabels(conds);
+    const note = typeof this._config?.edit_note === "string" ? this._config.edit_note.trim() : "";
+    if (!labels.length && !note) return content;
+    return html`<div style="position:relative">${content}${editLabel(labels, note)}</div>`;
   }
 
   /** Inside HA's card picker (hui-card-picker), where previews may show sample data. */

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { maxWidthCss } from "../src/core/base-card";
+import { visibilityLabels } from "../src/core/visibility";
 import { setLanguage, setLocale } from "../src/core/i18n";
 import { cssColor, tone } from "../src/core/styles";
 import type { HassEntity } from "../src/hass/types";
@@ -199,5 +200,17 @@ describe("max_width", () => {
     expect(maxWidthCss(undefined)).toBeUndefined();
     expect(maxWidthCss(0)).toBeUndefined();
     expect(maxWidthCss("wide")).toBeUndefined();
+  });
+});
+
+describe("edit-mode visibility labels", () => {
+  it("screen queries, HA presets, users, nested and / or", () => {
+    expect(visibilityLabels([{ condition: "screen", media_query: "(max-width: 1023px)" }])).toEqual([{ kind: "narrow", max: 1023 }]);
+    expect(visibilityLabels([{ condition: "screen", media_query: "(min-width: 1024px)" }])).toEqual([{ kind: "wide", min: 1024 }]);
+    expect(visibilityLabels([{ condition: "screen", media_query: "(min-width: 0px) and (max-width: 767px)" }])).toEqual([{ kind: "narrow", max: 767 }]);
+    expect(visibilityLabels([{ condition: "screen", media_query: "(min-width: 768px) and (max-width: 1023px)" }])).toEqual([{ kind: "screen", min: 768, max: 1023 }]);
+    expect(visibilityLabels([{ condition: "screen", media_query: "(orientation: portrait)" }])).toEqual([{ kind: "screen", text: "(orientation: portrait)" }]);
+    expect(visibilityLabels([{ condition: "and", conditions: [{ condition: "user", users: ["a"] }, { condition: "state", entity: "x", state: "on" }] }])).toEqual([{ kind: "user" }, { kind: "other" }]);
+    expect(visibilityLabels(undefined)).toEqual([]);
   });
 });

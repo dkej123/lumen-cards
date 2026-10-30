@@ -482,6 +482,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `max_width_unit` | `px` or `%` for a numeric `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | What happens when you tap, hold or double-tap: switch, show details, open another page, run a script… | depends on the card |
 | `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
+| `edit_note` | A note shown on the card only while the dashboard is being edited. Cards hidden by a screen condition (their own or their section's) also get a "Phone" / "Computer" label there automatically: HA shows them all in edit mode without telling them apart. | none |
 | `styles` | For tinkerers: your own CSS inside the card | none |
 | `haptics` | Gentle vibration on tap, hold and while dragging (the lightest tick every 1 %, slightly firmer at the ends). Works in the HA app and Android browsers. | on |
 
