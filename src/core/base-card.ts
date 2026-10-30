@@ -32,6 +32,8 @@ export interface BaseConfig {
   fab_side?: "right" | "left";
   /** Vibration feedback on taps, holds and drags (default on). */
   haptics?: boolean;
+  /** Haptic type of the drag ticks (default selection, light at the ends). */
+  haptic_tick?: string;
   /** Extra CSS inside the card (advanced, like Bubble Card `styles` / card-mod). */
   styles?: string;
   /** Small extra buttons on the right (cards that have room for them). */

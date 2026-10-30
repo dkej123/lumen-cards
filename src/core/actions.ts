@@ -74,7 +74,9 @@ export class DragTicks {
     const now = Date.now();
     if (!end && now - this.at < 25) return;
     this.at = now;
-    haptic(node, end ? "light" : "selection");
+    // The card's `haptic_tick` picks the type (the HA app decides how strong each one is).
+    const own = (node as { _config?: { haptic_tick?: string } })._config?.haptic_tick;
+    haptic(node, own ?? (end ? "light" : "selection"));
   }
 
   end(): void {
