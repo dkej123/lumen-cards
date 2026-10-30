@@ -153,8 +153,8 @@ export const sampleBadge = () =>
 /** Dashboard edit mode: where the card shows (HA visibility) and its `edit_note`, top left. */
 export const editLabel = (labels: VisibilityLabel[], note: string) => {
   const text = (l: VisibilityLabel) =>
-    l.kind === "narrow" ? t("edit.narrow", { px: l.max! + 1 })
-    : l.kind === "wide" ? t("edit.wide", { px: l.min! })
+    l.kind === "narrow" ? t("edit.narrow")
+    : l.kind === "wide" ? t("edit.wide")
     : l.kind === "screen" ? (l.text ?? t("edit.screen", { min: l.min!, max: l.max! }))
     : t(`edit.${l.kind}`);
   const ico = labels.some((l) => l.kind === "narrow") ? "mdi:cellphone" : labels.some((l) => l.kind === "wide") ? "mdi:monitor" : "mdi:eye-outline";

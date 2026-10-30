@@ -18,9 +18,6 @@ export const shared = `
 }
 /* Narrower than the panel column (e.g. half a section): rows wrap instead of overlapping. */
 @container (max-width: 319px) {
-  .lockrow { flex-wrap: wrap; }
-  .lockbtns { flex: 1 1 100% !important; }
-  .lockbtns > button { flex: 1; justify-content: center; }
   .modes > button { flex-direction: column; gap: 2px !important; padding: 0 2px; font-size: 11px !important; }
 }
 [data-fx] { position: relative; }

@@ -5,6 +5,7 @@ import { DragTicks, haptic } from "./actions";
 import { Pending } from "./controllers/pending";
 import { icon } from "./lumen-icon";
 import { WFX } from "./parts";
+import { spinnerStyle } from "./press";
 import { glass, prevent, stop } from "./styles";
 
 // Slider tiles of the catalog (section 14: cover, fan, number) and the thin bars (cover tilt,
@@ -233,7 +234,7 @@ export function sliderTile(look: SliderLook, drag: SlideDrag | undefined, intera
       ${look.una ? icon("mdi:power-plug-off-outline", "flex:none;font-size:18px;color:var(--lumen-text-3)") : nothing}
     </div>
     ${!c && look.below ? look.below : nothing}
-    ${look.spin ? html`<span aria-hidden="true" style="position:absolute;top:7px;right:7px;width:10px;height:10px;box-sizing:border-box;border-radius:50%;border:2px solid var(--lumen-border-strong);border-top-color:var(--lumen-text-1);animation:lumenSpin 800ms linear infinite"></span>` : nothing}
+    ${look.spin ? html`<span aria-hidden="true" style=${spinnerStyle(10, "position:absolute;top:7px;right:7px")}></span>` : nothing}
   </div>`;
 }
 

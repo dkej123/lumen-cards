@@ -1,4 +1,4 @@
-import { html, nothing } from "lit";
+import { css, html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
@@ -85,6 +85,24 @@ export const lockPadKind = (format: unknown): "pin" | "text" =>
  * when the command went through.
  */
 export class LumenLockCard extends LumenBaseCard<LockConfig> {
+  // Narrower than the panel column (e.g. half a section): the buttons go under the row.
+  static styles = [
+    LumenBaseCard.styles,
+    css`
+      @container (max-width: 319px) {
+        .lockrow {
+          flex-wrap: wrap;
+        }
+        .lockbtns {
+          flex: 1 1 100% !important;
+        }
+        .lockbtns > button {
+          flex: 1;
+          justify-content: center;
+        }
+      }
+    `,
+  ];
   protected static cardSize = 2;
   static properties = { ...LumenBaseCard.properties, _cmd: { state: true }, _dialog: { state: true } };
   protected static compactBelow = 200;

@@ -44,11 +44,6 @@ const deepActive = (): HTMLElement | null => {
 };
 
 /**
- * Renders `content()` into a body-level layer after every host update; removed when empty.
- * A `[role=dialog]` in the layer gets dialog behaviour: focus moves into it, Tab stays inside,
- * Escape calls `close`, and focus returns to where it was when the dialog goes away.
- */
-/**
  * HA hides a card or a whole section with a visibility condition (e.g. screen width) by
  * `hidden` on its hui-card / hui-section wrapper, but keeps it connected: its floating button
  * must not show then (one copy of a card per screen size).
@@ -61,6 +56,11 @@ export function hiddenByHa(host: Element): boolean {
   return false;
 }
 
+/**
+ * Renders `content()` into a body-level layer after every host update; removed when empty.
+ * A `[role=dialog]` in the layer gets dialog behaviour: focus moves into it, Tab stays inside,
+ * Escape calls `close`, and focus returns to where it was when the dialog goes away.
+ */
 export class LayerController implements ReactiveController {
   private el?: LumenLayerElement;
   /** The dashboard view the card is in: FABs keep to its edges (not over HA's sidebar). */

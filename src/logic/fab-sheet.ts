@@ -54,9 +54,6 @@ export function badgeCount(badge: string[] | undefined, cardIds: string[], state
   return ids.filter((id) => isActive(states[id])).length;
 }
 
-/** Plural form for counted labels: one / few (Polish 2–4, not 12–14) / many. */
-
-
 /**
  * Sheet subtitle / trigger row text: "2 of 3 heating · avg 20.6°", 1 → "1 of 3 heating", 0 →
  * "Nothing is heating"; the average of the available thermostats' room temperatures. Without

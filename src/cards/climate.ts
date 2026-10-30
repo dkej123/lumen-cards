@@ -8,7 +8,7 @@ import { appearance, entityStub, fabFields, form, hapticsField, nameIcon } from 
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { WFX } from "../core/parts";
-import { pressable } from "../core/press";
+import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
 import { toast } from "../core/toast";
@@ -496,8 +496,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
    * Compact row (under 300 px, and the thermostat row of the floating panel, catalog sections 09
    * and 19): icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
    */
-  /** Compact row icon: tap = power on / off, hold = details. */
-
   private compactRow() {
     const a = this.ac();
     const cfg = this._config;
@@ -542,7 +540,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         <span aria-live="polite" style="flex:none;min-width:${stepper ? 46 : 0}px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${a.sending ? "var(--lumen-text-3)" : "var(--lumen-text-1)"};transition:color 300ms">${value}</span>
         ${stepper ? html`<button class="press" ?disabled=${inert} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style=${btn}>${icon("mdi:plus")}</button>` : nothing}
       </div>
-      ${a.sending && stepper ? html`<span aria-hidden="true" style="position:absolute;top:7px;right:56px;width:10px;height:10px;box-sizing:border-box;border-radius:50%;border:2px solid var(--lumen-border-strong);border-top-color:var(--lumen-text-1);animation:lumenSpin 800ms linear infinite"></span>` : nothing}
+      ${a.sending && stepper ? html`<span aria-hidden="true" style=${spinnerStyle(10, "position:absolute;top:7px;right:56px")}></span>` : nothing}
     </div>`;
   }
 

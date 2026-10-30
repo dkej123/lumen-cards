@@ -25,15 +25,15 @@ export function validateWeatherBackground(c: Partial<WeatherBackgroundConfig>): 
   requireEntity(c, { key: "weather_entity", domains: ["weather"], msg: "card.weather.error.entity" });
 }
 
+/** The views whose parent hosts the background. */
+const VIEWS = new Set(["hui-view", "hui-panel-view", "hui-sections-view", "hui-masonry-view"]);
+
 /**
  * Weather background of the design for a whole dashboard view: sky gradient, the
  * background canvas (clouds, rain, snow, sun, stars, lightning) behind the cards and the
  * floating layer (mist, wind) above them. Also drives the per-card weather surfaces of
  * every Lumen card in the view. One per view; takes no space unless it shows its switches.
  */
-/** The views whose parent hosts the background. */
-const VIEWS = new Set(["hui-view", "hui-panel-view", "hui-sections-view", "hui-masonry-view"]);
-
 export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundConfig> {
   protected static grid = GRID.full;
   /** A full-screen layer, not a card in the grid: no loading skeleton. */

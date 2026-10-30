@@ -36,8 +36,7 @@ export function validateCover(c: Partial<CoverConfig>): void {
 export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   protected static cardSize = 2;
   protected static compactBelow = 200;
-  /** Open / close just pressed: shows Opening… / Closing… before HA reports it. */
-  /** The pressed command (position %) until HA sends a new state for the cover (or 10 s). */
+  /** The pressed command (position %; open / close show Opening… / Closing…) until HA sends a new state (or 10 s). */
   private target = new Pending<number>(this, () => this.cover);
 
   private pos = new SlideDrag(this, {

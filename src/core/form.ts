@@ -6,7 +6,7 @@ import { subButtonsField } from "./sub-buttons";
 
 export type Schema = Record<string, unknown>;
 
-/** Field labels: the Polish label is the key of the translation. Standard fields (entity, name, icon, actions) keep HA's own labels. */
+/** Field labels by field name (translation keys); a field's own `title` wins (computeLabel). */
 const LABELS: Record<string, string> = {
   entity: "editor.entity",
   name: "editor.name",
@@ -273,10 +273,10 @@ export const hapticsField: Schema = {
   ],
 };
 
-/** Floating-button fields (climate, scene chips). */
 /** Side of the floating button (left for left-handed use). */
 export const fabSideField: Schema = { name: "fab_side", default: "right", selector: select([["right", "editor.fab_side.right"], ["left", "editor.fab_side.left"]]) };
 
+/** Floating-button fields (climate, scene chips). */
 export const fabFields = (): Schema[] => [
   { name: "fab", default: false, selector: { boolean: {} } },
   { name: "fab_narrow_only", default: true, selector: { boolean: {} } },
@@ -297,10 +297,6 @@ export const actions = (withTap = true, withDouble = true): Schema => ({
   ],
 });
 
-/**
- * Editor form. `assertConfig` throws only for configs the form cannot show (HA then falls back to
- * the YAML editor) – never for a field that is just empty while the user edits.
- */
 /** `name` + `icon` side by side. */
 export const nameIcon = (): Schema => ({
   name: "",
@@ -312,6 +308,10 @@ export const nameIcon = (): Schema => ({
   ],
 });
 
+/**
+ * Editor form. `assertConfig` throws only for configs the form cannot show (HA then falls back to
+ * the YAML editor) – never for a field that is just empty while the user edits.
+ */
 export function form(schema: Schema[], assertConfig?: (c: Record<string, unknown>) => void) {
   return { schema, computeLabel, computeHelper, assertConfig };
 }
