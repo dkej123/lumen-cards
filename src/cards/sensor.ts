@@ -26,7 +26,12 @@ export interface SensorConfig extends BaseConfig {
   show_graph?: boolean;
   /** Hours without a new reading after which the value counts as outdated (dashed card). Default none. */
   stale_after?: number;
+  /** Card height in px (default 52, compact 36). Under 48 px: one line, name left and value right. */
+  height?: number;
 }
+
+/** Below this height (px) the full card becomes the one-line row. */
+const ONE_LINE_BELOW = 48;
 
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
@@ -106,15 +111,19 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
     const label = stale ? `${name} ${value} · ${t("card.sensor.stale", { x: formatAgo(e!.last_reported ?? e!.last_updated) })}` : `${name} ${value}`;
     const border = una || stale ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)";
     const ink = una || stale ? "var(--lumen-text-3)" : "var(--lumen-text-1)";
-    if (this.compact) {
+    const chart = c.show_graph === false || una ? nothing : html`<svg viewBox="0 0 120 36" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:70%;pointer-events:none;opacity:${stale ? 0.4 : 1}"><path d=${sp.area} fill="currentColor" opacity="0.16"></path><path d=${sp.line} fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7" vector-effect="non-scaling-stroke"></path></svg>`;
+    const hpx = Number(c.height) > 0 ? Math.max(28, Math.min(200, Number(c.height))) : 0;
+    if (this.compact || (hpx && hpx < ONE_LINE_BELOW)) {
+      // Dom mobile (handoff 2026-10-06): one line over a dimmed sparkline, 36 px.
+      const shade = `color:${ink};text-shadow:0 1px 6px color-mix(in srgb, var(--lumen-bg) 70%, transparent)`;
       return html`<div data-fx ${pressable(h)} class="press" aria-label=${label}
-        style="position:relative;display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;box-sizing:border-box;border-radius:14px;background:var(--lumen-surface);border:${border};${glass};cursor:pointer;user-select:none;touch-action:pan-y">${WFX}
-        <span style="flex:1;min-width:0;font-size:11px;font-weight:700;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name2}</span><span style="flex:none;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:${ink}">${value}</span>
+        style="position:relative;display:flex;align-items:center;height:${hpx || 36}px;padding:0 10px;box-sizing:border-box;border-radius:14px;background:var(--lumen-surface);border:${border};${glass};cursor:pointer;user-select:none;touch-action:pan-y;color:${stale ? "var(--lumen-text-3)" : color}">${WFX}
+        <div style="position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none">${chart}${chart === nothing ? nothing : html`<span style="position:absolute;inset:0;background:color-mix(in srgb, var(--lumen-bg) 32%, transparent)"></span>`}</div>
+        <div style="position:relative;display:flex;align-items:baseline;justify-content:space-between;gap:6px;width:100%;min-width:0;white-space:nowrap"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:700;${shade}">${name2}</span><span style="flex:none;font-size:15px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;${shade}">${value}</span></div>
       </div>`;
     }
-    const chart = c.show_graph === false || una ? nothing : html`<svg viewBox="0 0 120 36" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:70%;pointer-events:none;opacity:${stale ? 0.4 : 1}"><path d=${sp.area} fill="currentColor" opacity="0.16"></path><path d=${sp.line} fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7" vector-effect="non-scaling-stroke"></path></svg>`;
     return html`<div data-fx ${pressable(h)} class="press" aria-label=${label}
-      style="position:relative;display:flex;align-items:center;min-height:52px;padding:6px 12px;box-sizing:border-box;border-radius:18px;background:var(--lumen-surface);border:${border};${glass};cursor:pointer;user-select:none;touch-action:pan-y;color:${stale ? "var(--lumen-text-3)" : color}">${WFX}
+      style="position:relative;display:flex;align-items:center;${hpx ? `height:${hpx}px` : "min-height:52px"};padding:6px 12px;box-sizing:border-box;border-radius:18px;background:var(--lumen-surface);border:${border};${glass};cursor:pointer;user-select:none;touch-action:pan-y;color:${stale ? "var(--lumen-text-3)" : color}">${WFX}
       <div style="position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none">${chart}</div>
       <div style="position:relative;display:flex;flex-direction:column;min-width:0"><span style="font-size:11px;font-weight:700;line-height:14px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name2}</span><span style="font-size:18px;font-weight:650;line-height:22px;letter-spacing:-0.02em;color:${ink};font-variant-numeric:tabular-nums">${value}</span></div>
     </div>`;
@@ -150,6 +159,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
           { name: "color", selector: { ui_color: {} } },
         ],
       },
+      { name: "height", selector: { number: { min: 28, max: 200, step: 2, mode: "box", unit_of_measurement: "px" } } },
       { name: "stale_after", selector: { number: { min: 0, max: 168, step: 0.5, mode: "box", unit_of_measurement: "h" } } },
       actions(),
       advanced([["show_name"], ["show_graph"]]),
