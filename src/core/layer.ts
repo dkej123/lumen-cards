@@ -150,13 +150,14 @@ export class LayerController implements ReactiveController {
 }
 
 
-// Floating buttons of several cards stack upwards from the bottom-right corner instead of
-// covering each other (catalog A10): the lowest FAB is 64 px (right 24, bottom 24 + safe area),
-// every next one 48 px, 12 px above the previous one and centred on the axis of the first.
-// Order from the bottom: scenes, climate / floating panels, alarm (`FAB_ORDER`), then the order of
-// registration (the dashboard's order).
+// Floating buttons of several cards stack upwards from a bottom corner instead of covering each
+// other (catalog A10): the lowest FAB is 64 px, every next one 48 px, 12 px above the previous one,
+// all with the same outer edge (owner: aligned to the screen edge, 16 px from it). Each card picks
+// its side (`fab_side`, for left-handed use); every side is its own stack. Order from the bottom:
+// scenes, climate / floating panels, alarm (`FAB_ORDER`), then the order of registration.
 type FabOwner = { requestUpdate(): void };
-const fabs: { owner: FabOwner; order: number }[] = [];
+export type FabSide = "right" | "left";
+const fabs: { owner: FabOwner; order: number; side: FabSide }[] = [];
 
 export const FAB_ORDER = { scenes: 0, climate: 1, panels: 1, alarm: 2 } as const;
 /** Size (px) of the lowest FAB and of the ones stacked above it. */
@@ -164,27 +165,33 @@ export const FAB_MAIN = 64;
 export const FAB_SMALL = 48;
 const FAB_GAP = 12;
 
-/** Slot (0 = lowest) of a FAB owner; registers it on first use. */
-export function fabSlot(owner: FabOwner, order: number = FAB_ORDER.climate): number {
+const refreshFrom = (i: number, side: FabSide) => fabs.slice(i).forEach((f) => f.side === side && f.owner.requestUpdate());
+
+/** Slot (0 = lowest) of a FAB owner in the stack of its side; registers it on first use. */
+export function fabSlot(owner: FabOwner, order: number = FAB_ORDER.climate, side: FabSide = "right"): number {
   let i = fabs.findIndex((f) => f.owner === owner);
-  if (i === -1 || fabs[i].order !== order) {
-    if (i !== -1) fabs.splice(i, 1);
+  if (i === -1 || fabs[i].order !== order || fabs[i].side !== side) {
+    if (i !== -1) {
+      const old = fabs[i];
+      fabs.splice(i, 1);
+      refreshFrom(i, old.side);
+    }
     let at = fabs.findIndex((f) => f.order > order);
     if (at === -1) at = fabs.length;
-    fabs.splice(at, 0, { owner, order });
+    fabs.splice(at, 0, { owner, order, side });
     // The ones above moved up a slot.
-    fabs.slice(at + 1).forEach((f) => f.owner.requestUpdate());
+    refreshFrom(at + 1, side);
     i = at;
   }
-  return i;
+  return fabs.slice(0, i).filter((f) => f.side === side).length;
 }
 
 /** The owner's FAB is gone: the ones above move down. */
 export function releaseFab(owner: FabOwner): void {
   const i = fabs.findIndex((f) => f.owner === owner);
   if (i === -1) return;
-  fabs.splice(i, 1);
-  fabs.slice(i).forEach((f) => f.owner.requestUpdate());
+  const [gone] = fabs.splice(i, 1);
+  refreshFrom(i, gone.side);
 }
 
 /** Size (px) of the FAB in `slot`. */
@@ -194,5 +201,11 @@ export const fabSize = (slot: number) => (slot === 0 ? FAB_MAIN : FAB_SMALL);
 export const fabBottom = (slot: number) =>
   `calc(var(--lumen-cards-fab-bottom, 24px) + ${slot === 0 ? 0 : FAB_MAIN + FAB_GAP + (slot - 1) * (FAB_SMALL + FAB_GAP)}px + env(safe-area-inset-bottom))`;
 
-/** `right:` of a FAB of `size` px, centred on the axis of the lowest (64 px) one. */
-export const fabRight = (size: number) => `calc(var(--lumen-cards-fab-right, 24px) + ${(FAB_MAIN - size) / 2}px)`;
+/** Distance of every FAB's outer edge from the screen edge (themes: --lumen-cards-fab-right / -left). */
+export const fabInset = (side: FabSide = "right") => `var(--lumen-cards-fab-${side}, 16px)`;
+
+/** `right:` / `left:` declaration of a FAB on `side`. */
+export const fabEdge = (side: FabSide = "right") => `${side}:${fabInset(side)}`;
+
+/** `fab_side` from a card config. */
+export const fabSideOf = (c: { fab_side?: unknown } | undefined): FabSide => (c?.fab_side === "left" ? "left" : "right");

@@ -2,7 +2,7 @@
 // Catalog 2026-10-29, sections 01–04, 07, 08: light, entity, button, person, reminder, chips / FAB.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { setLanguage } from "../src/core/i18n";
-import { FAB_ORDER, fabBottom, fabRight, fabSize, fabSlot, releaseFab } from "../src/core/layer";
+import { FAB_ORDER, fabBottom, fabEdge, fabSize, fabSlot, releaseFab } from "../src/core/layer";
 import { subButtonLimit } from "../src/core/sub-buttons";
 import type { HassEntity, HassLike } from "../src/hass/types";
 import { hsToRgb, hueName, miredPresets, mixedGroup, swatchIndex, whiteGradient } from "../src/logic/light";
@@ -352,7 +352,7 @@ describe("chips and floating buttons", () => {
     expect(activeScene([{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.evening" }], h.states)).toBe("scene.evening");
   });
 
-  it("stack from the bottom: scenes 64, then 48 px every 12 px, centred", () => {
+  it("stack from the bottom: scenes 64, then 48 px every 12 px, one outer edge; each side its own stack", () => {
     const climate = { requestUpdate: vi.fn() };
     const scenes = { requestUpdate: vi.fn() };
     const alarm = { requestUpdate: vi.fn() };
@@ -366,7 +366,12 @@ describe("chips and floating buttons", () => {
     expect(fabSize(2)).toBe(48);
     expect(fabBottom(1)).toContain("+ 76px");
     expect(fabBottom(2)).toContain("+ 136px");
-    expect(fabRight(48)).toContain("+ 8px");
-    [climate, scenes, alarm].forEach(releaseFab);
+    expect(fabEdge("right")).toBe("right:var(--lumen-cards-fab-right, 16px)");
+    expect(fabEdge("left")).toBe("left:var(--lumen-cards-fab-left, 16px)");
+    // A left-handed panel starts its own stack at the bottom of the left edge.
+    const panel = { requestUpdate: vi.fn() };
+    expect(fabSlot(panel, FAB_ORDER.panels, "left")).toBe(0);
+    expect(fabSlot(alarm, FAB_ORDER.alarm)).toBe(2);
+    [climate, scenes, alarm, panel].forEach(releaseFab);
   });
 });

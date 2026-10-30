@@ -67,6 +67,7 @@ const LABELS: Record<string, string> = {
   done_action: "editor.done_action",
   battery_entity: "editor.battery_entity",
   step: "editor.step",
+  fab_side: "editor.fab_side",
   device_class: "editor.device_class",
   battery_low: "editor.battery_low",
   show_battery: "editor.show_battery",
@@ -118,6 +119,7 @@ const HELPERS: Record<string, string> = {
   max_width: "editor.help.max_width",
   battery_entity: "editor.help.battery_entity",
   step: "editor.help.step",
+  fab_side: "editor.help.fab_side",
   device_class: "editor.help.device_class",
   sub_buttons: "editor.help.sub_buttons",
 };
@@ -190,9 +192,13 @@ export const advanced = (shows: [string, boolean?][] = [], opts: { subButtons?: 
 });
 
 /** Floating-button fields (climate, scene chips). */
+/** Side of the floating button (left for left-handed use). */
+export const fabSideField: Schema = { name: "fab_side", default: "right", selector: select([["right", "editor.fab_side.right"], ["left", "editor.fab_side.left"]]) };
+
 export const fabFields = (): Schema[] => [
   { name: "fab", default: false, selector: { boolean: {} } },
   { name: "fab_narrow_only", default: true, selector: { boolean: {} } },
+  fabSideField,
 ];
 
 export const actions = (withTap = true): Schema => ({

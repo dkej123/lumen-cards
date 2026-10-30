@@ -507,6 +507,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `alignment` | Left, centre, right or spread out | left |
 | `fab` | **Show as a floating button**: the action chips move into a round button in the bottom-right corner | off |
 | `fab_narrow_only` | **Auto: only on narrow screens.** The floating button appears only on phones and portrait tablets; on wider screens the normal row stays. Untick to always use the floating button. | on |
+| `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
 | `title` | Heading above the items of the floating button | "Scenes" |
 
 <a id="lumen-person-card"></a>
@@ -605,6 +606,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 | `step` | How much − and + change the setpoint (e.g. `0.5` when the thermostat reports 0.1). The setpoint is sent 1 s after the last tap. | the device's step |
 | `fab` | **Show as a floating button** in the corner | off |
 | `fab_narrow_only` | **Auto: only on narrow screens**: floating button on phones, normal card on big screens | on |
+| `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
 | `power_action` | What the power button does, if you want your own script instead | turns on the last used mode / turns off |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Show the room temperature / the mode buttons / the fan buttons | on |
 | `battery_entity`, `battery_low`, `show_battery` | Low-battery badge ("Battery 9%"). By default it reads Better Thermostat's battery info on the thermostat itself (the weakest valve); or give a % sensor / battery binary sensor. Low below `battery_low` % (default 15). | on |
@@ -785,6 +787,7 @@ cards:
 | `icon`, `title` | Icon of the floating button and heading of the sheet | `mdi:dock-bottom`, "Floating panel" |
 | `cards` | The cards inside (any Home Assistant cards, edited as YAML). Climate cards show as compact thermostat rows here. | – |
 | `narrow_only` | The floating button only on phones and narrow screens (under 1024 px); wider, the card is a row in the grid that opens the same sheet. Off = the button on every screen. | on |
+| `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
 | `badge_entities` | What the number on the button counts. Empty = the cards' thermostats that are heating; otherwise these entities when heating / on. | empty |
 | `color_scheme`, `accent_color`, `styles` | As on every card | – |
 

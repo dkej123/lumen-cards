@@ -4,7 +4,7 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, fabFields, form } from "../core/form";
 import { t } from "../core/i18n";
-import { FAB_MAIN, FAB_ORDER, fabBottom, fabRight, fabSlot, LayerController, releaseFab } from "../core/layer";
+import { FAB_MAIN, FAB_ORDER, fabBottom, fabEdge, fabInset, fabSideOf, fabSlot, LayerController, releaseFab } from "../core/layer";
 import { Presses, pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass } from "../core/styles";
@@ -191,11 +191,12 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     const open = this._fab;
     const items = this.of("action");
     const active = this.active;
-    const bottom = fabBottom(fabSlot(this, FAB_ORDER.scenes));
+    const side = fabSideOf(this._config);
+    const bottom = fabBottom(fabSlot(this, FAB_ORDER.scenes, side));
     const title = this._config.title || t("card.chips.scenes");
     return html`
       <div @click=${() => (this._fab = false)} style="position:absolute;inset:0;z-index:6;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};transition:opacity 320ms var(--lumen-ease-out)"></div>
-      <div role=${open ? "dialog" : nothing} aria-label=${title} style="position:absolute;right:calc(${fabRight(FAB_MAIN)} - 4px);bottom:calc(${bottom} + ${FAB_MAIN + 12}px);z-index:7;width:200px;max-height:calc(100% - ${FAB_MAIN + 60}px);overflow:auto;padding:10px;box-sizing:border-box;border-radius:22px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2);display:flex;flex-direction:column;gap:2px;transform-origin:bottom right;transform:${open ? "none" : "translateY(16px) scale(.92)"};opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};visibility:${open ? "visible" : "hidden"};transition:transform 460ms var(--lumen-ease-spring), opacity 220ms var(--lumen-ease-out), visibility 0s ${open ? "0s" : "460ms"}">
+      <div role=${open ? "dialog" : nothing} aria-label=${title} style="position:absolute;${side}:calc(${fabInset(side)} - 4px);bottom:calc(${bottom} + ${FAB_MAIN + 12}px);z-index:7;width:200px;max-height:calc(100% - ${FAB_MAIN + 60}px);overflow:auto;padding:10px;box-sizing:border-box;border-radius:22px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2);display:flex;flex-direction:column;gap:2px;transform-origin:bottom ${side};transform:${open ? "none" : "translateY(16px) scale(.92)"};opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};visibility:${open ? "visible" : "hidden"};transition:transform 460ms var(--lumen-ease-spring), opacity 220ms var(--lumen-ease-out), visibility 0s ${open ? "0s" : "460ms"}">
         <div style="padding:4px 8px 6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3)">${title}</div>
         ${items.map((s) => {
           const on = s.entity === active;
@@ -212,7 +213,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
       <button class="acfab" @click=${() => {
         this.haptic();
         this._fab = !open;
-      }} aria-label=${title} aria-expanded=${open} style="position:absolute;right:${fabRight(FAB_MAIN)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:${this.strong.bg};color:${this.strong.fg};font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
+      }} aria-label=${title} aria-expanded=${open} style="position:absolute;${fabEdge(side)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:${this.strong.bg};color:${this.strong.fg};font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
         <span style="position:absolute;inset:0;display:grid;place-items:center;transform:${open ? "rotate(90deg)" : "none"};transition:transform 460ms var(--lumen-ease-spring)">
           ${icon("mdi:palette-outline", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms`)}
           ${icon("mdi:close", `position:absolute;opacity:${open ? 1 : 0};transition:opacity 200ms`)}

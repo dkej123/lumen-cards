@@ -507,6 +507,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `alignment` | Do lewej, do środka, do prawej albo rozłożone | do lewej |
 | `fab` | **Pokaż jako pływający przycisk**: akcje przechodzą do okrągłego przycisku w prawym dolnym rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie.** Pływający przycisk pojawia się tylko na telefonie i tablecie w pionie, a na szerszych ekranach zostaje zwykły rząd chipów. Odznacz, żeby przycisk pływał zawsze. | wł. |
+| `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
 | `title` | Nagłówek nad pozycjami pływającego przycisku | „Sceny” |
 
 <a id="lumen-person-card"></a>
@@ -603,6 +604,7 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy kar
 | `step` | O ile zmieniają nastawę − i + (np. `0.5`, gdy termostat podaje 0,1). Nastawa idzie do urządzenia 1 s po ostatnim dotknięciu. | krok z urządzenia |
 | `fab` | **Pokaż jako pływający przycisk** w rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie**: pływający przycisk na telefonie, zwykła karta na dużym ekranie | wł. |
+| `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
 | `power_action` | Co robi przycisk zasilania, jeśli wolisz własny skrypt | włącza ostatni tryb / wyłącza |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Pokazuj temperaturę w pokoju / przyciski trybu / przyciski nadmuchu | wł. |
 | `battery_entity`, `battery_low`, `show_battery` | Znacznik słabej baterii („Bateria 9%”). Domyślnie czyta informację o bateriach z Better Thermostat na samym termostacie (najsłabsza głowica); można też podać czujnik w % albo czujnik binarny baterii. Słaba poniżej `battery_low` % (domyślnie 15). | wł. |
@@ -783,6 +785,7 @@ cards:
 | `icon`, `title` | Ikona pływającego przycisku i nagłówek arkusza | `mdi:dock-bottom`, „Pływający panel” |
 | `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML). Karty klimatyzacji są tu kompaktowymi wierszami termostatów. | – |
 | `narrow_only` | Pływający przycisk tylko na telefonie i wąskim ekranie (poniżej 1024 px); szerzej karta jest wierszem w siatce, który otwiera ten sam arkusz. Wył. = przycisk na każdym ekranie. | wł. |
+| `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
 | `badge_entities` | Co liczy liczba na przycisku. Puste = termostaty z kart, które grzeją; inaczej te encje, gdy grzeją / są włączone. | puste |
 | `color_scheme`, `accent_color`, `styles` | Jak w każdej karcie | – |
 

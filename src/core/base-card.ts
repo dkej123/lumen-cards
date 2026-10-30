@@ -28,6 +28,8 @@ export interface BaseConfig {
   weather_effects?: boolean;
   /** The card is never wider than this (px) and stays centred in its grid cell. */
   max_width?: number;
+  /** Floating button side (cards with a FAB): right (default) or left. */
+  fab_side?: "right" | "left";
   /** Extra CSS inside the card (advanced, like Bubble Card `styles` / card-mod). */
   styles?: string;
   /** Small extra buttons on the right (cards that have room for them). */
