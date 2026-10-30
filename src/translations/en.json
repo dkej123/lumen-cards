@@ -401,6 +401,7 @@
   "common.sending_command": "Sending command…",
   "common.unavailable": "Unavailable",
   "edit.all": "All",
+  "edit.from_section": "section",
   "edit.narrow": "Phone",
   "edit.other": "Conditional",
   "edit.preview": "Layout preview",

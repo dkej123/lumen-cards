@@ -161,7 +161,7 @@ export const editLabel = (labels: VisibilityLabel[], note: string) => {
     : l.kind === "screen" ? (l.text ?? t("edit.screen", { min: l.min!, max: l.max! }))
     : t(`edit.${l.kind}`);
   const ico = labels.some((l) => l.kind === "narrow") ? "mdi:cellphone" : labels.some((l) => l.kind === "wide") ? "mdi:monitor" : "mdi:eye-outline";
-  const parts = [...labels.map(text), ...(note ? [note] : [])];
+  const parts = [...labels.map((l) => text(l) + (l.section ? ` · ${t("edit.from_section")}` : "")), ...(note ? [note] : [])];
   return html`<span style="position:absolute;top:-5px;left:8px;z-index:5;display:flex;align-items:center;gap:3px;max-width:calc(100% - 16px);padding:1px 6px 1px 4px;box-sizing:border-box;border-radius:8px;background:var(--lumen-info);color:#fff;box-shadow:var(--lumen-shadow-1);font:700 10px/14px var(--lumen-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none">${icon(labels.length ? ico : "mdi:note-text-outline", "display:block;flex:none;font-size:12px")}<span style="overflow:hidden;text-overflow:ellipsis">${parts.join(" · ")}</span></span>`;
 };
 

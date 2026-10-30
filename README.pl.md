@@ -479,7 +479,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
 | `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
 | — | **Podgląd układu w edycji:** przełącznik na dole widoku (Wszystko / Telefon / Komputer) ukrywa karty i sekcje drugiego rozmiaru ekranu, więc każdy układ edytujesz osobno. Sprawdza warunki ekranu HA (min. / maks. szerokość), zapamiętuje wybór na urządzeniu i znika po wyjściu z edycji. Pojawia się, gdy w widoku jest choć jedna karta Lumen. | – |
-| `edit_note` | Opis widoczny na karcie tylko podczas edycji dashboardu. Karty z warunkiem ekranu (swoim albo sekcji) dostają tam też automatycznie etykietę „Telefon” / „Komputer”: HA w trybie edycji pokazuje wszystkie, nie odróżniając ich. | brak |
+| `edit_note` | Opis widoczny na karcie tylko podczas edycji dashboardu. Karty z warunkiem ekranu (swoim albo sekcji) dostają tam też automatycznie etykietę „Telefon” / „Komputer” (z dopiskiem „sekcja”, gdy warunek jest na sekcji, a nie na karcie): HA w trybie edycji pokazuje wszystkie, nie odróżniając ich. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
 | `haptics` | Delikatne wibracje przy dotknięciu, przytrzymaniu i przeciąganiu (najlżejsze tyknięcie co 1 %, nieco mocniejsze na końcach skali). Działa w aplikacji HA i w przeglądarce na Androidzie. | wł. |
 

@@ -401,6 +401,7 @@
   "common.sending_command": "Wysyłam polecenie…",
   "common.unavailable": "Niedostępne",
   "edit.all": "Wszystko",
+  "edit.from_section": "sekcja",
   "edit.narrow": "Telefon",
   "edit.other": "Z warunkiem",
   "edit.preview": "Podgląd układu",

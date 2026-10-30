@@ -202,7 +202,7 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     if (!this.preview || !this.isConnected) return content;
     const conds = haConditions(this);
     if (!conds) return content;
-    const labels = visibilityLabels(conds);
+    const labels = [...visibilityLabels(conds.card), ...visibilityLabels(conds.section).map((l) => ({ ...l, section: true }))];
     const note = typeof this._config?.edit_note === "string" ? this._config.edit_note.trim() : "";
     if (!labels.length && !note) return content;
     return html`<div style="position:relative">${content}${editLabel(labels, note)}</div>`;

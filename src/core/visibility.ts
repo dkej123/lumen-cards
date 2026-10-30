@@ -13,6 +13,8 @@ export interface VisibilityLabel {
   min?: number;
   max?: number;
   text?: string;
+  /** The condition is on the section around the card, not on the card itself. */
+  section?: boolean;
 }
 
 /**
@@ -45,13 +47,13 @@ export function visibilityLabels(conds: unknown): VisibilityLabel[] {
 }
 
 /**
- * Visibility conditions of the hui-card wrappers and the hui-section around a card that sits
- * directly in a dashboard view (not inside a Lumen bar / pop-up), or undefined elsewhere
- * (card editor dialog, card picker).
+ * Visibility conditions of the hui-card wrappers (card, stacks) and of the hui-section around a
+ * card that sits directly in a dashboard view (not inside a Lumen bar / pop-up), or undefined
+ * elsewhere (card editor dialog, card picker).
  */
-export function haConditions(host: Element): unknown[] | undefined {
+export function haConditions(host: Element): { card: unknown[]; section: unknown[] } | undefined {
   if (host.parentElement?.localName !== "hui-card") return undefined;
-  const found: unknown[] = [];
+  const found = { card: [] as unknown[], section: [] as unknown[] };
   let n: Node | null = host;
   for (let i = 0; i < 40 && n; i++) {
     const parent: Node | null = n.parentNode;
@@ -59,7 +61,7 @@ export function haConditions(host: Element): unknown[] | undefined {
     if (!(n instanceof HTMLElement)) continue;
     if (n.localName === "hui-card" || n.localName === "hui-section") {
       const v = (n as HTMLElement & { config?: { visibility?: unknown } }).config?.visibility;
-      if (Array.isArray(v)) found.push(...v);
+      if (Array.isArray(v)) found[n.localName === "hui-card" ? "card" : "section"].push(...v);
     }
     if (/^hui-.*-view$/.test(n.localName)) return found;
   }
