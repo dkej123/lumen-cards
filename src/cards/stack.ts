@@ -1,16 +1,14 @@
 import { css, html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard } from "../core/base-card";
+import { assertCards, LumenContainerCard, type ContainerConfig } from "../core/container-card";
 import { form, maxWidthField, select } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
-import { InnerCards, type CardConfig } from "../core/sheet";
 import type { LumenStackEditor } from "../core/stack-editor";
 import "../core/stack-editor";
-import type { HassLike } from "../hass/types";
 
-export interface StackConfig extends BaseConfig {
-  /** Cards inside, one under another (vertical) or side by side with equal widths (horizontal). */
-  cards?: CardConfig[];
+/** `cards`: one under another (vertical) or side by side (horizontal). */
+export interface StackConfig extends ContainerConfig {
   /** Heading above the cards, as in HA's stacks. */
   title?: string;
   /** Where a narrower stack (max_width) sits in its place (default centre); with `card_width: content` also where the cards sit in the row. */
@@ -20,7 +18,7 @@ export interface StackConfig extends BaseConfig {
 }
 
 export function validateStack(c: Partial<StackConfig>): void {
-  if (c.cards !== undefined && !Array.isArray(c.cards)) throw new Error(t("card.stack.error.cards"));
+  assertCards(c);
   if (c.align !== undefined && !["center", "start", "end"].includes(c.align)) throw new Error(t("card.stack.error.align"));
   if (c.card_width !== undefined && !["equal", "content"].includes(c.card_width)) throw new Error(t("card.stack.error.card_width"));
 }
@@ -42,7 +40,7 @@ const fields = (row = false) => [
  * Lumen stacks: HA's vertical / horizontal stack with a max. width (px or % of the place) and
  * its position built in – one width for a whole group of cards, no extra wrapper. No frame.
  */
-abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
+abstract class LumenStackCard extends LumenContainerCard<StackConfig> {
   // Lumen cards are size containers (their layout follows their own width), which leaves them
   // no width of their own: with card_width content they size to their content instead.
   static styles = [LumenBaseCard.styles, css`
@@ -52,28 +50,15 @@ abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
     }
   `];
   protected static skeletonHeight = 0;
+  protected static wrapCards = true;
   protected abstract readonly row: boolean;
-  private inner = new InnerCards(this, (c) => c, { wrap: true });
-
-  protected entityIds() {
-    return [];
-  }
 
   protected validate(c: StackConfig) {
     validateStack(c);
   }
 
   protected defaults(): Partial<StackConfig> {
-    return { cards: [], align: "center" };
-  }
-
-  setConfig(config: StackConfig): void {
-    super.setConfig(config);
-    if (this.inner.invalidate(this._config.cards)) this.inner.build(this._config.cards ?? []);
-  }
-
-  protected onHass(hass: HassLike): void {
-    this.inner.setHass(hass);
+    return { align: "center" };
   }
 
   protected willUpdate(changed: Map<PropertyKey, unknown>): void {
@@ -92,7 +77,7 @@ abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
     const title = this._config.title
       ? html`<div style="padding:4px 4px 0;font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--lumen-text-1)">${this._config.title}</div>`
       : nothing;
-    if (!(this._config.cards ?? []).length)
+    if (!this.hasCards)
       return html`${title}<div style="display:grid;place-items:center;min-height:56px;border-radius:18px;border:1px dashed var(--lumen-border-strong);font-size:12px;font-weight:650;color:var(--lumen-text-3)">${t("card.stack.empty")}</div>`;
     // card_width content: each card as wide as its content, wrapping, placed by `align`
     const fit = this.row && this._config.card_width === "content";

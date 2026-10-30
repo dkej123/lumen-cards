@@ -1,30 +1,25 @@
 import { css, html, nothing, unsafeCSS } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard } from "../core/base-card";
+import { LumenContainerCard, type ContainerConfig } from "../core/container-card";
 import { appearance, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { registerCard } from "../core/register";
-import { InnerCards, Sheet, type CardConfig } from "../core/sheet";
+import { Sheet, type CardConfig } from "../core/sheet";
 import { SlideDrag, TILE_CSS, sliderTile } from "../core/slider-tile";
-import type { HassLike } from "../hass/types";
 import { hashMatches, innerConfig, normalizeHash } from "../logic/popup";
 
-export interface PopupConfig extends BaseConfig {
+/** `cards`: any HA cards inside, like a vertical stack. */
+export interface PopupConfig extends ContainerConfig {
   /** `#hash` (with or without #) that opens the pop-up, e.g. from a navigate action. */
   hash: string;
   name?: string;
   icon?: string;
-  /** Cards inside (any HA card, like a vertical stack). */
-  cards?: CardConfig[];
   /** A row in the dashboard that opens the pop-up (default false: the card is invisible). */
   show_trigger?: boolean;
   /** Close by itself after this many seconds (0 = never). */
   auto_close?: number;
-}
-
-export function validatePopup(c: Partial<PopupConfig>): void {
-  if (c.cards !== undefined && !Array.isArray(c.cards)) throw new Error(t("card.popup.error.cards"));
 }
 
 /**
@@ -34,9 +29,8 @@ export function validatePopup(c: Partial<PopupConfig>): void {
  * hash. Invisible in the dashboard unless `show_trigger` is on; the card editor shows the trigger
  * row so the card can be found and edited.
  */
-export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
+export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}`];
-  private inner = new InnerCards(this, (c) => innerConfig(c));
   private sheetView = new Sheet(this, () => this.close());
   private autoTimer?: number;
 
@@ -44,29 +38,17 @@ export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
 
   protected layer = new LayerController(this, () => (this.sheetView.open && !this.preview ? this.sheet() : nothing), () => this.close());
 
-  protected entityIds() {
-    return [];
+  protected prepare(c: CardConfig) {
+    return innerConfig(c);
   }
 
-  protected validate(c: PopupConfig) {
-    validatePopup(c);
-  }
-
-  protected defaults(): Partial<PopupConfig> {
-    return { cards: [] };
+  /** The cards are built while the sheet is open. */
+  protected get cardsShown() {
+    return this.sheetView.open;
   }
 
   get hashTag(): string {
     return normalizeHash(this._config?.hash);
-  }
-
-  setConfig(config: PopupConfig): void {
-    super.setConfig(config);
-    if (this.inner.invalidate(this._config.cards) && this.sheetView.open) this.inner.build(this._config.cards ?? []);
-  }
-
-  protected onHass(hass: HassLike): void {
-    this.inner.setHass(hass);
   }
 
   private onLocation = () => this.sync();
@@ -97,7 +79,7 @@ export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
 
   private show() {
     this.sheetView.show();
-    this.inner.build(this._config.cards ?? []);
+    this.buildCards();
     window.clearTimeout(this.autoTimer);
     const secs = Number(this._config.auto_close);
     if (secs > 0) this.autoTimer = window.setTimeout(() => this.close(), secs * 1000);

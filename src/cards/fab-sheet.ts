@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { type BaseConfig } from "../core/base-card";
+import { assertCards, LumenContainerCard } from "../core/container-card";
 import { PENDING_MS } from "../core/controllers/pending";
 import { appearance, fabSideField, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
@@ -8,7 +9,7 @@ import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/la
 import { icon } from "../core/lumen-icon";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
-import { emptySheet, InnerCards, Sheet, type CardConfig } from "../core/sheet";
+import { emptySheet, Sheet, type CardConfig } from "../core/sheet";
 import { glass, ink } from "../core/styles";
 import { toast } from "../core/toast";
 import type { HassEntity, HassLike } from "../hass/types";
@@ -30,7 +31,7 @@ export interface FabSheetConfig extends BaseConfig {
 }
 
 export function validateFabSheet(c: Partial<FabSheetConfig>): void {
-  if (c.cards !== undefined && !Array.isArray(c.cards)) throw new Error(t("card.popup.error.cards"));
+  assertCards(c);
   if (c.badge_entities !== undefined && !Array.isArray(c.badge_entities)) throw new Error(t("card.fab_sheet.error.badge_entities"));
 }
 
@@ -52,8 +53,7 @@ const ORANGE = "var(--lumen-orange)";
  * sheet. Wider than a phone (with `narrow_only`) and while the dashboard is edited the card is a
  * 52 px row in the grid that opens the same sheet.
  */
-export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
-  private inner = new InnerCards(this, fabSheetInner);
+export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
   private sheet = new Sheet(this, () => this.sheet.hide());
   private idsFor?: unknown;
   private idsCache: string[] = [];
@@ -88,21 +88,13 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
     validateFabSheet(c);
   }
 
-  protected defaults(): Partial<FabSheetConfig> {
-    return { cards: [] };
+  protected prepare(c: CardConfig) {
+    return fabSheetInner(c);
   }
 
-  setConfig(config: FabSheetConfig): void {
-    super.setConfig(config);
-    if (this.inner.invalidate(this._config.cards) && this.sheet.open) this.inner.build(this._config.cards ?? []);
-  }
-
-  protected onHass(hass: HassLike): void {
-    this.inner.setHass(hass);
-  }
-
-  private get hasCards(): boolean {
-    return (this._config?.cards ?? []).length > 0;
+  /** The cards are built while the sheet is open. */
+  protected get cardsShown() {
+    return this.sheet.open;
   }
 
   private floating = new FabController(this, FAB_ORDER.panels, () => this.useFab, () => fabSideOf(this._config));
@@ -118,7 +110,7 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
     if (this.preview) return;
     this.haptic();
     this.sheet.show();
-    this.inner.build(this._config.cards ?? []);
+    this.buildCards();
   };
 
   private get panelTitle(): string {
