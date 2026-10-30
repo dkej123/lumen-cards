@@ -239,3 +239,24 @@ describe("compact looks: 44 px, rows auto (catalog correction 2026-10-30)", () =
     expect(off.shadowRoot!.textContent).toContain("Off");
   });
 });
+
+describe("hiddenByHa", () => {
+  it("a card inside a hidden hui-card / hui-section has no layer", async () => {
+    const { hiddenByHa } = await import("../src/core/layer");
+    const view = document.createElement("hui-sections-view");
+    const section = document.createElement("hui-section");
+    const wrap = document.createElement("hui-card");
+    const card = document.createElement("div");
+    wrap.append(card);
+    section.append(wrap);
+    view.append(section);
+    document.body.append(view);
+    expect(hiddenByHa(card)).toBe(false);
+    section.hidden = true;
+    expect(hiddenByHa(card)).toBe(true);
+    section.hidden = false;
+    wrap.hidden = true;
+    expect(hiddenByHa(card)).toBe(true);
+    view.remove();
+  });
+});

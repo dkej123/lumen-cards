@@ -289,7 +289,11 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     this.timers = [];
   }
 
-  private onWide = () => (this._wide = wideQuery?.matches ?? true);
+  private onWide = () => {
+    this._wide = wideQuery?.matches ?? true;
+    // HA's own screen conditions (hidden cards / sections) switch on the same width: look again after them.
+    requestAnimationFrame(() => this.requestUpdate());
+  };
 
   /**
    * `--lumen-accent`, `-soft`, `-ink`, `-shadow`, `-fill-a`, `-fill-b`, `-glow` (and the same for

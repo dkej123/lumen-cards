@@ -59,6 +59,22 @@ function viewOf(el: Element): Element | undefined {
   return undefined;
 }
 
+/**
+ * HA hides a card or a whole section with a visibility condition (e.g. screen width) by
+ * `hidden` on its hui-card / hui-section wrapper, but keeps it connected: its floating button
+ * must not show then (one copy of a card per screen size).
+ */
+export function hiddenByHa(host: Element): boolean {
+  let n: Node | null = host;
+  for (let i = 0; i < 40 && n; i++) {
+    const parent: Node | null = n.parentNode;
+    n = parent instanceof ShadowRoot ? parent.host : parent;
+    if (n instanceof HTMLElement && n.localName.startsWith("hui-") && n.hidden) return true;
+    if (n instanceof HTMLElement && /^hui-.*-view$/.test(n.localName)) return false;
+  }
+  return false;
+}
+
 export class LayerController implements ReactiveController {
   private el?: LumenLayerElement;
   /** The dashboard view the card is in: FABs keep to its edges (not over HA's sidebar). */
@@ -90,6 +106,7 @@ export class LayerController implements ReactiveController {
    * dialogs (in a body-level layer) would show over the next dashboard.
    */
   private onScreen(): boolean {
+    if (hiddenByHa(this.host)) return false;
     const seg = location.pathname.split("/")[1] ?? "";
     const view = this.view?.isConnected ? this.view : viewOf(this.host);
     if (view) {

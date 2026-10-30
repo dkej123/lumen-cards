@@ -325,7 +325,7 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
     const now = this.current();
     const w = this.warnings()[0];
     const label = `${now.temp === null ? "—" : deg(now.temp)} · ${now.label}`;
-    return html`<div style="display:flex"><div class="wxmini" ${pressable(this.handlers())} role="button" aria-label=${label} title=${label}
+    return html`<div style="display:flex;justify-content:flex-end"><div class="wxmini" ${pressable(this.handlers())} role="button" aria-label=${label} title=${label}
       style="position:relative;display:inline-flex;align-items:center;gap:4px;height:40px;padding:0 8px;border-radius:12px;color:var(--lumen-text-1);cursor:pointer;user-select:none;-webkit-user-select:none">
       ${icon(now.icon, `font-size:24px;color:${now.una ? "var(--lumen-unavailable)" : "var(--lumen-text-2)"}`)}
       <span style="font:700 16px var(--lumen-font);font-variant-numeric:tabular-nums">${now.temp === null ? "—" : deg(now.temp)}</span>
