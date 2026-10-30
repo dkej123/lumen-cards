@@ -296,3 +296,34 @@ export const fabEdge = (side: FabSide = "right") => `${side}:${fabInset(side)}`;
 
 /** `fab_side` from a card config. */
 export const fabSideOf = (c: { fab_side?: unknown } | undefined): FabSide => (c?.fab_side === "left" ? "left" : "right");
+
+/**
+ * A card's floating button in the stack of its side: `place()` gives its slot and position while
+ * the card shows it; the slot is given back when the card stops showing it or leaves the page.
+ */
+export class FabController implements ReactiveController {
+  constructor(
+    private host: ReactiveControllerHost,
+    private order: number,
+    /** The card shows its FAB now. */
+    private shown: () => boolean,
+    private side: () => FabSide,
+  ) {
+    host.addController(this);
+  }
+
+  /** Slot (0 = lowest), side, `bottom:` and edge (`right:` / `left:`) declarations, size for the slot. */
+  place() {
+    const side = this.side();
+    const slot = fabSlot(this.host, this.order, side);
+    return { side, slot, bottom: fabBottom(slot), edge: fabEdge(side), size: fabSize(slot) };
+  }
+
+  hostUpdated(): void {
+    if (!this.shown()) releaseFab(this.host);
+  }
+
+  hostDisconnected(): void {
+    releaseFab(this.host);
+  }
+}

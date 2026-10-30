@@ -4,7 +4,7 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, fabFields, form } from "../core/form";
 import { t } from "../core/i18n";
-import { FAB_MAIN, FAB_ORDER, fabBottom, fabEdge, fabInset, fabSideOf, fabSlot, LayerController, releaseFab } from "../core/layer";
+import { FAB_MAIN, FAB_ORDER, FabController, fabInset, fabSideOf, LayerController } from "../core/layer";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass } from "../core/styles";
@@ -121,6 +121,8 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     return (this._config.chips ?? []).filter((x) => x.type === type) as Extract<Chip, { type: T }>[];
   }
 
+  private floating = new FabController(this, FAB_ORDER.scenes, () => this.useFab, () => fabSideOf(this._config));
+
   private get useFab() {
     const c = this._config;
     return !!c && !!this._hass && !!c.fab && (c.fab_narrow_only === false || this.narrowScreen) && !this.preview && this.of("action").length > 0;
@@ -130,7 +132,6 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     super.disconnectedCallback();
     window.clearTimeout(this.pulseTimer);
     window.clearTimeout(this.fabTimer);
-    releaseFab(this);
   }
 
   // ---------------------------------------------------------------- action chips
@@ -186,8 +187,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     const open = this._fab;
     const items = this.of("action");
     const active = this.active;
-    const side = fabSideOf(this._config);
-    const bottom = fabBottom(fabSlot(this, FAB_ORDER.scenes, side));
+    const { side, bottom, edge } = this.floating.place();
     const title = this._config.title || t("card.chips.scenes");
     return html`
       <div @click=${() => (this._fab = false)} style="position:absolute;inset:0;z-index:6;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};transition:opacity 320ms var(--lumen-ease-out)"></div>
@@ -208,7 +208,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
       <button class="acfab" @click=${() => {
         this.haptic();
         this._fab = !open;
-      }} aria-label=${title} aria-expanded=${open} style="position:absolute;${fabEdge(side)};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:${this.strong.bg};color:${this.strong.fg};font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
+      }} aria-label=${title} aria-expanded=${open} style="position:absolute;${edge};bottom:${bottom};z-index:8;width:${FAB_MAIN}px;height:${FAB_MAIN}px;padding:0;border-radius:50%;border:0;background:${this.strong.bg};color:${this.strong.fg};font-size:27px;cursor:pointer;pointer-events:auto;box-shadow:var(--lumen-shadow-2);display:grid;place-items:center;transition:transform 260ms var(--lumen-ease-spring)">
         <span style="position:absolute;inset:0;display:grid;place-items:center;transform:${open ? "rotate(90deg)" : "none"};transition:transform 460ms var(--lumen-ease-spring)">
           ${icon(this._config.fab_icon || "mdi:palette-outline", `position:absolute;opacity:${open ? 0 : 1};transition:opacity 200ms`)}
           ${icon("mdi:close", `position:absolute;opacity:${open ? 1 : 0};transition:opacity 200ms`)}
@@ -220,7 +220,6 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
 
   protected updated(changed: Map<string, unknown>): void {
     super.updated(changed);
-    if (!this.useFab) releaseFab(this);
     // Nothing in the row (all chips in the FAB): take no space – except while the dashboard is
     // being edited, so the card can still be found. Not the `hidden` attribute: HA would take the
     // card out of the page, and its FAB with it.

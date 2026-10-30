@@ -4,7 +4,7 @@ import { PENDING_MS } from "../core/controllers/pending";
 import { appearance, fabSideField, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
-import { FAB_ORDER, fabBottom, fabEdge, fabSideOf, fabSize, fabSlot, LayerController, releaseFab } from "../core/layer";
+import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
@@ -105,20 +105,12 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
     return (this._config?.cards ?? []).length > 0;
   }
 
+  private floating = new FabController(this, FAB_ORDER.panels, () => this.useFab, () => fabSideOf(this._config));
+
   /** FAB instead of the row: not in the editor, not without cards, narrow screens unless `narrow_only: false`. */
   get useFab(): boolean {
     const c = this._config;
     return !!c && !!this._hass && !this._configError && this.hasCards && !this.preview && !this.editMode && (c.narrow_only === false || this.narrowScreen);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    releaseFab(this);
-  }
-
-  protected updated(changed: Map<string, unknown>): void {
-    super.updated(changed);
-    if (!this.useFab) releaseFab(this);
   }
 
   /** Open the sheet (FAB, trigger row). */
@@ -199,12 +191,10 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
   /** The FAB: 48 px above the scenes FAB (64 px when it is the lowest), hidden under the open sheet. */
   private fab() {
     const s = this.status();
-    const side = fabSideOf(this._config);
-    const slot = fabSlot(this, FAB_ORDER.panels, side);
-    const size = fabSize(slot);
+    const { size, bottom, edge } = this.floating.place();
     const open = this.sheet.open && !this.sheet.closing;
     return html`<button class="acfab" @click=${this.open} aria-label=${this.label(s)} title=${this.label(s)} aria-haspopup="dialog" aria-expanded=${open ? "true" : "false"} tabindex=${open ? -1 : 0}
-      style="position:absolute;${fabEdge(side)};bottom:${fabBottom(slot)};z-index:5;width:${size}px;height:${size}px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;font-size:${Math.round(size * 0.42)}px;background:var(--lumen-surface-solid);color:${s.heating ? ORANGE : "var(--lumen-text-1)"};box-shadow:var(--lumen-shadow-2);cursor:pointer;user-select:none;opacity:${open ? 0 : 1};pointer-events:${open ? "none" : "auto"};animation:${s.heating ? "lumenPendingPulse 2s ease-in-out infinite" : "none"};transition:opacity 200ms, color 400ms, transform 260ms var(--lumen-ease-spring)">
+      style="position:absolute;${edge};bottom:${bottom};z-index:5;width:${size}px;height:${size}px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;font-size:${Math.round(size * 0.42)}px;background:var(--lumen-surface-solid);color:${s.heating ? ORANGE : "var(--lumen-text-1)"};box-shadow:var(--lumen-shadow-2);cursor:pointer;user-select:none;opacity:${open ? 0 : 1};pointer-events:${open ? "none" : "auto"};animation:${s.heating ? "lumenPendingPulse 2s ease-in-out infinite" : "none"};transition:opacity 200ms, color 400ms, transform 260ms var(--lumen-ease-spring)">
       ${icon(this.panelIcon, "display:block")}${this.corners(s)}
     </button>`;
   }

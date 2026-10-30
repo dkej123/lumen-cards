@@ -6,7 +6,7 @@ import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
 import { appearance, fabFields, firstOf, form, hapticsField, stub } from "../core/form";
 import { t } from "../core/i18n";
-import { FAB_ORDER, fabBottom, fabEdge, fabSideOf, fabSlot, LayerController, releaseFab } from "../core/layer";
+import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
@@ -201,6 +201,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     this.acLast = readAcLast(config.entity);
   }
 
+  private floating = new FabController(this, FAB_ORDER.climate, () => this.useFab, () => fabSideOf(this._config));
+
   private get useFab() {
     const c = this._config;
     return !!c && !!this._hass && !!c.fab && (c.fab_narrow_only === false || this.narrowScreen) && !this.preview;
@@ -219,12 +221,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     // A pending setpoint is still sent (acTimer): the user chose it.
     window.clearTimeout(this.acHold);
     this._dlg = false;
-    releaseFab(this);
-  }
-
-  protected updated(changed: Map<string, unknown>): void {
-    super.updated(changed);
-    if (!this.useFab) releaseFab(this);
   }
 
   protected willUpdate(changed: Map<string, unknown>): void {
@@ -556,6 +552,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   /** AC FAB (B9): tap = dialog, hold 550 ms = power with a toast. */
   private fab() {
     const a = this.ac();
+    const place = this.floating.place();
     // the setpoint to the nearest half degree: 21.76 → "22°", 21.5 → "21,5°" (smaller digits)
     const half = this.disp === undefined ? undefined : Math.round(this.disp * 2) / 2;
     const whole = half === undefined || Number.isInteger(half);
@@ -585,7 +582,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     };
     return html`<button class="press acfab" @pointerdown=${down} @pointerup=${cancel} @pointerleave=${cancel} @click=${tap} @pointercancel=${cancel} @contextmenu=${prevent}
       aria-label="${this.name} · ${t("card.climate.fab_hint")}" aria-haspopup="dialog" title="${this.name} · ${a.off ? t("card.climate.hold_on") : t("card.climate.hold_off")}"
-      style="position:absolute;${fabEdge(fabSideOf(this._config))};bottom:${fabBottom(fabSlot(this, FAB_ORDER.climate, fabSideOf(this._config)))};z-index:5;width:48px;height:48px;padding:0;border-radius:50%;border:0;background:${a.off ? "var(--lumen-surface-solid)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;touch-action:none;${glass};box-shadow:var(--lumen-shadow-2);transition:background-color 400ms, color 400ms, transform 260ms var(--lumen-ease-spring)">
+      style="position:absolute;${place.edge};bottom:${place.bottom};z-index:5;width:48px;height:48px;padding:0;border-radius:50%;border:0;background:${a.off ? "var(--lumen-surface-solid)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;touch-action:none;${glass};box-shadow:var(--lumen-shadow-2);transition:background-color 400ms, color 400ms, transform 260ms var(--lumen-ease-spring)">
       ${a.off
         ? icon(this._config.icon ?? "mdi:air-conditioner", `display:block;${anim}`)
         : html`<span style="display:flex;flex-direction:column;align-items:center;gap:1px;${anim}">${icon(a.mode === "heat" ? "mdi:fire" : "mdi:snowflake", "font-size:13px;line-height:13px;opacity:.85")}<span style="font-size:${whole ? 14 : 12}px;font-weight:800;line-height:15px;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">${short}</span></span>`}
