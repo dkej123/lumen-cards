@@ -105,7 +105,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     validateEntity(c);
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const raw = this.entity(c.entity);

@@ -45,7 +45,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
     validateLightTile(c);
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return html``;
     const c = this._config;
     switch (this.look) {

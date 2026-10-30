@@ -86,7 +86,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
     else if (c.entity) this.moreInfo(c.entity);
   };
 
-  render() {
+  protected renderCard() {
     if (!this._config) return nothing;
     const c = this._config;
     const mobile = this.compact;

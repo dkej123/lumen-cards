@@ -173,7 +173,7 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
       : html`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="${overline};line-height:13px;margin-right:4px">${t("card.weather.this_device")}</span>${items}</div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config) return nothing;
     if (this.preview || (this.editMode && !this._config.show_controls)) {
       const cond = weatherCondition(this.weatherEntity);

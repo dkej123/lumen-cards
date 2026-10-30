@@ -97,7 +97,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     </div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const compact = this.compact;

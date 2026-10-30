@@ -296,7 +296,7 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
     </div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     if (this.preview) return this.previewView();
     if (this.editMode) return this.triggerRow(true);

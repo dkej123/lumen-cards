@@ -314,11 +314,11 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
     return this.presses.handlers(`weather:${c.entity}`, this.openSheet, () => this.moreInfo(c.entity));
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const look = this.look;
     if (look === "icon") return this.renderIcon();
-    return look === "line" ? this.renderLine() : this.renderCard();
+    return look === "line" ? this.renderLine() : this.renderFull();
   }
 
   private renderIcon() {
@@ -356,7 +356,7 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
     </div>`;
   }
 
-  private renderCard() {
+  private renderFull() {
     const c = this._config;
     const now = this.current();
     const width = this._width || 340;

@@ -113,7 +113,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
     }
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.entity(c.entity);

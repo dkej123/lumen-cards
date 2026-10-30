@@ -329,7 +329,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
       </div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     if (!this.compact) return this.row();
     const una = this.offline;

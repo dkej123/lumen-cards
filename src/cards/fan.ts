@@ -87,7 +87,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     callOrToast(this, this._hass, "fan", pct === 0 ? "turn_off" : "set_percentage", pct === 0 ? {} : { percentage: Math.round(pct) }, this._config.entity).then(() => this.requestUpdate());
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.fan;

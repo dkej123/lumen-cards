@@ -79,7 +79,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
     callOrToast(this, this._hass, domain, "set_value", { value: v }, this._config.entity).then(() => this.requestUpdate());
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.num;

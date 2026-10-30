@@ -125,7 +125,7 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
     </nav>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     if (!navItems(c).length) return this.preview || this.editMode ? html`<div style="padding:16px;border-radius:20px;border:1px dashed var(--lumen-border-strong);font-size:13px;font-weight:650;color:var(--lumen-text-3)">${t("card.nav.empty")}</div>` : nothing;

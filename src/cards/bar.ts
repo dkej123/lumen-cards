@@ -51,7 +51,7 @@ export class LumenBarCard extends LumenBaseCard<BarConfig> {
     this.inner.setHass(hass);
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const n = Math.max(1, (this._config.cards ?? []).length);
     const empty = !(this._config.cards ?? []).length;

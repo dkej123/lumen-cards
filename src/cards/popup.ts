@@ -141,7 +141,7 @@ export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
     );
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     if (!c.show_trigger && !this.preview && !this.editMode) return nothing;

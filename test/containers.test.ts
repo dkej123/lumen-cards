@@ -31,8 +31,7 @@ describe("InnerCards", () => {
     expect(inner.cards).toHaveLength(0);
   });
 
-  // Known bug (review 2026-10-30): the rebuilt card gets no ll-rebuild listener. Fixed in phase 1.
-  it.fails("ll-rebuild replaces the card, also a second time", async () => {
+  it("ll-rebuild replaces the card, also a second time", async () => {
     const inner = new InnerCards(host(), (c) => c);
     await inner.build(cfgs);
     const first = inner.cards[0];
@@ -43,6 +42,12 @@ describe("InnerCards", () => {
     second.dispatchEvent(new Event("ll-rebuild"));
     await tick();
     expect(inner.cards[0]).not.toBe(second);
+  });
+
+  it("a cards value that is not a list builds nothing", async () => {
+    const inner = new InnerCards(host(), (c) => c);
+    await inner.build("x" as never);
+    expect(inner.cards).toEqual([]);
   });
 });
 

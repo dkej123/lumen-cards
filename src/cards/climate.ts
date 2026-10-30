@@ -218,6 +218,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     window.clearTimeout(this.acHold);
     this.tweenTo = undefined;
     this._dlg = false;
+    this.presses.dispose();
     releaseFab(this);
   }
 
@@ -586,9 +587,10 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   /** AC FAB (B9): tap = dialog, hold 550 ms = power with a toast. */
   private fab() {
     const a = this.ac();
-    const tt = this.disp;
-    const whole = tt === undefined || Math.abs(tt - Math.round(tt)) < 0.05;
-    const short = tt === undefined ? "—" : `${whole ? String(Math.round(tt)) : formatNumber(Math.round(tt * 2) / 2)}°`;
+    // the setpoint to the nearest half degree: 21.76 → "22°", 21.5 → "21,5°" (smaller digits)
+    const half = this.disp === undefined ? undefined : Math.round(this.disp * 2) / 2;
+    const whole = half === undefined || Number.isInteger(half);
+    const short = half === undefined ? "—" : `${whole ? String(half) : formatNumber(half)}°`;
     const anim = `animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`;
     const down = (e: PointerEvent) => {
       if (e.button !== 0) return;
@@ -647,7 +649,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       </div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     if (this.useFab) return nothing;
     return this.compact ? this.compactRow() : this.card();

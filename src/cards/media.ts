@@ -154,7 +154,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     }} style="flex:none;width:${size}px;height:${size}px;border:0;border-radius:50%;display:grid;place-items:center;font-size:${size >= 52 ? 26 : 22}px;background:var(--lumen-text-1);color:var(--lumen-bg);padding:0;cursor:pointer">${icon(playing ? "mdi:pause" : "mdi:play", "display:block")}</button>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.player;

@@ -83,24 +83,29 @@ export class InnerCards {
     if (this.builtFor === cfgs || this.building) return;
     this.building = true;
     try {
-      const els = await Promise.all(cfgs.map((c) => this.create(this.prepare(c ?? {}))));
-      els.forEach((el, i) => {
-        if (this.hass) el.hass = this.hass;
-        el.addEventListener("ll-rebuild", (ev) => {
-          ev.stopPropagation();
-          this.create(this.prepare(cfgs[i] ?? {})).then((fresh) => {
-            if (this.hass) fresh.hass = this.hass;
-            this.cards = this.cards.map((x) => (x === el ? fresh : x));
-            this.host.requestUpdate();
-          });
-        });
-      });
+      // a config that failed validation (cards: "x") builds nothing instead of throwing
+      const list = Array.isArray(cfgs) ? cfgs : [];
+      const els = await Promise.all(list.map((c) => this.create(this.prepare(c ?? {}))));
+      els.forEach((el, i) => this.wire(el, list[i]));
       this.cards = els;
       this.builtFor = cfgs;
     } finally {
       this.building = false;
       this.host.requestUpdate();
     }
+  }
+
+  /** hass for a new card, and `ll-rebuild` (HA's "build me again") replacing it – also the replacement. */
+  private wire(el: CardEl, cfg: CardConfig | undefined): void {
+    if (this.hass) el.hass = this.hass;
+    el.addEventListener("ll-rebuild", (ev) => {
+      ev.stopPropagation();
+      this.create(this.prepare(cfg ?? {})).then((fresh) => {
+        this.wire(fresh, cfg);
+        this.cards = this.cards.map((x) => (x === el ? fresh : x));
+        this.host.requestUpdate();
+      });
+    });
   }
 
   /** The 12-column grid of the cards (each spans its grid_options.columns, default the whole row). */

@@ -91,7 +91,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
     this.history.track(this._hass, this._config.entity);
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.entity(c.entity);

@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { callOrToast } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
@@ -135,7 +136,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       this.haptic();
       this._open = false;
       if (c.done_action) handleAction(this, c.done_action, c.entity, "tap");
-      else this._hass?.callService("homeassistant", "turn_off", {}, { entity_id: c.entity });
+      else callOrToast(this, this._hass, "homeassistant", "turn_off", {}, c.entity);
     };
     const title = c.title || this.label;
     return html`<div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both;pointer-events:auto"></div>
@@ -166,7 +167,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       </div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     // show_chip: false hides the pill everywhere (also in the editor preview and edit mode).

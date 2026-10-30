@@ -214,7 +214,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     </div>`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const aq = this.quality();
     const h = this.presses.handlers("aq", () => (this.preview ? undefined : this.openSheet()), () => this.moreInfo(this.ids[0]));

@@ -181,7 +181,7 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
       requestAnimationFrame(() => this.layer.root?.querySelector<HTMLElement>('[role="option"][aria-selected="true"], [role="option"]')?.focus({ preventScroll: true }));
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.sel;

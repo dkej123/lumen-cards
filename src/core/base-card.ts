@@ -122,13 +122,16 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   protected _configError?: { title: string; detail: string };
   private _inPicker?: boolean;
 
-  constructor() {
-    super();
-    // General states of every card (section 15) before the card's own render: config error,
-    // loading skeleton, entity not found. Wrapping keeps every subclass' render() unchanged.
-    const own = this.render;
-    this.render = () => this.withEditLabel(this.generalState() ?? this.withBadge(own.call(this)));
+  /**
+   * General states of every card (section 15) come before the card's own content: config error,
+   * loading skeleton, entity not found; then the example badge and the edit-mode label.
+   */
+  render() {
+    return this.withEditLabel(this.generalState() ?? this.withBadge(this.renderCard()));
   }
+
+  /** The card's own content (render() adds the general states around it). */
+  protected abstract renderCard(): unknown;
 
   /** Entities whose state changes re-render the card. */
   protected abstract entityIds(): readonly (string | undefined)[];

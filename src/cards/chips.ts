@@ -239,7 +239,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     return (this._config.chips ?? []).filter((x) => x.type !== "action" || !fab);
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const compact = this.compact;

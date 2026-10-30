@@ -334,7 +334,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     return [];
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.alarm;

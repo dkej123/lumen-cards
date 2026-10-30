@@ -141,7 +141,7 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     return tg.pos;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.cover;

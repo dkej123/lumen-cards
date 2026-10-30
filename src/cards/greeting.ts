@@ -32,7 +32,7 @@ export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
     return `${t(GREETING[phase])}, ${this._config.name ?? this._hass?.user?.name ?? ""}`;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     if (this.compact) {

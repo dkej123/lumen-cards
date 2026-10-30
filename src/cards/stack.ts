@@ -87,7 +87,7 @@ abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
     for (const c of this.inner.cards) c.preview = this.preview;
   }
 
-  render() {
+  protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const title = this._config.title
       ? html`<div style="padding:4px 4px 0;font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--lumen-text-1)">${this._config.title}</div>`

@@ -59,24 +59,42 @@ class EditPreview {
     }
   }
 
-  /** A card that is in a dashboard view in edit mode. */
+  /**
+   * A card in a dashboard view in edit mode, after each of its updates: HA re-renders the cards
+   * when the dashboard changes, so the hidden copies are worked out again then.
+   */
   add(card: Element): void {
-    if (this.cards.has(card)) return;
+    if (!this.cards.size) window.addEventListener("resize", this.onResize);
     this.cards.add(card);
-    if (!this.timer) this.timer = window.setInterval(() => this.apply(), 800);
+    this.syncTimer();
     this.schedule();
   }
 
   remove(card: Element): void {
     if (!this.cards.delete(card)) return;
     if (!this.cards.size) {
-      window.clearInterval(this.timer);
-      this.timer = undefined;
+      window.removeEventListener("resize", this.onResize);
+      this.syncTimer();
       this.restore();
       this.padded?.style.removeProperty("padding-bottom");
       this.padded = undefined;
       this.bar?.remove();
       this.bar = undefined;
+    }
+  }
+
+  private onResize = () => this.schedule();
+
+  /**
+   * While a layout is picked, a slow check catches cards HA adds without any Lumen card
+   * updating (e.g. a plain HA card dropped into a section); "all" hides nothing and needs none.
+   */
+  private syncTimer(): void {
+    const want = this.cards.size > 0 && this.mode !== "all";
+    if (want && !this.timer) this.timer = window.setInterval(() => this.apply(), 3000);
+    if (!want && this.timer) {
+      window.clearInterval(this.timer);
+      this.timer = undefined;
     }
   }
 
@@ -97,6 +115,7 @@ class EditPreview {
     } catch {
       /* not remembered */
     }
+    this.syncTimer();
     this.apply();
   }
 
