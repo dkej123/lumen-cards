@@ -476,6 +476,7 @@
   "editor.sun_entity": "Sun",
   "editor.title": "Title",
   "editor.type": "Type",
+  "editor.visible_parts": "What to show",
   "editor.weather_effects": "Weather effects on the card",
   "editor.weather_entity": "Weather entity",
   "error.entity_not_found": "Entity not found",

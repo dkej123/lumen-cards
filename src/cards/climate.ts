@@ -519,7 +519,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       ${a.fans.length > 5 ? fanSelect : html`<div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1};transition:opacity 400ms">${a.fans.map((o) => seg(o, "var(--lumen-text-1)", true))}</div>`}` : nothing}
       ${cfg.show_swing !== false && a.swings.length ? html`<div style=${SECTION}>${t("card.climate.swing")}</div>
       <div role="group" aria-label=${t("card.climate.swing")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1}">${a.swings.map((o) => html`<div style="flex:1;min-width:0;display:flex">${seg(o, "var(--lumen-text-1)")}</div>`)}</div>` : nothing}
-      ${cfg.show_presets !== false && a.presets.length ? html`<div style=${SECTION}>${t("card.climate.preset")}</div>
+      ${cfg.show_presets !== false && a.presets.some((o) => o.k !== "none") ? html`<div style=${SECTION}>${t("card.climate.preset")}</div>
       <div role="group" aria-label=${t("card.climate.preset")} style="display:flex;flex-wrap:wrap;gap:6px">${a.presets.map(
         (o) => html`<button aria-pressed=${o.active} @click=${o.on} style="display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px 0 10px;border-radius:999px;background:${o.active ? "var(--lumen-accent-soft)" : "transparent"};color:${o.active ? "var(--lumen-accent)" : "var(--lumen-text-2)"};border:${o.active ? "1px solid color-mix(in srgb, var(--lumen-accent) 40%, transparent)" : "1px solid var(--lumen-border)"};font:700 12px var(--lumen-font);cursor:pointer">${icon(o.ic, "font-size:15px")}${o.label}</button>`,
       )}</div>` : nothing}
@@ -687,6 +687,32 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         name: "preset_modes",
         selector: { select: { multiple: true, mode: "list", custom_value: true, options: Object.keys(PRESETS).map((value) => ({ value, label: t(PRESETS[value][0]) })) } },
       },
+      // What the card shows: right under the mode / fan / preset lists, open by default.
+      {
+        name: "",
+        type: "expandable",
+        flatten: true,
+        expanded: true,
+        title: t("editor.visible_parts"),
+        icon: "mdi:eye-outline",
+        schema: [
+          {
+            name: "",
+            type: "grid",
+            flatten: true,
+            schema: [
+              { name: "show_modes", default: true, selector: { boolean: {} } },
+              { name: "show_fan_modes", default: true, selector: { boolean: {} } },
+              { name: "show_presets", default: true, selector: { boolean: {} } },
+              { name: "show_swing", default: true, selector: { boolean: {} } },
+              { name: "show_current_temp", default: true, selector: { boolean: {} } },
+              { name: "show_action", default: true, selector: { boolean: {} } },
+              { name: "show_battery", default: true, selector: { boolean: {} } },
+              { name: "show_range", default: false, selector: { boolean: {} } },
+            ],
+          },
+        ],
+      },
       { name: "", type: "expandable", flatten: true, title: t("editor.fab"), icon: "mdi:gesture-tap-button", schema: fabFields() },
       {
         name: "",
@@ -696,21 +722,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         icon: "mdi:tune-variant",
         schema: [
           { name: "power_action", selector: { ui_action: {} } },
-          {
-            name: "",
-            type: "grid",
-            flatten: true,
-            schema: [
-              { name: "show_current_temp", default: true, selector: { boolean: {} } },
-              { name: "show_modes", default: true, selector: { boolean: {} } },
-              { name: "show_fan_modes", default: true, selector: { boolean: {} } },
-              { name: "show_swing", default: true, selector: { boolean: {} } },
-              { name: "show_presets", default: true, selector: { boolean: {} } },
-              { name: "show_action", default: true, selector: { boolean: {} } },
-              { name: "show_range", default: false, selector: { boolean: {} } },
-              { name: "show_battery", default: true, selector: { boolean: {} } },
-            ],
-          },
           {
             name: "",
             type: "grid",

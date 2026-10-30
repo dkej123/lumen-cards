@@ -476,6 +476,7 @@
   "editor.sun_entity": "Słońce",
   "editor.title": "Tytuł",
   "editor.type": "Rodzaj",
+  "editor.visible_parts": "Co pokazywać",
   "editor.weather_effects": "Efekty pogodowe na karcie",
   "editor.weather_entity": "Encja pogody",
   "error.entity_not_found": "Nie znaleziono encji",

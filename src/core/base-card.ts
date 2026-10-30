@@ -6,6 +6,8 @@ import { injectFonts } from "../design/fonts";
 import { weather } from "../weather/engine";
 import { haptic, openMoreInfo } from "./actions";
 import { colorVars, cssColor, shared } from "./styles";
+import "./form-editor";
+import type { CardForm, LumenFormEditor } from "./form-editor";
 import { errorCard, sampleBadge, skeleton } from "./parts";
 import type { SubButton } from "./sub-buttons";
 
@@ -74,6 +76,15 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
    * (section 15, "Example" badge). Cards with an `entity` field override it.
    */
   protected static sample?: (entityId: string) => HassEntity | undefined;
+
+  /** Visual editor: the card's getConfigForm() schema in a form that shows the defaults. */
+  static getConfigElement(): HTMLElement | undefined {
+    const form = (this as unknown as { getConfigForm?: () => CardForm }).getConfigForm?.();
+    if (!form) return undefined;
+    const el = document.createElement("lumen-form-editor") as LumenFormEditor;
+    el.form = form;
+    return el;
+  }
 
   /** Set by HA in the card editor / picker preview. */
   preview = false;
