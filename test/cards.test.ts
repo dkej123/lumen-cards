@@ -1,14 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { HassEntity, HassLike } from "../src/hass/types";
-
-const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
-  entity_id,
-  state,
-  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
-  last_changed: new Date(Date.now() - 600_000).toISOString(),
-  last_updated: new Date(Date.now() - 600_000).toISOString(),
-});
+import { ent, mockHass, type Card } from "./helpers";
+import type { HassLike } from "../src/hass/types";
 
 const STATES = [
   ent("light.desk", "on", { brightness: 128, supported_color_modes: ["color_temp"], color_temp_kelvin: 3000, min_color_temp_kelvin: 2700, max_color_temp_kelvin: 6500 }),
@@ -26,36 +19,17 @@ const STATES = [
   ent("input_boolean.bike", "on"),
 ];
 
-const hass = (): HassLike & { calls: unknown[] } => {
-  const calls: unknown[] = [];
-  return {
-    calls,
-    states: Object.fromEntries(STATES.map((e) => [e.entity_id, e])),
-    user: { id: "u1", name: "Ann", is_admin: true },
-    language: "en",
-    locale: { language: "en" },
-    themes: { darkMode: false },
-    formatEntityState: (e) => e.state,
-    callService: async (...args) => {
-      calls.push(args);
-      return undefined;
-    },
-    callWS: async () => ({}) as never,
-  };
-};
+const hass = () => mockHass(STATES);
 
 type CardClass = CustomElementConstructor & {
   getStubConfig?(h: HassLike, entities?: string[], fallback?: string[]): Record<string, unknown>;
   getConfigForm?(): { schema: unknown[]; assertConfig?(c: Record<string, unknown>): void };
 };
-type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean>; getGridOptions?(): unknown };
 type Entry = { type: string; name: string; getEntitySuggestion?(h: HassLike, id: string): { config: Record<string, unknown> }[] | null };
 
 let entries: Entry[] = [];
 
 beforeAll(async () => {
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
-  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
   await import("../src/lumen-cards");
   entries = (window as unknown as { customCards: Entry[] }).customCards;
 });

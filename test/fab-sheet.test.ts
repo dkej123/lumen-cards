@@ -1,19 +1,12 @@
 // @vitest-environment happy-dom
 // Catalog 2026-10-30: floating panel (section 19), compact heights (sections 01–06, 17), battery.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { ent, layer, mockHass, mount as mountCard, type Card } from "./helpers";
 import { setLanguage } from "../src/core/i18n";
 import { FAB_ORDER } from "../src/core/layer";
-import type { HassEntity, HassLike } from "../src/hass/types";
+import type { HassLike } from "../src/hass/types";
 import { batteryLevel } from "../src/logic/battery";
 import { badgeCount, bulkSegment, cardEntities, panelSummary, panelWarning, plural } from "../src/logic/fab-sheet";
-
-const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
-  entity_id,
-  state,
-  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
-  last_changed: new Date(Date.now() - 600_000).toISOString(),
-  last_updated: new Date(Date.now() - 600_000).toISOString(),
-});
 
 const TH = { hvac_modes: ["heat", "off"], preset_modes: ["comfort", "eco", "away"], min_temp: 5, max_temp: 30, target_temp_step: 0.5 };
 const STATES = [
@@ -33,40 +26,11 @@ const S = Object.fromEntries(STATES.map((e) => [e.entity_id, e]));
 const card = (entity: string) => ({ type: "custom:lumen-climate-card", entity });
 const THREE = [card("climate.salon"), card("climate.bedroom"), card("climate.bath")];
 
-type Hass = HassLike & { calls: unknown[][] };
-const hass = (states = S): Hass => {
-  const calls: unknown[][] = [];
-  return {
-    calls,
-    states,
-    user: { id: "u1", name: "Ann", is_admin: true },
-    language: "en",
-    locale: { language: "en" },
-    themes: { darkMode: false },
-    formatEntityState: (e) => e.state,
-    callService: async (...args) => {
-      calls.push(args);
-      return undefined;
-    },
-    callWS: async () => ({}) as never,
-  };
-};
+const hass = (states = S) => mockHass(states);
 
-type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean>; preview: boolean; editMode: boolean; getGridOptions(): Record<string, unknown> };
-const mount = async (type: string, config: Record<string, unknown>, h: HassLike = hass(), setup?: (el: Card) => void) => {
-  const el = document.createElement(`lumen-${type}-card`) as Card;
-  el.setConfig({ type: `custom:lumen-${type}-card`, ...config });
-  setup?.(el);
-  el.hass = h;
-  document.body.append(el);
-  await el.updateComplete;
-  return el;
-};
-const layer = () => document.querySelector("lumen-cards-layer")?.shadowRoot ?? null;
+const mount = (type: string, config: Record<string, unknown>, h: HassLike = hass(), setup?: (el: Card) => void) => mountCard(type, config, h, setup);
 
 beforeAll(async () => {
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
-  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
   await import("../src/lumen-cards");
   setLanguage("en");
 });

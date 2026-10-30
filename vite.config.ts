@@ -40,5 +40,5 @@ export default defineConfig({
     },
     rollupOptions: { output: { codeSplitting: false, minify: true } },
   },
-  test: { environment: "node" },
+  test: { environment: "node", setupFiles: ["test/setup.ts"] },
 });

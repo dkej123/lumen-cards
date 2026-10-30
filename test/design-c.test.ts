@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 // Catalog section 14 ("Nowe domeny"): cover, media, select, fan, number, calendar, nav, pop-up.
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { ent as entity, mockHass, mount as mountCard, type Card } from "./helpers";
 import { setLanguage, setLocale } from "../src/core/i18n";
-import type { HassEntity, HassLike } from "../src/hass/types";
+import type { HassLike } from "../src/hass/types";
 import { dayLabel, eventTime, eventTone, groupByDay, parseEvents, rangeQuery } from "../src/logic/calendar";
 import { COVER, activeButton, coverIcon, coverPosition, coverState, tiltDegrees } from "../src/logic/cover";
 import { MEDIA, formatTrackTime, mediaInfo, mediaOff, mediaPosition, volumeIcon } from "../src/logic/media";
@@ -10,13 +11,7 @@ import { activeIndex, resolvePath } from "../src/logic/nav";
 import { cardSpan, hashMatches, innerConfig, normalizeHash } from "../src/logic/popup";
 import { fractionAt, fractionOf, numberRange, numberText, snap, stepDecimals, valueAt } from "../src/logic/slider";
 
-const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
-  entity_id,
-  state,
-  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
-  last_changed: "2026-10-29T10:00:00Z",
-  last_updated: "2026-10-29T10:00:00Z",
-});
+const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}) => entity(entity_id, state, attributes, "2026-10-29T10:00:00Z");
 
 afterEach(() => {
   setLanguage("en");
@@ -202,7 +197,6 @@ describe("nav + pop-up logic", () => {
 
 // ------------------------------------------------------------------ cards
 
-type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean> };
 type Entry = { type: string; getEntitySuggestion?(h: HassLike, id: string): { config: Record<string, unknown> }[] | null };
 
 const STATES = [
@@ -217,41 +211,16 @@ const STATES = [
   ent("calendar.c", "off"),
 ];
 
-const mkHass = (api?: (path: string) => unknown): HassLike & { calls: unknown[]; api: string[] } => {
-  const calls: unknown[] = [];
-  const apiCalls: string[] = [];
-  return {
-    calls,
-    api: apiCalls,
-    states: Object.fromEntries(STATES.map((e) => [e.entity_id, e])),
-    user: { id: "u1", name: "Ann", is_admin: true },
-    language: "en",
-    locale: { language: "en", time_format: "24" },
-    themes: { darkMode: false },
-    formatEntityState: (e) => e.state,
-    callService: async (...args) => {
-      calls.push(args);
-      return undefined;
-    },
-    callWS: async () => ({}) as never,
-    ...(api ? { callApi: async (_m: string, path: string) => (apiCalls.push(path), api(path)) } : {}),
-  } as HassLike & { calls: unknown[]; api: string[] };
-};
+const mkHass = (api?: (path: string) => unknown) => mockHass(STATES, { api, locale: { time_format: "24" } });
 
 const mount = async (type: string, cfg: Record<string, unknown>, h = mkHass()) => {
-  const el = document.createElement(`lumen-${type}-card`) as Card;
-  el.setConfig({ type: `custom:lumen-${type}-card`, ...cfg });
-  el.hass = h;
-  document.body.append(el);
-  await el.updateComplete;
+  const el = await mountCard(type, cfg, h);
   return { el, h, root: el.shadowRoot! };
 };
 
 const press = (el: Element, key: string, extra: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, ...extra }));
 
 beforeAll(async () => {
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
-  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
   await import("../src/lumen-cards");
 });
 

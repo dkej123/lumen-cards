@@ -1,20 +1,14 @@
 // @vitest-environment happy-dom
 // Catalog 2026-10-29, sections 01–04, 07, 08: light, entity, button, person, reminder, chips / FAB.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { ent, mockHass, mount as mountCard, type Card } from "./helpers";
 import { setLanguage } from "../src/core/i18n";
 import { FAB_ORDER, fabBottom, fabEdge, fabSize, fabSlot, releaseFab } from "../src/core/layer";
 import { subButtonLimit } from "../src/core/sub-buttons";
-import type { HassEntity, HassLike } from "../src/hass/types";
+import type { HassLike } from "../src/hass/types";
 import { hsToRgb, hueName, miredPresets, mixedGroup, swatchIndex, whiteGradient } from "../src/logic/light";
 import { avatarColor, presence } from "../src/logic/presence";
 
-const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, ago = 600_000): HassEntity => ({
-  entity_id,
-  state,
-  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
-  last_changed: new Date(Date.now() - ago).toISOString(),
-  last_updated: new Date(Date.now() - ago).toISOString(),
-});
 
 const CT = { supported_color_modes: ["color_temp", "hs"], min_color_temp_kelvin: 2200, max_color_temp_kelvin: 6500 };
 
@@ -41,40 +35,12 @@ const STATES = [
   ent("scene.movie", "2026-10-28T18:00:00Z"),
 ];
 
-type Hass = HassLike & { calls: unknown[][] };
-const hass = (states = STATES): Hass => {
-  const calls: unknown[][] = [];
-  return {
-    calls,
-    states: Object.fromEntries(states.map((e) => [e.entity_id, e])),
-    user: { id: "u1", name: "Ann", is_admin: true },
-    language: "en",
-    locale: { language: "en" },
-    themes: { darkMode: false },
-    formatEntityState: (e) => e.state,
-    callService: async (...args) => {
-      calls.push(args);
-      return undefined;
-    },
-    callWS: async () => ({}) as never,
-  };
-};
+const hass = (states = STATES) => mockHass(states);
 
-type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean>; preview: boolean };
-
-const mount = async (type: string, config: Record<string, unknown>, h: HassLike = hass()) => {
-  const el = document.createElement(`lumen-${type}-card`) as Card;
-  el.setConfig({ type: `custom:lumen-${type}-card`, ...config });
-  el.hass = h;
-  document.body.append(el);
-  await el.updateComplete;
-  return el;
-};
+const mount = (type: string, config: Record<string, unknown>, h: HassLike = hass()) => mountCard(type, config, h);
 const text = (el: Card) => el.shadowRoot!.textContent!.replace(/\s+/g, " ");
 
 beforeAll(async () => {
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
-  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
   await import("../src/lumen-cards");
   setLanguage("en");
 });

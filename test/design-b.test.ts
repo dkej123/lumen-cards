@@ -1,63 +1,22 @@
 // @vitest-environment happy-dom
 // Catalog 2026-10-29, sections 05, 06, 09, 10, 11, 13, 15, 16, 17.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { HassEntity, HassLike } from "../src/hass/types";
+import { ent as entity, layer, mockHass, mount, settle, type Card } from "./helpers";
+import type { HassEntity } from "../src/hass/types";
 import { setLanguage } from "../src/core/i18n";
 import { armModes, alarmStatus, targetMode } from "../src/logic/status";
 import { colorSet, colorVars } from "../src/core/styles";
 import { isSolidCard } from "../src/weather/engine";
 
-const ago = (s: number) => new Date(Date.now() - s * 1000).toISOString();
-const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, changedSecAgo = 600): HassEntity => ({
-  entity_id,
-  state,
-  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
-  last_changed: ago(changedSecAgo),
-  last_updated: ago(changedSecAgo),
-});
+/** Entities here are aged in seconds. */
+const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, changedSecAgo = 600) => entity(entity_id, state, attributes, changedSecAgo * 1000);
 
-type Hass = HassLike & { calls: unknown[][]; fail?: (args: unknown[]) => boolean };
-const hass = (...list: HassEntity[]): Hass => {
-  const calls: unknown[][] = [];
-  const h: Hass = {
-    calls,
-    states: Object.fromEntries(list.map((e) => [e.entity_id, e])),
-    user: { id: "u1", name: "Ann", is_admin: true },
-    language: "en",
-    locale: { language: "en" },
-    themes: { darkMode: false },
-    formatEntityState: (e) => e.state,
-    callService: async (...args) => {
-      calls.push(args);
-      if (h.fail?.(args)) throw new Error("Invalid alarm code provided");
-      return undefined;
-    },
-    callWS: async () => ({}) as never,
-  };
-  return h;
-};
+const hass = (...list: HassEntity[]) => mockHass(list);
 
-type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean>; getGridOptions(): Record<string, unknown> };
-
-const mount = async (type: string, config: Record<string, unknown>, h?: HassLike) => {
-  const el = document.createElement(`lumen-${type}-card`) as Card;
-  el.setConfig({ type: `custom:lumen-${type}-card`, ...config });
-  if (h) el.hass = h;
-  document.body.append(el);
-  await el.updateComplete;
-  return el;
-};
 const root = (el: Card) => el.shadowRoot!;
-const layer = () => document.querySelector("lumen-cards-layer")?.shadowRoot ?? null;
-const settle = async (el: Card) => {
-  await new Promise((r) => setTimeout(r, 0));
-  await el.updateComplete;
-};
 const button = (r: ParentNode | null, text: string) => [...(r?.querySelectorAll("button") ?? [])].find((b) => b.textContent?.trim() === text || b.getAttribute("aria-label") === text);
 
 beforeAll(async () => {
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
-  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
   await import("../src/lumen-cards");
 });
 
