@@ -2,24 +2,10 @@ import { html, nothing } from "lit";
 import { icon } from "./lumen-icon";
 import { t } from "./i18n";
 import type { PressHandlers } from "./press";
-import { activate, pressable, spinnerStyle } from "./press";
-import { glass, prevent, tone } from "./styles";
-import type { Status } from "../logic/status";
+import { activate, pressable } from "./press";
+import { prevent } from "./styles";
 import { WFX } from "./parts";
 
-
-/** Alarm status row (design `statusRow`). */
-export function statusRow(s: Status, title: string, opts: { pending?: boolean; handlers?: PressHandlers; showState?: boolean; extra?: unknown } = {}) {
-  const c = tone(s.tone);
-  const trig = !!s.alert;
-  const h = opts.handlers;
-  return html`<div data-fx ${pressable(h)} aria-label="${title} · ${s.label}"
-    class="press" style="display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px 10px 10px;box-sizing:border-box;border-radius:20px;background:${trig ? "color-mix(in srgb, var(--lumen-danger) 16%, var(--lumen-surface-solid))" : "var(--lumen-surface)"};border:${trig ? "1px solid var(--lumen-danger)" : "1px solid var(--lumen-border)"};${glass};cursor:${h ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:background-color 500ms, border-color 500ms, transform 220ms var(--lumen-ease-spring);animation:${trig ? "lumenAlarmPulse 1.1s ease-in-out infinite" : "none"}">${WFX}
-    <div style="width:40px;height:40px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb, ${c} 16%, transparent);color:${c};transition:background-color 500ms, color 500ms">${icon(s.icon, `display:block;animation:${trig ? "lumenShake 900ms ease-in-out infinite" : s.busy ? "lumenBreath 2400ms ease-in-out infinite" : "none"}`)}</div>
-    <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:19px">${title}</div>${opts.showState !== false ? html`<div style="font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-2)">${s.label}</div>` : nothing}</div>
-    ${opts.pending ? html`<span style=${spinnerStyle(16)}></span>` : nothing}${opts.extra ?? nothing}
-  </div>`;
-}
 
 /** Alarm banner while the alarm is triggered (design `alarmBanner`). */
 export function alarmBanner(mobile: boolean, text: string, onTap?: () => void) {

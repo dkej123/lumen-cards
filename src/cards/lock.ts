@@ -88,7 +88,6 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   protected static cardSize = 2;
   static properties = { ...LumenBaseCard.properties, _cmd: { state: true }, _dialog: { state: true } };
   protected static compactBelow = 200;
-  protected static iconBelow = 100;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "locked", attributes: { friendly_name: t("card.lock.name"), supported_features: 1 }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
   /** Command on its way. */
   private _cmd: { cmd: Cmd; sawBusy: boolean; since: number } | null = null;

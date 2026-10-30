@@ -102,22 +102,3 @@ export function rowTile(o: TileOpts) {
   </div>`;
 }
 
-/**
- * Compact square tile (catalog `C`, card narrower than its compact threshold): icon (or
- * avatar) and one sub-button on top, name in up to two lines and the state at the bottom.
- */
-export function squareTile(o: TileOpts & { height?: number }) {
-  const label = o.label ?? [o.title, o.sub].filter(Boolean).join(" · ");
-  return html`<div data-fx ${pressable(o.handlers)} class=${o.handlers ? "press" : ""} aria-label=${label} title=${label} aria-busy=${o.busy ? "true" : nothing}
-    style="position:relative;height:${o.height ?? 120}px;padding:10px;box-sizing:border-box;border-radius:18px;display:flex;flex-direction:column;justify-content:space-between;${frame(o)}">${WFX}
-    <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:6px">${leadCell(o, 30, 11, 17)}${o.trailing ?? nothing}</div>
-    <div style="position:relative;min-width:0">
-      ${o.showTitle !== false ? html`<div style="font-size:12px;font-weight:700;line-height:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere">${o.title}</div>` : nothing}
-      ${o.showSub !== false && o.sub ? html`<div style="font-size:11px;font-weight:600;line-height:14px;color:${o.look.subC};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${o.sub}</div>` : nothing}
-    </div>
-    ${spinner(o)}
-  </div>`;
-}
-
-/** Below this card width (px) compact cards show only the icon (the access bar cell). */
-export const ICON_ONLY_BELOW = 100;

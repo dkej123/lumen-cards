@@ -111,11 +111,11 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     const badge = c.presence_entity && !s.unavailable ? (c.presence_badge ?? "BLE") : "";
     const opts = {
       title: name,
-      sub: compact ? s.short : s.label,
-      meta: compact ? "" : s.since,
-      badge: compact ? "" : badge,
+      sub: s.label,
+      meta: s.since,
+      badge,
       look: s.unavailable ? UNAVAILABLE : s.unknown ? UNKNOWN : NEUTRAL,
-      lead: this.avatar(name, s, compact),
+      lead: this.avatar(name, s, false),
       handlers: h,
       label: `${name} · ${s.status}`,
       showTitle: c.show_name !== false,

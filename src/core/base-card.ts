@@ -100,12 +100,6 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
    */
   protected static compactBelow: number | "screen" = "screen";
 
-  /**
-   * Card width (px) below which the compact look becomes the icon tile (catalog C1), 0 = never.
-   * Only cards that have an icon tile set it.
-   */
-  protected static iconBelow = 0;
-
   /** Default size in the sections grid (getGridOptions). */
   protected static grid: Record<string, unknown> = GRID.row;
 
@@ -299,12 +293,6 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     if (v !== "auto") return v === "compact";
     const rule = (this.constructor as typeof LumenBaseCard).compactBelow;
     return rule === "screen" ? !this._wide : this._width > 0 && this._width < rule;
-  }
-
-  /** Compact and narrower than `iconBelow`: only the icon (catalog C1). `layout: compact` never forces it. */
-  get iconOnly(): boolean {
-    const below = (this.constructor as typeof LumenBaseCard).iconBelow;
-    return (this._config?.layout ?? "auto") === "auto" && this.compact && this._width > 0 && this._width < below;
   }
 
   /** Viewport narrower than WIDE_PX: overlays become bottom sheets, FABs in auto mode show. */

@@ -9,7 +9,7 @@ import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { tone } from "../core/styles";
-import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneLook, type TileLook } from "../core/tile";
+import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, toneLook, type TileLook } from "../core/tile";
 import { requireEntity } from "../core/validate";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
@@ -136,9 +136,9 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
       showTitle: c.show_name !== false,
       showSub: c.show_state !== false,
       label: `${name} · ${label}`,
-      trailing: this.subs.render(c.sub_buttons, { compact: this.compact, max: this.subMax }),
+      trailing: this.subs.render(c.sub_buttons, { compact: false, max: this.subMax }),
     };
-    return this.compact ? squareTile(opts) : rowTile(opts);
+    return rowTile(opts);
   }
 
   static getStubConfig(hass?: HassLike, entities?: string[], fallback?: string[]) {

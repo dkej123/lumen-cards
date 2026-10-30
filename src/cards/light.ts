@@ -37,12 +37,6 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
     return [this._config.entity, this._config.power_entity, ...groupMembers(this.entity(this._config.entity))];
   }
 
-  /** wide | compact | icon (layout + card width). */
-  get look(): "wide" | "compact" | "icon" {
-    // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 44 px tile.
-    return this.compact ? "compact" : "wide";
-  }
-
   protected validate(c: LightTileConfig) {
     validateLightTile(c);
   }
@@ -50,15 +44,9 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
   protected renderCard() {
     if (!this._config || !this._hass) return html``;
     const c = this._config;
-    switch (this.look) {
-      case "icon":
-        return this.lights.iconTile(c, Math.max(52, c.height ?? 84));
-      case "compact":
-        // No colour swatch under 120 px (catalog correction 2026-10-30).
-        return this.lights.tile(c, 0, c.height ?? COMPACT_H, true, !this._width || this._width >= 120);
-      default:
-        return this.lights.tile(c, 0, c.height ?? 64, false);
-    }
+    // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 44 px tile,
+    // without the colour swatch under 120 px (catalog correction 2026-10-30).
+    return this.compact ? this.lights.tile(c, 0, c.height ?? COMPACT_H, true, !this._width || this._width >= 120) : this.lights.tile(c, 0, c.height ?? 64, false);
   }
 
   static getStubConfig = entityStub("light", "light.example");

@@ -9,7 +9,7 @@ import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
-import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneBorder, toneLook, type TileLook } from "../core/tile";
+import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, toneBorder, toneLook, type TileLook } from "../core/tile";
 import { requireEntity } from "../core/validate";
 import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
@@ -258,8 +258,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     const look = this.look(e);
     // Owner 2026-10-29: compact is always the access bar cell (no square tile).
     const tiny = this.compact;
-    const compact = false;
-    const out = this.outcome(compact || tiny);
+    const out = this.outcome(tiny);
     const sub = una ? t("common.unavailable") : out ?? (c.show_state === false ? "" : this.sub(e));
     if (tiny) {
       return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: look.iconFg, handlers: h, disabled: una, unavailable: una, extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(busy ? "mdi:loading" : ic, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`) });
@@ -268,16 +267,15 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
       title: this.name,
       sub,
       look,
-      lead: c.show_icon !== false ? (busy && compact ? "mdi:loading" : ic) : undefined,
-      iconAnim: busy && compact ? "lumenSpin 900ms linear infinite" : undefined,
+      lead: c.show_icon !== false ? ic : undefined,
       handlers: h,
-      busy: busy && !compact,
-      plug: una && !compact,
+      busy,
+      plug: una,
       showTitle: c.show_name !== false,
       showSub: c.show_state !== false || out !== null || una,
-      trailing: this.subs.render(c.sub_buttons, { compact, max: subButtonLimit(compact, this._width) }),
+      trailing: this.subs.render(c.sub_buttons, { compact: false, max: subButtonLimit(false, this._width) }),
     };
-    return compact ? squareTile(opts) : rowTile(opts);
+    return rowTile(opts);
   }
 
   static getStubConfig = entityStub(["script", "button", "input_button", "scene"], "script.open_gate");

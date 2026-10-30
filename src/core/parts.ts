@@ -3,8 +3,6 @@ import { keyed } from "lit/directives/keyed.js";
 import { icon } from "./lumen-icon";
 import type { VisibilityLabel } from "./visibility";
 import { t } from "./i18n";
-import type { PressHandlers } from "./press";
-import { pressable } from "./press";
 import { glass, prevent, stop } from "./styles";
 
 // Building blocks of the Lumen Cards catalog (2026-10-29): the row card (R), the compact tile (C),
@@ -109,34 +107,6 @@ export const rowFrame = (l: Look, pointer: boolean) =>
 
 /** Plug-off glyph at the right of an unavailable row. */
 export const unplugged = () => icon("mdi:power-plug-off-outline", "flex:none;font-size:18px;color:var(--lumen-text-3)");
-
-/**
- * Compact tile (`C`, 2 grid rows = 120 px): icon top left, name + status at the bottom.
- * `tap` makes the whole tile a button.
- */
-export function compactTile(o: { title: string; look: Look; handlers?: PressHandlers; label?: string }) {
-  const l = o.look;
-  const action = !!o.handlers;
-  return html`<div data-fx ${pressable(o.handlers)} role=${action ? "button" : nothing} tabindex=${action ? 0 : nothing} aria-label=${o.label ?? `${o.title} · ${l.sub}`} title=${o.label ?? `${o.title} · ${l.sub}`} class=${action ? "press" : ""}
-    style="position:relative;height:120px;padding:10px;box-sizing:border-box;border-radius:18px;background:${l.bg ?? "var(--lumen-surface)"};border:${l.border ?? "1px solid var(--lumen-border)"};box-shadow:${l.shadow ?? "var(--lumen-shadow-1)"};${l.una ? "" : glass + ";"}color:${l.fg ?? "var(--lumen-text-1)"};animation:${l.anim ?? "none"};display:flex;flex-direction:column;justify-content:space-between;cursor:${action ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:background-color 500ms, transform 220ms var(--lumen-ease-spring)">${WFX}
-    <div style="width:30px;height:30px;border-radius:11px;display:grid;place-items:center;font-size:17px;background:${l.iconBg ?? "var(--lumen-surface-2)"};color:${l.iconFg ?? "var(--lumen-text-2)"}">${icon(l.icon, `display:block;animation:${l.iconAnim ?? "none"}`)}</div>
-    <div style="min-width:0">
-      <div style="font-size:12px;font-weight:700;line-height:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${o.title}</div>
-      <div style="font-size:11px;font-weight:600;line-height:14px;color:${l.subC ?? "var(--lumen-text-2)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${l.sub}</div>
-    </div>
-  </div>`;
-}
-
-/** Icon tile (`I`, under 100 px of card width): only the 40 px icon; the name goes to aria-label and the tooltip. */
-export function iconTile(o: { title: string; look: Look; handlers?: PressHandlers }) {
-  const l = o.look;
-  const action = !!o.handlers;
-  const label = `${o.title} · ${l.sub}`;
-  return html`<div data-fx ${pressable(o.handlers)} role=${action ? "button" : nothing} tabindex=${action ? 0 : nothing} aria-label=${label} title=${label} class=${action ? "press" : ""}
-    style="position:relative;height:84px;border-radius:18px;background:${l.bg ?? "var(--lumen-surface)"};border:${l.border ?? "1px solid var(--lumen-border)"};box-shadow:${l.shadow ?? "var(--lumen-shadow-1)"};${l.una ? "" : glass + ";"}animation:${l.anim ?? "none"};display:grid;place-items:center;cursor:${action ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:transform 220ms var(--lumen-ease-spring)">${WFX}
-    <div style="width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${l.iconBg ?? "var(--lumen-surface-2)"};color:${l.iconFg ?? "var(--lumen-text-2)"}">${icon(l.icon, `display:block;animation:${l.iconAnim ?? "none"}`)}</div>
-  </div>`;
-}
 
 /** Section 15: configuration error in Lumen style instead of HA's error card. */
 export const errorCard = (title: string, detail: string) =>

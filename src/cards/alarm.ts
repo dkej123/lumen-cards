@@ -102,7 +102,6 @@ const writeMode = (entity: string, mode: string) => {
  */
 export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   protected static compactBelow = 200;
-  protected static iconBelow = 100;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "armed_home", attributes: { friendly_name: t("card.alarm.name"), supported_features: 7, code_format: "number" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
 
   private subs = new SubButtons(this);

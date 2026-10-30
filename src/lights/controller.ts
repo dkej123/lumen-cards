@@ -56,7 +56,6 @@ const onSwatch = (e: Event) => !!(e.target as Element | null)?.closest?.("[data-
 const RAINBOW = "conic-gradient(#f55, #fd5, #5d7, #5cf, #86f, #f5b, #f55)";
 const WHEEL = "radial-gradient(circle, #fff 0%, rgba(255,255,255,0) 70%), conic-gradient(from 90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)";
 const ring = (on: boolean) => (on ? "0 0 0 2px var(--lumen-surface-solid), 0 0 0 4px var(--lumen-text-1)" : "inset 0 0 0 1px rgba(0,0,0,.08)");
-const UNAV_BORDER = "1px dashed var(--lumen-border-strong)";
 
 export const lightName = (item: LightItem, e?: HassEntity) => item.name || e?.attributes.friendly_name || item.entity;
 export const lightIcon = (item: LightItem, e?: HassEntity) => item.icon || e?.attributes.icon || "mdi:lightbulb";
@@ -457,53 +456,6 @@ export class LightsController implements ReactiveController {
           : html`<div style="display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:650;color:${l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);font-weight:600;flex:none">${meta}</span></div>`}
       </div>
     </div>`;
-  }
-
-  /** Tile frame shared by the compact and icon-only looks (catalog `C` / `I`). */
-  private frame(item: LightItem, l: ReturnType<LightsController["light"]>, h: number, body: TemplateResult, column: boolean) {
-    const hd = this.handlers(item);
-    const dragging = this.drag?.entity === item.entity && this.drag.dragging;
-    const name = lightName(item, l.e);
-    const label = `${name} · ${l.value}${l.meta ? ` · ${l.meta}` : ""}`;
-    const border = l.una ? UNAV_BORDER : l.on ? `1px solid color-mix(in srgb, ${l.col} 40%, var(--lumen-border))` : "1px solid var(--lumen-border)";
-    const shadow = l.una ? "none" : l.on ? `0 10px 30px -14px color-mix(in srgb, ${l.col} 70%, transparent), var(--lumen-shadow-1)` : "var(--lumen-shadow-1)";
-    return html`<div data-fx role="button" tabindex="0" aria-pressed=${l.on} aria-disabled=${l.una} aria-label=${label} title=${label} aria-keyshortcuts="Shift+Enter ArrowLeft ArrowRight"
-      @pointerdown=${hd.down} @pointermove=${hd.move} @pointerup=${hd.up} @pointercancel=${hd.cancel} @keydown=${hd.key} @contextmenu=${prevent}
-      class="press tile" style="position:relative;isolation:isolate;height:${h}px;${column ? "padding:10px;display:flex;flex-direction:column;justify-content:space-between" : "display:grid;place-items:center"};box-sizing:border-box;border-radius:18px;background:${l.una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};${l.una ? "" : glass};border:${border};box-shadow:${shadow};color:var(--lumen-text-1);touch-action:pan-y;user-select:none;cursor:${l.una ? "not-allowed" : "pointer"};outline:none;transition:box-shadow 700ms var(--lumen-ease-out), border-color 400ms, transform 240ms var(--lumen-ease-spring)">${WFX}
-      <div style="position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;pointer-events:none">
-        <div style="position:absolute;inset:0 auto 0 0;width:${l.on ? l.b : 0}%;background:linear-gradient(90deg, color-mix(in srgb, ${l.col} var(--lumen-fill-a), transparent), color-mix(in srgb, ${l.col} var(--lumen-fill-b), transparent));transition:${dragging ? "width 60ms linear" : "width 620ms var(--lumen-ease-spring)"}"></div>
-        ${column ? html`<div style="position:absolute;top:-70%;right:-50%;width:150%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, ${l.col} 55%, transparent) 0%, transparent 62%);opacity:${l.glow.toFixed(2)};transition:opacity 800ms var(--lumen-ease-out)"></div>` : nothing}
-      </div>
-      ${body}
-    </div>`;
-  }
-
-  /** Icon cell of the compact / icon-only tiles; a tap on it opens the sheet. */
-  private iconCell(item: LightItem, l: ReturnType<LightsController["light"]>, size: number, radius: number, font: number) {
-    const ih = this.iconHandlers(item);
-    const bg = l.on ? l.col : l.una ? "transparent" : "var(--lumen-surface-2)";
-    const fg = l.on ? "var(--lumen-light-ink)" : l.una ? "var(--lumen-unavailable)" : l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)";
-    const glyph = l.una && !item.icon ? "mdi:lightbulb-off-outline" : l.on || item.icon || l.e?.attributes.icon ? lightIcon(item, l.e) : "mdi:lightbulb-outline";
-    return html`<div role="button" tabindex="-1" aria-label=${t("card.light.settings")} @pointerdown=${ih.down} @click=${ih.click}
-      style="position:relative;flex:none;width:${size}px;height:${size}px;border-radius:${radius}px;display:grid;place-items:center;font-size:${font}px;background:${bg};color:${fg};cursor:pointer;transition:background-color 500ms, color 500ms">${icon(glyph, "display:block")}</div>`;
-  }
-
-  /** Compact tile (card narrower than 220 px): icon on top, name in up to two lines, state below. */
-  compactTile(item: LightItem, h: number): TemplateResult {
-    const l = this.light(item);
-    const sub = l.una ? l.value : !l.on ? (l.unknown ? l.value : t("common.off_short")) : l.group ? l.value : [l.value, l.meta].filter(Boolean).join(" · ");
-    return this.frame(item, l, h, html`
-      <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:6px">${this.iconCell(item, l, 30, 11, 17)}</div>
-      <div style="position:relative;min-width:0">
-        <div style="font-size:12px;font-weight:700;line-height:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere">${lightName(item, l.e)}</div>
-        ${item.show_state === false ? nothing : html`<div style="font-size:11px;font-weight:600;line-height:14px;color:${l.una || l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${sub}</div>`}
-      </div>`, true);
-  }
-
-  /** Icon-only tile (card narrower than 100 px, like the access bar cells): the fill shows the state. */
-  iconTile(item: LightItem, h: number): TemplateResult {
-    const l = this.light(item);
-    return this.frame(item, l, h, this.iconCell(item, l, 40, 14, 22), false);
   }
 
   /** Colour picker over the whole tile: 4 presets, a pick closes it after 280 ms. */
