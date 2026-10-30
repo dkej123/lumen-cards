@@ -24,6 +24,8 @@ export interface EntityConfig extends BaseConfig {
   show_name?: boolean;
   show_icon?: boolean;
   show_state?: boolean;
+  /** Treat the sensor as this device class (e.g. `door` for an `opening` contact on a door). */
+  device_class?: string;
 }
 
 /** Binary sensor glyphs by device class [on, off]; openings are red when open (design doors). */
@@ -106,7 +108,9 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   render() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
-    const e = this.entity(c.entity);
+    const raw = this.entity(c.entity);
+    // `device_class` from the card wins (e.g. an `opening` contact shown as a door).
+    const e = raw && c.device_class ? { ...raw, attributes: { ...raw.attributes, device_class: c.device_class } } : raw;
     const s = entityStatus(e, this._hass, c.icon);
     const look = entityLook(e, s);
     const col = look.iconFg;
@@ -164,6 +168,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     return form([
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      { name: "device_class", selector: { select: { mode: "dropdown", options: ["door", "garage_door", "window", "opening", "moisture", "smoke", "motion", "occupancy"].map((value) => ({ value, label: t(`editor.device_class.${value}`) })) } } },
       actions(),
       advanced([["show_name"], ["show_icon"], ["show_state"]], { subButtons: true }),
       appearance({ layout: "width" }),

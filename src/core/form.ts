@@ -67,6 +67,7 @@ const LABELS: Record<string, string> = {
   done_action: "editor.done_action",
   battery_entity: "editor.battery_entity",
   step: "editor.step",
+  device_class: "editor.device_class",
   battery_low: "editor.battery_low",
   show_battery: "editor.show_battery",
   dialog: "editor.dialog",
@@ -117,6 +118,7 @@ const HELPERS: Record<string, string> = {
   max_width: "editor.help.max_width",
   battery_entity: "editor.help.battery_entity",
   step: "editor.help.step",
+  device_class: "editor.help.device_class",
   sub_buttons: "editor.help.sub_buttons",
 };
 

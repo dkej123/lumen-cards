@@ -218,6 +218,16 @@ describe("sub-buttons", () => {
   });
 });
 
+describe("entity card: device_class override", () => {
+  it("an opening contact shown as a door", async () => {
+    const h = hass([...STATES, ent("binary_sensor.contact", "on", { device_class: "opening" })]);
+    const plain = await mount("entity", { entity: "binary_sensor.contact", layout: "wide" }, h);
+    expect(plain.shadowRoot!.innerHTML).toContain("mdi:square-outline");
+    const door = await mount("entity", { entity: "binary_sensor.contact", layout: "wide", device_class: "door" }, h);
+    expect(door.shadowRoot!.innerHTML).toContain("mdi:door-open");
+  });
+});
+
 describe("entity card", () => {
   it("on = accent icon, off = neutral", async () => {
     const on = await mount("entity", { entity: "fan.purifier", layout: "wide" });
