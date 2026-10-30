@@ -125,8 +125,12 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
         title: `${name} ${label}`,
         color: col,
         handlers: h,
+        unavailable: una,
         extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }),
-        body: html`<span style="position:relative;display:inline-flex">${icon(glyph, "font-size:24px")}<span style="position:absolute;right:-7px;top:3px;width:5px;height:5px;border-radius:50%;background:${col}"></span></span>`,
+        // Doors get the design's 5 px position dot next to the glyph.
+        body: glyph.includes("door")
+          ? html`<span style="position:relative;display:inline-flex">${icon(glyph, "display:block")}<span style="position:absolute;right:-7px;top:3px;width:5px;height:5px;border-radius:50%;background:${col}"></span></span>`
+          : icon(glyph, "display:block"),
       });
     }
     const opts = {

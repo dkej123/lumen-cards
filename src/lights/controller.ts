@@ -417,7 +417,7 @@ export class LightsController implements ReactiveController {
   }
 
   /** Large tile (design `tile`). */
-  tile(item: LightItem, i: number, minH: number, mobile: boolean): TemplateResult {
+  tile(item: LightItem, i: number, minH: number, mobile: boolean, swatch = true): TemplateResult {
     const l = this.light(item);
     const h = this.handlers(item);
     const dragging = this.drag?.entity === item.entity && this.drag.dragging;
@@ -427,26 +427,27 @@ export class LightsController implements ReactiveController {
     const ctOpen = l.on && l.ct && !l.hs && this.ctOpen === item.entity;
     const border = l.una ? "1.5px dashed var(--lumen-border-strong)" : l.on ? `1px solid color-mix(in srgb, ${l.col} 45%, transparent)` : "1px solid var(--lumen-border)";
     const shadow = l.on ? `0 18px 44px -18px color-mix(in srgb, ${l.col} ${Math.round(35 + l.b * 0.5)}%, transparent), var(--lumen-shadow-1)` : "var(--lumen-shadow-1)";
-    const iconSize = mobile ? 30 : 34;
+    // Compact (catalog correction 2026-10-30): the low Dom tile, r16, icon 28 r9, one-line name.
+    const iconSize = mobile ? 28 : 34;
     return html`<div data-fx role="button" tabindex="0" aria-pressed=${l.on} aria-disabled=${l.una} aria-label="${lightName(item, l.e)} · ${value}" aria-keyshortcuts="Shift+Enter ArrowLeft ArrowRight"
       @pointerdown=${h.down} @pointermove=${h.move} @pointerup=${h.up} @pointercancel=${h.cancel} @keydown=${h.key} @contextmenu=${prevent}
-      class="press tile" style="position:relative;isolation:isolate;height:${minH}px;padding:${mobile ? "6px 6px 6px 8px" : "11px 12px"};box-sizing:border-box;border-radius:${mobile ? 18 : 20}px;background:var(--lumen-surface);${glass};border:${border};box-shadow:${shadow};opacity:${l.una ? 0.6 : 1};touch-action:pan-y;user-select:none;cursor:${l.una ? "not-allowed" : "pointer"};display:flex;flex-direction:row;align-items:center;gap:${mobile ? 8 : 10}px;outline:none;transition:box-shadow 700ms var(--lumen-ease-out), border-color 400ms, transform 240ms var(--lumen-ease-spring), opacity 300ms;animation:lumenRise 640ms var(--lumen-ease-spring) both;animation-delay:${i * 40}ms">${WFX}
+      class="press tile" style="position:relative;isolation:isolate;height:${minH}px;padding:${mobile ? "8px 6px 8px 8px" : "11px 12px"};box-sizing:border-box;border-radius:${mobile ? 16 : 20}px;background:var(--lumen-surface);${glass};border:${border};box-shadow:${shadow};opacity:${l.una ? 0.6 : 1};touch-action:pan-y;user-select:none;cursor:${l.una ? "not-allowed" : "pointer"};display:flex;flex-direction:row;align-items:center;gap:${mobile ? 8 : 10}px;outline:none;transition:box-shadow 700ms var(--lumen-ease-out), border-color 400ms, transform 240ms var(--lumen-ease-spring), opacity 300ms;animation:lumenRise 640ms var(--lumen-ease-spring) both;animation-delay:${i * 40}ms">${WFX}
       ${ctOpen ? this.ctOverlay(item.entity, l.k, mobile, false, l.e) : nothing}
       <div style="position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;pointer-events:none">
       <div style="position:absolute;inset:0 auto 0 0;width:${fillW};background:linear-gradient(90deg, color-mix(in srgb, ${l.col} var(--lumen-fill-a), transparent), color-mix(in srgb, ${l.col} var(--lumen-fill-b), transparent));transition:${dragging ? "width 60ms linear" : "width 620ms var(--lumen-ease-spring)"};mask-image:linear-gradient(90deg, #000 calc(100% - 36px), transparent);-webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 36px), transparent);pointer-events:none"></div>
       <div style="position:absolute;top:-70%;right:-35%;width:120%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, ${l.col} 55%, transparent) 0%, transparent 62%);opacity:${l.glow.toFixed(2)};transition:opacity 800ms var(--lumen-ease-out);pointer-events:none"></div>
       </div>
-      <div role="button" tabindex="-1" aria-label=${t("card.light.settings")} title=${t("card.light.settings")} @pointerdown=${ih.down} @click=${ih.click} style="position:relative;flex:none;order:-2;width:${iconSize}px;height:${iconSize}px;border-radius:${mobile ? 10 : 12}px;display:grid;place-items:center;font-size:${mobile ? 17 : 19}px;cursor:pointer;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "#3B2709" : l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};box-shadow:${l.on ? `0 0 18px color-mix(in srgb, ${l.col} 70%, transparent)` : "none"};transition:background-color 500ms, color 500ms, box-shadow 700ms">${icon(lightIcon(item, l.e))}</div>
+      <div role="button" tabindex="-1" aria-label=${t("card.light.settings")} title=${t("card.light.settings")} @pointerdown=${ih.down} @click=${ih.click} style="position:relative;flex:none;order:-2;width:${iconSize}px;height:${iconSize}px;border-radius:${mobile ? 9 : 12}px;display:grid;place-items:center;font-size:${mobile ? 16 : 19}px;cursor:pointer;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "#3B2709" : l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};box-shadow:${l.on ? `0 0 18px color-mix(in srgb, ${l.col} 70%, transparent)` : "none"};transition:background-color 500ms, color 500ms, box-shadow 700ms">${icon(lightIcon(item, l.e))}</div>
       ${l.una ? icon("mdi:power-plug-off-outline", "font-size:18px;color:var(--lumen-text-3)") : nothing}
-      ${l.on && l.ct && !l.hs && !l.group && item.show_color_button !== false
-        ? this.swatch(item, l.col, mobile ? 20 : 22, `position:relative;width:${mobile ? 30 : 40}px;height:44px;margin:${mobile ? "0 -4px 0 -2px" : "0 -6px 0 0"};padding:0;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;touch-action:pan-y`)
+      ${l.on && l.ct && !l.hs && !l.group && item.show_color_button !== false && swatch
+        ? this.swatch(item, l.col, mobile ? 18 : 22, `position:relative;width:${mobile ? 30 : 40}px;height:44px;margin:${mobile ? "-8px -4px -8px -2px" : "0 -6px 0 0"};padding:0;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;touch-action:pan-y`)
         : nothing}
       <div style="position:relative;flex:1;order:-1;${mobile ? "" : "display:flex;flex-direction:column;gap:1px;"}min-width:0">
-        <div style="font-size:${mobile ? 12 : 14}px;font-weight:700;${mobile ? "line-height:14px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere" : "letter-spacing:-0.01em;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"}">${lightName(item, l.e)}</div>
+        <div style="font-size:${mobile ? 12 : 14}px;font-weight:700;${mobile ? "line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" : "letter-spacing:-0.01em;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"}">${lightName(item, l.e)}</div>
         ${item.show_state === false
           ? nothing
           : mobile
-          ? html`<div style="display:flex;gap:6px;font-size:11px;line-height:14px;font-weight:650;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);flex:none">${meta}</span></div>`
+          ? html`<div style="display:flex;gap:6px;font-size:11px;line-height:14px;font-weight:600;color:var(--lumen-text-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);flex:none">${meta}</span></div>`
           : html`<div style="display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:650;color:${l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden"><span style="overflow:hidden;text-overflow:ellipsis">${value}</span><span style="color:var(--lumen-text-3);font-weight:600;flex:none">${meta}</span></div>`}
       </div>
     </div>`;
@@ -501,7 +502,7 @@ export class LightsController implements ReactiveController {
 
   /** Colour picker over the whole tile: 4 presets, a pick closes it after 280 ms. */
   ctOverlay(entity: string, k: number, mobile: boolean, pills = false, e?: HassEntity) {
-    return html`<div class="ctov" role="radiogroup" aria-label=${t("card.light.ct")} @pointerdown=${stop} @pointerup=${stop} @click=${stop} style="position:absolute;inset:0;z-index:5;border-radius:${pills ? 14 : mobile ? 18 : 16}px;background:var(--lumen-surface-solid);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-1);display:flex;align-items:center;justify-content:space-around;padding:0 6px;box-sizing:border-box;animation:lumenFadeIn 180ms both">
+    return html`<div class="ctov" role="radiogroup" aria-label=${t("card.light.ct")} @pointerdown=${stop} @pointerup=${stop} @click=${stop} style="position:absolute;inset:0;z-index:5;border-radius:${pills ? 14 : 16}px;background:var(--lumen-surface-solid);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-1);display:flex;align-items:center;justify-content:space-around;padding:0 6px;box-sizing:border-box;animation:lumenFadeIn 180ms both">
       ${ctPresets(e ?? this.entity(entity)).map(([preset, name]) => {
         const on = Math.abs(k - preset) < 60;
         const label = `${t(name)} · ${preset} K`;

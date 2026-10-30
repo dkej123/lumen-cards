@@ -1,0 +1,241 @@
+// @vitest-environment happy-dom
+// Catalog 2026-10-30: floating panel (section 19), compact heights (sections 01–06, 17), battery.
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { setLanguage } from "../src/core/i18n";
+import { FAB_ORDER } from "../src/core/layer";
+import type { HassEntity, HassLike } from "../src/hass/types";
+import { batteryLevel } from "../src/logic/battery";
+import { badgeCount, bulkSegment, cardEntities, panelSummary, panelWarning, plural } from "../src/logic/fab-sheet";
+
+const ent = (entity_id: string, state: string, attributes: Record<string, unknown> = {}): HassEntity => ({
+  entity_id,
+  state,
+  attributes: { friendly_name: entity_id.split(".")[1], ...attributes },
+  last_changed: new Date(Date.now() - 600_000).toISOString(),
+  last_updated: new Date(Date.now() - 600_000).toISOString(),
+});
+
+const TH = { hvac_modes: ["heat", "off"], preset_modes: ["comfort", "eco", "away"], min_temp: 5, max_temp: 30, target_temp_step: 0.5 };
+const STATES = [
+  ent("climate.salon", "heat", { ...TH, friendly_name: "Salon", hvac_action: "heating", temperature: 21, current_temperature: 20.4, preset_mode: "comfort" }),
+  ent("climate.bedroom", "heat", { ...TH, friendly_name: "Bedroom", hvac_action: "idle", temperature: 19, current_temperature: 19.6, preset_mode: "comfort" }),
+  ent("climate.bath", "heat", { ...TH, friendly_name: "Bath", hvac_action: "heating", temperature: 23, current_temperature: 21.8, preset_mode: "comfort", batteries: '{"a": {"battery": 9}, "b": {"battery": 70}}' }),
+  ent("climate.ac", "cool", { hvac_modes: ["off", "cool"], preset_modes: ["none", "eco"], temperature: 22, current_temperature: 23 }),
+  ent("climate.gone", "unavailable"),
+  ent("binary_sensor.door", "off", { device_class: "door" }),
+  ent("input_boolean.x", "on"),
+  ent("person.ann", "home"),
+  ent("alarm_control_panel.home", "disarmed"),
+  ent("script.gate", "off"),
+  ent("light.desk", "on", { brightness: 128, supported_color_modes: ["color_temp"], color_mode: "color_temp", color_temp_kelvin: 3000, min_color_temp_kelvin: 2700, max_color_temp_kelvin: 6500 }),
+];
+const S = Object.fromEntries(STATES.map((e) => [e.entity_id, e]));
+const card = (entity: string) => ({ type: "custom:lumen-climate-card", entity });
+const THREE = [card("climate.salon"), card("climate.bedroom"), card("climate.bath")];
+
+type Hass = HassLike & { calls: unknown[][] };
+const hass = (states = S): Hass => {
+  const calls: unknown[][] = [];
+  return {
+    calls,
+    states,
+    user: { id: "u1", name: "Ann", is_admin: true },
+    language: "en",
+    locale: { language: "en" },
+    themes: { darkMode: false },
+    formatEntityState: (e) => e.state,
+    callService: async (...args) => {
+      calls.push(args);
+      return undefined;
+    },
+    callWS: async () => ({}) as never,
+  };
+};
+
+type Card = HTMLElement & { setConfig(c: unknown): void; hass: HassLike; updateComplete: Promise<boolean>; preview: boolean; editMode: boolean; getGridOptions(): Record<string, unknown> };
+const mount = async (type: string, config: Record<string, unknown>, h: HassLike = hass(), setup?: (el: Card) => void) => {
+  const el = document.createElement(`lumen-${type}-card`) as Card;
+  el.setConfig({ type: `custom:lumen-${type}-card`, ...config });
+  setup?.(el);
+  el.hass = h;
+  document.body.append(el);
+  await el.updateComplete;
+  return el;
+};
+const layer = () => document.querySelector("lumen-cards-layer")?.shadowRoot ?? null;
+
+beforeAll(async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} unobserve() {} });
+  vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} unobserve() {} });
+  await import("../src/lumen-cards");
+  setLanguage("en");
+});
+
+afterEach(() => {
+  document.body.innerHTML = "";
+  setLanguage("en");
+});
+
+describe("floating panel logic", () => {
+  const ids = cardEntities(THREE);
+  it("entities of the cards (entity, entities, nested cards)", () => {
+    expect(ids).toEqual(["climate.salon", "climate.bedroom", "climate.bath"]);
+    expect(cardEntities([{ type: "entities", entities: ["light.desk", { entity: "person.ann" }] }, { type: "vertical-stack", cards: [{ entity: "script.gate" }] }])).toEqual(["light.desk", "person.ann", "script.gate"]);
+  });
+  it("summary: n of total heating with the average, one, none, no thermostats", () => {
+    expect(panelSummary(ids, S, 3)).toBe("2 of 3 heating · avg 20.6°");
+    expect(panelSummary(ids, S, 3, false)).toBe("2 of 3 heating");
+    expect(panelSummary(["climate.salon", "climate.bedroom"], S, 2)).toBe("1 of 2 heating · avg 20°");
+    expect(panelSummary(["climate.bedroom", "climate.gone"], S, 2)).toBe("Nothing is heating · avg 19.6°");
+    expect(panelSummary(["light.desk"], S, 1)).toBe("1 card");
+    setLanguage("pl");
+    expect(panelSummary(ids, S, 3)).toBe("2 z 3 grzeją · śr. 20,6°");
+    expect(panelSummary(["climate.salon"], S, 1)).toMatch(/^1 z 1 grzeje/);
+    expect(panelSummary(["climate.bedroom"], S, 1)).toMatch(/^Nic nie grzeje/);
+    expect(plural(5)).toBe("many");
+    expect(plural(22)).toBe("few");
+    expect(plural(12)).toBe("many");
+  });
+  it("badge count: heating thermostats, or the given entities (on = active)", () => {
+    expect(badgeCount(undefined, ids, S)).toBe(2);
+    expect(badgeCount([], ["climate.bedroom"], S)).toBe(0);
+    expect(badgeCount(["climate.salon", "input_boolean.x", "binary_sensor.door"], ids, S)).toBe(2);
+  });
+  it("warning: low battery (< 15 %) first, then an unavailable entity", () => {
+    expect(panelWarning(THREE, ids, S)).toMatchObject({ kind: "battery", icon: "mdi:battery-alert-variant-outline", text: "Battery 9% · Bath" });
+    expect(panelWarning([card("climate.bath")], ["climate.bath"], { ...S, "climate.bath": ent("climate.bath", "heat", { batteries: '{"a": {"battery": 15}}' }) })).toBeNull();
+    expect(panelWarning([card("climate.bath"), { ...card("climate.bath"), show_battery: false }].slice(1), ["climate.bath"], S)).toBeNull();
+    expect(panelWarning([card("climate.salon"), card("climate.gone")], ["climate.salon", "climate.gone"], S)).toMatchObject({ kind: "unavailable", icon: "mdi:alert-circle-outline" });
+    expect(panelWarning([card("climate.salon")], ["climate.salon"], S)).toBeNull();
+  });
+  it("'All' segment: ≥ 2 thermostats with the same preset_modes; mixed = nothing selected", () => {
+    expect(bulkSegment(ids, S)).toEqual({ ids, presets: ["comfort", "eco"], selected: "comfort" });
+    expect(bulkSegment(["climate.salon"], S)).toBeNull();
+    expect(bulkSegment(["climate.salon", "climate.ac"], S)).toBeNull();
+    const mixed = { ...S, "climate.bath": { ...S["climate.bath"], attributes: { ...S["climate.bath"].attributes, preset_mode: "eco" } } };
+    expect(bulkSegment(ids, mixed)?.selected).toBeNull();
+    const off = Object.fromEntries(ids.map((id) => [id, { ...S[id], state: "off" }]));
+    expect(bulkSegment(ids, off)?.selected).toBe("off");
+  });
+  it("battery threshold: low below 15 % by default", () => {
+    expect(batteryLevel(ent("climate.x", "heat", { battery_level: 14 }), undefined)).toEqual({ pct: 14, low: true });
+    expect(batteryLevel(ent("climate.x", "heat", { battery_level: 15 }), undefined)).toEqual({ pct: 15, low: false });
+  });
+  it("FAB order: scenes, panels, alarm", () => {
+    expect(FAB_ORDER.scenes).toBeLessThan(FAB_ORDER.panels);
+    expect(FAB_ORDER.panels).toBeLessThan(FAB_ORDER.alarm);
+  });
+});
+
+describe("floating panel card", () => {
+  it("FAB with count and warning; tap opens the sheet with the cards and the 'All' segment; the FAB hides", async () => {
+    const h = hass();
+    const el = await mount("fab-sheet", { title: "Heating", icon: "mdi:radiator", cards: THREE, narrow_only: false }, h);
+    expect(el.shadowRoot!.textContent!.trim()).toBe("");
+    const fab = layer()!.querySelector<HTMLButtonElement>("button.acfab")!;
+    expect(fab.getAttribute("style")).toContain("width:64px");
+    expect(fab.getAttribute("style")).toContain("lumenPendingPulse");
+    expect(fab.textContent).toContain("2");
+    expect(fab.getAttribute("aria-label")).toContain("Battery 9% · Bath");
+    fab.click();
+    await new Promise((r) => setTimeout(r, 0));
+    await el.updateComplete;
+    const root = layer()!;
+    const dlg = root.querySelector('[role="dialog"]')!;
+    expect(dlg.getAttribute("aria-label")).toBe("Heating");
+    expect((dlg as HTMLElement).style.maxWidth).toBe("520px");
+    expect(dlg.textContent).toContain("2 of 3 heating · avg 20.6°");
+    expect(root.querySelectorAll("lumen-climate-card").length).toBe(3);
+    expect(root.querySelector<HTMLButtonElement>("button.acfab")!.style.opacity).toBe("0");
+    const segs = [...root.querySelectorAll<HTMLButtonElement>('[role="group"] button')];
+    expect(segs.map((b) => b.textContent!.trim())).toEqual(["Comfort", "Eco", "Off"]);
+    expect(segs[0].getAttribute("aria-pressed")).toBe("true");
+    segs[1].click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.calls.at(-1)).toEqual(["climate", "set_preset_mode", { preset_mode: "eco" }, { entity_id: ["climate.salon", "climate.bedroom", "climate.bath"] }]);
+    segs[2].click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.calls.at(-1)).toEqual(["climate", "set_hvac_mode", { hvac_mode: "off" }, { entity_id: ["climate.salon", "climate.bedroom", "climate.bath"] }]);
+    // Inner climate cards are the compact 56 px thermostat row.
+    const row = (root.querySelector("lumen-climate-card") as Card).shadowRoot!.querySelector<HTMLElement>("[data-fx]")!;
+    expect(row.getAttribute("style")).toContain("min-height:56px");
+    root.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+    await new Promise((r) => setTimeout(r, 300));
+    await el.updateComplete;
+    expect(layer()!.querySelector('[role="dialog"]')).toBeNull();
+    el.remove();
+  });
+
+  it("wide screen with narrow_only: the 52 px trigger row; edit mode: dashed row with the note", async () => {
+    const el = await mount("fab-sheet", { title: "Heating", cards: THREE });
+    const row = el.shadowRoot!.querySelector<HTMLElement>(".trow")!;
+    expect(row.getAttribute("style")).toContain("height:52px");
+    expect(row.textContent).toContain("2 of 3 heating");
+    expect(layer()).toBeNull();
+    const ed = await mount("fab-sheet", { title: "Heating", cards: THREE, narrow_only: false }, hass(), (x) => (x.editMode = true));
+    const erow = ed.shadowRoot!.querySelector<HTMLElement>(".trow")!;
+    expect(erow.getAttribute("style")).toContain("dashed");
+    expect(erow.textContent).toContain("FAB on every screen");
+    expect(ed.getGridOptions()).toMatchObject({ rows: "auto" });
+  });
+
+  it("no cards: nothing outside edit mode; the sheet shows the empty state", async () => {
+    const el = await mount("fab-sheet", { title: "Heating", narrow_only: false });
+    expect(el.shadowRoot!.textContent!.trim()).toBe("");
+    expect(layer()).toBeNull();
+    const ed = await mount("fab-sheet", { title: "Heating" }, hass(), (x) => (x.editMode = true));
+    (ed as unknown as { open(): void }).open();
+    await ed.updateComplete;
+    expect(layer()!.textContent).toContain("No cards in the panel");
+  });
+
+  it("editor preview: FAB and a static sheet with the thermostats", async () => {
+    const el = await mount("fab-sheet", { title: "Heating", cards: THREE }, hass(), (x) => (x.preview = true));
+    const t = el.shadowRoot!.textContent!.replace(/\s+/g, " ");
+    expect(t).toContain("Salon");
+    expect(t).toContain("Heating");
+    expect(t).toContain("23°");
+  });
+});
+
+describe("compact looks: 44 px, rows auto (catalog correction 2026-10-30)", () => {
+  const sub = [{ entity: "input_boolean.x", icon: "mdi:power" }];
+  it("entity / button / alarm cell 44 px with one 30 px sub-button; lock cell 44 px", async () => {
+    for (const [type, entity] of [["entity", "binary_sensor.door"], ["button", "script.gate"], ["alarm", "alarm_control_panel.home"]]) {
+      const el = await mount(type, { entity, layout: "compact", sub_buttons: sub });
+      const cell = el.shadowRoot!.querySelector<HTMLElement>("[data-fx]")!;
+      expect(cell.getAttribute("style"), type).toContain("height:44px");
+      expect(cell.querySelector<HTMLElement>(".acc")!.getAttribute("style")).toContain("height:44px");
+      expect(cell.querySelector<HTMLElement>(".subbtns > div")!.getAttribute("style")).toContain("height:30px");
+      expect(el.getGridOptions()).toMatchObject({ rows: "auto" });
+    }
+  });
+  it("person pill 44 px with a 30 px avatar", async () => {
+    const el = await mount("person", { entity: "person.ann", layout: "compact" });
+    const pill = el.shadowRoot!.querySelector<HTMLElement>("[data-fx]")!;
+    expect(pill.getAttribute("style")).toContain("height:44px");
+    expect(pill.innerHTML).toContain("width:30px;height:30px");
+  });
+  it("alarm cell: hold 500 ms = the main command (arm opens the pad)", async () => {
+    vi.useFakeTimers();
+    const el = await mount("alarm", { entity: "alarm_control_panel.home", layout: "compact" });
+    const cell = el.shadowRoot!.querySelector<HTMLElement>(".acc")!;
+    cell.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, clientX: 5, clientY: 5, pointerId: 1 }));
+    vi.advanceTimersByTime(600);
+    cell.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, clientX: 5, clientY: 5, pointerId: 1 }));
+    vi.useRealTimers();
+    await el.updateComplete;
+    expect(layer()?.querySelector('[role="dialog"]')).toBeTruthy();
+  });
+  it("climate compact row: 56 px, battery chip with %, off disables −/+", async () => {
+    const el = await mount("climate", { entity: "climate.bath", layout: "compact" });
+    const row = el.shadowRoot!.querySelector<HTMLElement>("[data-fx]")!;
+    expect(row.getAttribute("style")).toContain("min-height:56px");
+    expect(row.textContent).toContain("9%");
+    expect(row.textContent).toContain("Heating");
+    const off = await mount("climate", { entity: "climate.salon", layout: "compact" }, hass({ ...S, "climate.salon": { ...S["climate.salon"], state: "off" } }));
+    const btns = [...off.shadowRoot!.querySelectorAll<HTMLButtonElement>("button[aria-label]")].filter((b) => b.disabled);
+    expect(btns.length).toBe(2);
+    expect(off.shadowRoot!.textContent).toContain("Off");
+  });
+});

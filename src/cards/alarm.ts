@@ -343,8 +343,16 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     );
     // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
     if (this.compact) {
+      // Catalog correction 2026-10-30: hold 500 ms = the main command (arm / cancel / the
+      // disarm pad), a tap = the tap action or more-info.
+      const cell = this.presses.handlers(
+        `alarmcell:${c.entity}`,
+        () => (c.tap_action ? this.tap() : this.moreInfo(c.entity)),
+        () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.primary()),
+        c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
+      );
       const anim = s.alert ? "lumenShake 900ms ease-in-out infinite" : s.busy ? "lumenBreath 2400ms ease-in-out infinite" : "none";
-      return compactCell({ title: `${this.name} · ${s.label}`, color: tone(s.tone), handlers, alert: s.alert, extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
+      return compactCell({ title: `${this.name} · ${s.label}`, color: tone(s.tone), handlers: cell, alert: s.alert, unavailable: s.tone === "unavailable", extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
     }
     const l = this.look(s, e, false);
     const cd = alarmCountdown(e, c);

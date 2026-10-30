@@ -33,18 +33,24 @@ export function alarmBanner(mobile: boolean, text: string, onTap?: () => void) {
 /** Pulsing red ring around the whole screen while the alarm is triggered. */
 export const alarmRing = () => html`<div style="position:absolute;inset:0;z-index:5;pointer-events:none;animation:lumenAlarmRing 1.2s ease-in-out infinite"></div>`;
 
+/** Height (px) of every compact look (catalog correction 2026-10-30): equal in a row, touch minimum. */
+export const COMPACT_H = 44;
+
 /**
- * Compact phone cell (design access bar B7, one item per card): a 52 px glass frame with the
- * tinted icon cell inside. Several of these side by side in the HA grid make up the bar.
+ * Compact phone cell (design access bar B7, one item per card): a 44 px tinted cell (r14) with a
+ * 22 px glyph in the state's tone. Several of these side by side in the HA grid make up the bar.
+ * `extra` (one sub-button, owner decision) sits beside the cell in the same 44 px row.
  */
-export function compactCell(o: { title: string; color: string; body: unknown; handlers?: PressHandlers; onClick?: () => void; disabled?: boolean; alert?: boolean; extra?: unknown }) {
+export function compactCell(o: { title: string; color: string; body: unknown; handlers?: PressHandlers; onClick?: () => void; disabled?: boolean; alert?: boolean; unavailable?: boolean; extra?: unknown }) {
   const h = o.handlers;
   const action = !!(h || o.onClick);
   const click = o.onClick ? activate(o.onClick) : undefined;
-  // `extra`: sub-buttons to the right of the cell (one fits on a compact card).
-  return html`<div data-fx style="display:flex;align-items:center;gap:4px;height:52px;padding:4px;box-sizing:border-box;border-radius:18px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};animation:${o.alert ? "lumenAlarmPulse 1.1s ease-in-out infinite" : "none"}">${WFX}
+  // Triggered alarm: danger background with a pulse, white glyph.
+  const bg = o.alert ? "var(--lumen-danger)" : o.unavailable ? "var(--lumen-surface-2)" : `color-mix(in srgb, ${o.color} 14%, transparent)`;
+  const fg = o.alert ? "#fff" : o.color;
+  return html`<div data-fx style="display:flex;align-items:center;gap:4px;height:${COMPACT_H}px">${WFX}
     <div ${pressable(h)} role=${action ? "button" : nothing} tabindex=${action ? 0 : nothing} class=${action ? "acc" : ""} title=${o.title} aria-label=${o.title} aria-disabled=${o.disabled ?? nothing}
       @click=${click?.click} @keydown=${click?.key} @contextmenu=${prevent}
-      style="position:relative;flex:1;min-width:0;height:100%;display:grid;place-items:center;border-radius:14px;background:color-mix(in srgb, ${o.color} ${action ? 16 : 14}%, transparent);color:${o.color};font-size:24px;cursor:${action ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:opacity 200ms, background-color 400ms, transform 220ms var(--lumen-ease-spring)">${o.body}</div>${o.extra ?? nothing}
+      style="position:relative;flex:1;min-width:0;height:${COMPACT_H}px;box-sizing:border-box;display:grid;place-items:center;border-radius:14px;border:${o.unavailable ? "1px dashed var(--lumen-border-strong)" : "1px solid transparent"};background:${bg};color:${fg};font-size:22px;cursor:${action && !o.disabled ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:opacity 200ms, background-color 400ms, transform 200ms var(--lumen-ease-spring);animation:${o.alert ? "lumenAlarmBg 1.2s ease-in-out infinite" : "none"}">${o.body}</div>${o.extra ?? nothing}
   </div>`;
 }

@@ -146,7 +146,7 @@ describe("climate", () => {
     await el.updateComplete;
     vi.useFakeTimers();
     el.step(1);
-    vi.advanceTimersByTime(700);
+    vi.advanceTimersByTime(900);
     vi.useRealTimers();
     expect(h.calls.at(-1)).toEqual(["climate", "set_temperature", { temperature: 69 }, { entity_id: "climate.f" }]);
     el.remove();

@@ -3,12 +3,13 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
+import { COMPACT_H } from "../core/status-row";
 import type { HassLike } from "../hass/types";
 import { LightsController, type LightItem } from "../lights/controller";
 import { groupMembers } from "../logic/light";
 
 export interface LightTileConfig extends BaseConfig, LightItem {
-  /** Tile height in px (default 64; compact tile 120, at least 96; icon-only tile 84, at least 52). */
+  /** Tile height in px (default 64; the compact tile 44). */
   height?: number;
 }
 
@@ -19,7 +20,7 @@ export function validateLightTile(c: Partial<LightTileConfig>): void {
 
 /**
  * One light tile: tap toggles, horizontal drag sets the brightness, the icon (or a hold) opens
- * the sheet. Narrower than 220 px a compact square tile, narrower than 100 px only the icon.
+ * the sheet. Narrower than 220 px the low 44 px compact tile.
  */
 export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
   protected static compactBelow = 220;
@@ -36,7 +37,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
 
   /** wide | compact | icon (layout + card width). */
   get look(): "wide" | "compact" | "icon" {
-    // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 52 px tile.
+    // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 44 px tile.
     return this.compact ? "compact" : "wide";
   }
 
@@ -51,7 +52,8 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
       case "icon":
         return this.lights.iconTile(c, Math.max(52, c.height ?? 84));
       case "compact":
-        return this.lights.tile(c, 0, c.height ?? 52, true);
+        // No colour swatch under 120 px (catalog correction 2026-10-30).
+        return this.lights.tile(c, 0, c.height ?? COMPACT_H, true, !this._width || this._width >= 120);
       default:
         return this.lights.tile(c, 0, c.height ?? 64, false);
     }

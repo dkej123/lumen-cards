@@ -153,11 +153,12 @@ export class LayerController implements ReactiveController {
 // Floating buttons of several cards stack upwards from the bottom-right corner instead of
 // covering each other (catalog A10): the lowest FAB is 64 px (right 24, bottom 24 + safe area),
 // every next one 48 px, 12 px above the previous one and centred on the axis of the first.
-// Order from the bottom: scenes, climate, alarm (`FAB_ORDER`), then the order of registration.
+// Order from the bottom: scenes, climate / floating panels, alarm (`FAB_ORDER`), then the order of
+// registration (the dashboard's order).
 type FabOwner = { requestUpdate(): void };
 const fabs: { owner: FabOwner; order: number }[] = [];
 
-export const FAB_ORDER = { scenes: 0, climate: 1, alarm: 2 } as const;
+export const FAB_ORDER = { scenes: 0, climate: 1, panels: 1, alarm: 2 } as const;
 /** Size (px) of the lowest FAB and of the ones stacked above it. */
 export const FAB_MAIN = 64;
 export const FAB_SMALL = 48;

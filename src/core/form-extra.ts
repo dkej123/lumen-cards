@@ -22,6 +22,7 @@ const LABELS: Record<string, string> = {
   cards: "editor.cards",
   show_trigger: "editor.show_trigger",
   auto_close: "editor.auto_close",
+  badge_entities: "editor.badge_entities",
 };
 
 const HELPERS: Record<string, string> = {
@@ -33,6 +34,9 @@ const HELPERS: Record<string, string> = {
   cards: "editor.help.cards",
   show_trigger: "editor.help.show_trigger",
   auto_close: "editor.help.auto_close",
+  badge_entities: "editor.help.badge_entities",
+  narrow_only_fab: "editor.help.narrow_only_fab",
+  fab_sheet_cards: "editor.help.fab_sheet_cards",
 };
 
 const label = (s: { name?: string; title?: string }) => (s.name && LABELS[s.name] ? t(LABELS[s.name]) : computeLabel(s));

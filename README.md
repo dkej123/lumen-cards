@@ -15,7 +15,7 @@ What you get:
 - **Cards for the everyday things in a home:** lights, people, alarm, locks, doors, the gate, temperatures, air quality, the air conditioner, reminders, blinds, music, fans, lists, calendars, a navigation bar and pop-ups.
 - **Weather on the dashboard.** Rain, snow, fog or sunshine move behind the cards, and raindrops or snow settle on the cards themselves.
 - **Big, comfortable controls.** Tap a light to switch it on, slide a finger across it to dim it, and hold it to pick the brightness and colour.
-- **Phone and big screen.** A card squeezed into a small space turns into a compact square button.
+- **Phone and big screen.** A card squeezed into a small space turns into a low compact tile (44 px, equal in a row).
 - **Light and dark mode.** The cards follow your Home Assistant settings.
 - **English and Polish.** The cards and their settings use the language from your Home Assistant profile.
 
@@ -247,6 +247,10 @@ A bar with buttons for your dashboard's views (or pop-ups). It can stick to the 
 <img src="docs/images/popup.png" alt="Pop-up with the living room's cards" width="260">
 
 A window with any cards you like, Lumen or not, opened by a link like `#living-room` (for example from the navigation bar or a button). Close it with ×, Esc, a tap outside, or by swiping down. The card itself is invisible on the dashboard unless you want a row that opens it.
+
+### Floating panel
+
+One floating round button that opens a sheet with any cards – typically all your thermostats in one place instead of a floating button for each. The button shows how many of them are heating, turns orange with a soft pulse while something heats, and warns about a weak valve battery or a device that is offline. In the sheet you get one row per thermostat (−/+ to change the temperature) and, when the thermostats share their presets, **All: Comfort / Eco / Off** for all of them at once. On a computer it is a row in the grid that opens the same sheet.
 
 ---
 
@@ -602,7 +606,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 | `fab_narrow_only` | **Auto: only on narrow screens**: floating button on phones, normal card on big screens | on |
 | `power_action` | What the power button does, if you want your own script instead | turns on the last used mode / turns off |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Show the room temperature / the mode buttons / the fan buttons | on |
-| `battery_entity`, `battery_low`, `show_battery` | Low-battery badge ("Battery 9%"). By default it reads Better Thermostat's battery info on the thermostat itself (the weakest valve); or give a % sensor / battery binary sensor. Low from `battery_low` % down (default 20). | on |
+| `battery_entity`, `battery_low`, `show_battery` | Low-battery badge ("Battery 9%"). By default it reads Better Thermostat's battery info on the thermostat itself (the weakest valve); or give a % sensor / battery binary sensor. Low below `battery_low` % (default 15). | on |
 | `show_swing`, `show_presets`, `show_action` | Show swing / presets / the "heating, cooling, idle" badge | on |
 | `show_range` | Show the device's temperature range under the target | off |
 
@@ -760,6 +764,31 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | `show_trigger` | Show a row on the dashboard that opens the pop-up (otherwise the card is invisible) | off |
 | `auto_close` | Close by itself after this many seconds (0 = never) | 0 |
 
+<a id="lumen-fab-sheet-card"></a>
+
+### Floating panel (`lumen-fab-sheet-card`)
+
+```yaml
+type: custom:lumen-fab-sheet-card
+icon: mdi:radiator
+title: Heating
+cards:
+  - type: custom:lumen-climate-card
+    entity: climate.living_room
+  - type: custom:lumen-climate-card
+    entity: climate.bedroom
+```
+
+| Setting | What it does | Default |
+|---|---|---|
+| `icon`, `title` | Icon of the floating button and heading of the sheet | `mdi:dock-bottom`, "Floating panel" |
+| `cards` | The cards inside (any Home Assistant cards, edited as YAML). Climate cards show as compact thermostat rows here. | – |
+| `narrow_only` | The floating button only on phones and narrow screens (under 1024 px); wider, the card is a row in the grid that opens the same sheet. Off = the button on every screen. | on |
+| `badge_entities` | What the number on the button counts. Empty = the cards' thermostats that are heating; otherwise these entities when heating / on. | empty |
+| `color_scheme`, `accent_color`, `styles` | As on every card | – |
+
+The button joins the stack of floating buttons: above the scenes button (48 px), or on its own place in the corner (64 px) when it is the only one. Order from the bottom: scenes, panels (in the dashboard's order), alarm. The warning corner shows a battery below the thermostat card's `battery_low` (15 % by default) or an offline entity. While the dashboard is edited the card is always the row, marked "FAB on phones".
+
 ---
 
 ## Questions and problems
@@ -796,7 +825,7 @@ npm test
 npm run build   # → dist/
 ```
 
-Demo options: `?compact`, `&dark`, `&lang=pl`, `&fx` (weather), `&weather=snowy`, `&scene=phone|desktop`, `&only=<card>`. Texts live in `src/translations/en.json` and `pl.json`. To add a language, add a file and register it in `src/core/i18n.ts`.
+Demo options: `?compact`, `&dark`, `&lang=pl`, `&fx` (weather), `&weather=snowy`, `&scene=phone|desktop`, `&only=<card>` (e.g. `fab-sheet`, `compact-row`), `&edit` (edit mode). Texts live in `src/translations/en.json` and `pl.json`. To add a language, add a file and register it in `src/core/i18n.ts`.
 
 ## License
 

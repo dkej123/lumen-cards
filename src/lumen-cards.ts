@@ -23,6 +23,8 @@ import "./cards/number";
 import "./cards/calendar";
 import "./cards/nav";
 import "./cards/popup";
+// Catalog section 19.
+import "./cards/fab-sheet";
 
 declare const __LUMEN_VERSION__: string;
 

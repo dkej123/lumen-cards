@@ -15,7 +15,7 @@ Co dostajesz:
 - **Karty na codzienne sprawy w domu:** światła, domownicy, alarm, zamki, drzwi, brama, temperatury, jakość powietrza, klimatyzacja, przypomnienia, rolety, muzyka, wentylatory, listy wyboru, kalendarze, pasek nawigacji i pop-upy.
 - **Pogoda na dashboardzie.** Za kartami pada deszcz, sypie śnieg, snuje się mgła albo świeci słońce, a krople i śnieg osiadają też na samych kartach.
 - **Duże, wygodne przyciski.** Światło włączasz dotknięciem, ściemniasz przesuwając po nim palcem, a przytrzymanie otwiera jasność i kolor.
-- **Telefon i duży ekran.** Karta wciśnięta w małe miejsce sama zamienia się w mały kwadratowy przycisk.
+- **Telefon i duży ekran.** Karta wciśnięta w małe miejsce sama zamienia się w niski kompaktowy kafel (44 px, równy w wierszu).
 - **Tryb jasny i ciemny.** Karty dopasowują się do ustawień Home Assistant.
 - **Po polsku i po angielsku.** Język kart i ich ustawień jest brany z Twojego profilu w Home Assistant.
 
@@ -247,6 +247,10 @@ Pasek z przyciskami do widoków dashboardu (albo pop-upów). Może przykleić si
 <img src="docs/images/popup.png" alt="Pop-up z kartami salonu" width="260">
 
 Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` (np. z paska nawigacji albo przycisku). Zamykasz je ×, klawiszem Esc, dotknięciem obok albo przesunięciem w dół. Sama karta jest na dashboardzie niewidoczna, chyba że chcesz wiersz, który ją otwiera.
+
+### Pływający panel
+
+Jeden pływający okrągły przycisk, który otwiera arkusz z dowolnymi kartami – najczęściej wszystkimi termostatami w jednym miejscu zamiast osobnego przycisku dla każdego. Przycisk pokazuje, ile z nich grzeje, przy grzaniu robi się pomarańczowy i delikatnie pulsuje, a o słabej baterii głowicy albo niedostępnym urządzeniu ostrzega znaczkiem w rogu. W arkuszu każdy termostat to jeden wiersz (−/+ zmienia temperaturę), a gdy termostaty mają te same presety, na górze jest **Wszystkie: Komfort / Eco / Wył.** dla wszystkich naraz. Na komputerze karta jest wierszem w siatce, który otwiera ten sam arkusz.
 
 ---
 
@@ -600,7 +604,7 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy kar
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie**: pływający przycisk na telefonie, zwykła karta na dużym ekranie | wł. |
 | `power_action` | Co robi przycisk zasilania, jeśli wolisz własny skrypt | włącza ostatni tryb / wyłącza |
 | `show_current_temp`, `show_modes`, `show_fan_modes` | Pokazuj temperaturę w pokoju / przyciski trybu / przyciski nadmuchu | wł. |
-| `battery_entity`, `battery_low`, `show_battery` | Znacznik słabej baterii („Bateria 9%”). Domyślnie czyta informację o bateriach z Better Thermostat na samym termostacie (najsłabsza głowica); można też podać czujnik w % albo czujnik binarny baterii. Słaba od `battery_low` % w dół (domyślnie 20). | wł. |
+| `battery_entity`, `battery_low`, `show_battery` | Znacznik słabej baterii („Bateria 9%”). Domyślnie czyta informację o bateriach z Better Thermostat na samym termostacie (najsłabsza głowica); można też podać czujnik w % albo czujnik binarny baterii. Słaba poniżej `battery_low` % (domyślnie 15). | wł. |
 | `show_swing`, `show_presets`, `show_action` | Pokazuj kierunek nawiewu / presety / znacznik „grzeje, chłodzi, czeka” | wł. |
 | `show_range` | Zakres temperatur urządzenia pod temperaturą docelową | wył. |
 
@@ -758,6 +762,31 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | `show_trigger` | Pokazuj na dashboardzie wiersz, który otwiera pop-up (inaczej karta jest niewidoczna) | wył. |
 | `auto_close` | Zamknij samo po tylu sekundach (0 = nigdy) | 0 |
 
+<a id="lumen-fab-sheet-card"></a>
+
+### Pływający panel (`lumen-fab-sheet-card`)
+
+```yaml
+type: custom:lumen-fab-sheet-card
+icon: mdi:radiator
+title: Ogrzewanie
+cards:
+  - type: custom:lumen-climate-card
+    entity: climate.salon
+  - type: custom:lumen-climate-card
+    entity: climate.sypialnia
+```
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `icon`, `title` | Ikona pływającego przycisku i nagłówek arkusza | `mdi:dock-bottom`, „Pływający panel” |
+| `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML). Karty klimatyzacji są tu kompaktowymi wierszami termostatów. | – |
+| `narrow_only` | Pływający przycisk tylko na telefonie i wąskim ekranie (poniżej 1024 px); szerzej karta jest wierszem w siatce, który otwiera ten sam arkusz. Wył. = przycisk na każdym ekranie. | wł. |
+| `badge_entities` | Co liczy liczba na przycisku. Puste = termostaty z kart, które grzeją; inaczej te encje, gdy grzeją / są włączone. | puste |
+| `color_scheme`, `accent_color`, `styles` | Jak w każdej karcie | – |
+
+Przycisk dołącza do stosu pływających przycisków: nad przyciskiem scen (48 px) albo sam w rogu (64 px), gdy jest jedyny. Kolejność od dołu: sceny, panele (w kolejności z dashboardu), alarm. Znaczek ostrzeżenia to bateria poniżej `battery_low` karty termostatu (domyślnie 15%) albo niedostępna encja. W trybie edycji dashboardu karta zawsze jest wierszem z podpisem „FAB na telefonie”.
+
 ---
 
 ## Pytania i problemy
@@ -794,7 +823,7 @@ npm test
 npm run build   # → dist/
 ```
 
-Opcje demo: `?compact`, `&dark`, `&lang=pl`, `&fx` (pogoda), `&weather=snowy`, `&scene=phone|desktop`, `&only=<karta>`. Teksty są w `src/translations/en.json` i `pl.json`. Nowy język to nowy plik zarejestrowany w `src/core/i18n.ts`.
+Opcje demo: `?compact`, `&dark`, `&lang=pl`, `&fx` (pogoda), `&weather=snowy`, `&scene=phone|desktop`, `&only=<karta>` (np. `fab-sheet`, `compact-row`), `&edit` (tryb edycji). Teksty są w `src/translations/en.json` i `pl.json`. Nowy język to nowy plik zarejestrowany w `src/core/i18n.ts`.
 
 ## Licencja
 

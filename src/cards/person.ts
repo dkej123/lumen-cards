@@ -76,14 +76,14 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
 
   private avatar(name: string, s: Presence, compact: boolean) {
     const c = this._config;
-    const size = compact ? 26 : 34;
-    const d = compact ? 9 : 10;
+    const size = compact ? 30 : 34;
+    const d = compact ? 11 : 10;
     const src = c.picture || this.entity(c.entity)?.attributes.entity_picture;
     const failed = !src || this.failed;
     const bg = s.unavailable ? "var(--lumen-unavailable)" : colorOr(c.avatar_color, avatarColor(name));
     const dot = s.unavailable ? "transparent" : s.unknown ? "var(--lumen-warning)" : s.home ? "var(--lumen-ok)" : "var(--lumen-text-3)";
     return html`<div style="position:relative;flex:none;width:${size}px;height:${size}px">
-      <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:${bg};color:#fff;font:800 ${compact ? 12 : 14}px var(--lumen-font)">
+      <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:${bg};color:#fff;font:800 ${compact ? 13 : 14}px var(--lumen-font)">
         ${failed
           ? html`<span>${(name[0] ?? "?").toUpperCase()}</span>`
           : html`<img src=${src} alt="" style="width:100%;height:100%;object-fit:cover" @error=${() => {
@@ -111,12 +111,12 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
       c.double_tap_action ? () => handleAction(this, c.double_tap_action, key, "double_tap") : undefined,
     );
     if (compact) {
-      // Owner 2026-10-29: the 36 px pill of the Dom panel (phone), not the catalog's square tile.
+      // The 44 px pill of the Dom panel (catalog correction 2026-10-30), not the catalog's square tile.
       return html`<div data-fx ${pressable(h)} class="press" aria-label="${name} · ${s.status}"
-        style="display:flex;align-items:center;gap:7px;height:36px;padding:0 10px 0 5px;border-radius:14px;box-sizing:border-box;background:var(--lumen-surface);border:${s.unavailable ? "1.5px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${glass};cursor:pointer;min-width:0;user-select:none;touch-action:pan-y;transition:transform 220ms var(--lumen-ease-spring)">${WFX}
+        style="display:flex;align-items:center;gap:8px;height:44px;padding:0 10px 0 7px;border-radius:16px;box-sizing:border-box;background:var(--lumen-surface);border:${s.unavailable ? "1.5px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${glass};cursor:pointer;min-width:0;user-select:none;touch-action:pan-y;transition:transform 220ms var(--lumen-ease-spring)">${WFX}
         ${this.avatar(name, s, true)}
-        <div style="min-width:0;display:flex;flex-direction:column;white-space:nowrap">${c.show_name !== false ? html`<span style="font-size:11px;font-weight:700;line-height:13px;overflow:hidden;text-overflow:ellipsis">${name}</span>` : nothing}${c.show_status !== false ? html`<span style="font-size:10px;font-weight:600;line-height:12px;color:var(--lumen-text-2);overflow:hidden;text-overflow:ellipsis">${s.short}</span>` : nothing}</div>
-        <span style="margin-left:auto"></span>${this.subs.render(c.sub_buttons, { compact: true, max: 1 })}
+        <div style="min-width:0;display:flex;flex-direction:column;white-space:nowrap">${c.show_name !== false ? html`<span style="font-size:12px;font-weight:700;line-height:14px;overflow:hidden;text-overflow:ellipsis">${name}</span>` : nothing}${c.show_status !== false ? html`<span style="font-size:11px;font-weight:600;line-height:14px;color:var(--lumen-text-2);overflow:hidden;text-overflow:ellipsis">${s.short}</span>` : nothing}</div>
+        <span style="margin-left:auto"></span>${c.sub_buttons?.length ? html`<span style="flex:none;display:flex;margin-right:-4px">${this.subs.render(c.sub_buttons, { compact: true, max: 1 })}</span>` : nothing}
       </div>`;
     }
     const badge = c.presence_entity && !s.unavailable ? (c.presence_badge ?? "BLE") : "";

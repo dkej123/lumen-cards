@@ -6,16 +6,20 @@ import { appearance, fabFields, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FAB_SMALL, fabBottom, fabRight, fabSlot, LayerController, releaseFab } from "../core/layer";
 import { registerCard } from "../core/register";
-import { glass, prevent } from "../core/styles";
+import { glass, ink, prevent } from "../core/styles";
 import { toast } from "../core/toast";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { formatNumber } from "../logic/time";
-import { batteryLevel } from "../logic/battery";
+import { BATTERY_LOW, batteryLevel } from "../logic/battery";
 
-/** Low-battery badge next to the hvac_action badge. */
+/** Low-battery pill next to the hvac_action badge (full card, catalog section 19). */
 const batteryBadge = (text: string) =>
-  html`<span role="status" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:999px;background:color-mix(in srgb, var(--lumen-warning) 16%, transparent);color:var(--lumen-warning);font:750 12px var(--lumen-font)">${icon("mdi:battery-alert-variant-outline", "font-size:15px")}${text}</span>`;
+  html`<span role="status" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px 4px 7px;border-radius:999px;background:color-mix(in srgb, var(--lumen-warning) 18%, transparent);color:${ink("var(--lumen-warning)")};font:750 12px var(--lumen-font)">${icon("mdi:battery-alert-variant-outline", "font-size:15px")}${text}</span>`;
+
+/** Low-battery chip next to the name in the compact row: icon + "9%", the full text in `title`. */
+const batteryChip = (pct: string, full: string) =>
+  html`<span role="img" title=${full} aria-label=${full} style="flex:none;display:inline-flex;align-items:center;gap:2px;padding:0 5px 0 3px;border-radius:6px;background:color-mix(in srgb, var(--lumen-warning) 18%, transparent);color:${ink("var(--lumen-warning)")};font:750 11px/16px var(--lumen-font);font-variant-numeric:tabular-nums">${icon("mdi:battery-alert-variant-outline", "font-size:13px")}${pct}</span>`;
 
 export interface ClimateConfig extends BaseConfig {
   entity: string;
@@ -50,13 +54,15 @@ export interface ClimateConfig extends BaseConfig {
   /** Battery of the valve/thermostat: a % sensor or a battery binary_sensor. Default: Better
    *  Thermostat's `batteries` attribute (or `battery_level`) on the climate entity. */
   battery_entity?: string;
-  /** Low battery from this % down (default 20). */
+  /** Low battery below this % (default 15). */
   battery_low?: number;
   /** Low-battery badge (default on). */
   show_battery?: boolean;
 }
 
 const PENDING_MS = 10_000;
+/** The setpoint goes out this long after the last −/+ tap. */
+export const SETPOINT_DEBOUNCE_MS = 800;
 const AC_LAST_KEY = "lumen-ac-last:";
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
@@ -161,6 +167,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private rangeTarget: { low: number; high: number } | null = null;
   private acSentAt = 0;
   private acTimer?: number;
+  /** A setpoint waits for the debounce (catalog section 19: sent 800 ms after the last tap). */
+  private acQueued = false;
   private acHold?: number;
   private acHeld = false;
   private disp?: number;
@@ -314,11 +322,13 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     this.haptic("selection");
     this.requestUpdate();
     this.acSentAt = 0;
+    this.acQueued = true;
     window.clearTimeout(this.acTimer);
     this.acTimer = window.setTimeout(() => {
+      this.acQueued = false;
       this.acSentAt = Date.now();
       this.call("climate", "set_temperature", data, entity);
-    }, 600);
+    }, SETPOINT_DEBOUNCE_MS);
   }
 
   /** °F per the entity or HA's unit system (no conversion: the device's numbers as they are). */
@@ -421,9 +431,12 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const rangeLine = lim ? t("card.climate.range", { min: formatTemp(lim[0]).replace("°", ""), max: formatTemp(lim[1]).replace("°", ""), unit: f ? "°F" : "°C", step: Number.isInteger(stepVal) ? String(stepVal) : formatNumber(stepVal) }) : "";
     const heatOnly = hvac.every((m) => m === "heat" || m === "off");
     const ic = cfg.icon ?? (mode === "heat_cool" || mode === "auto" ? "mdi:thermostat-auto" : heatOnly ? "mdi:radiator" : "mdi:air-conditioner");
-    const bat = cfg.show_battery === false ? null : batteryLevel(e, this.entity(cfg.battery_entity), cfg.battery_low ?? 20);
+    const bat = cfg.show_battery === false ? null : batteryLevel(e, this.entity(cfg.battery_entity), cfg.battery_low ?? BATTERY_LOW);
     const battery = bat?.low ? (bat.pct === null ? t("card.climate.battery_low") : t("card.climate.battery_pct", { pct: Math.round(bat.pct) })) : "";
-    return { c, ic, mode, off, una, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, action, rangeLine, sel, battery };
+    const batteryPct = bat?.low && bat.pct !== null ? `${Math.round(bat.pct)}%` : "";
+    // The setpoint is on its way: waiting for the debounce, or sent and not confirmed yet.
+    const sending = this.acQueued || (!!this.acSentAt && (this.acTarget !== null || this.rangeTarget !== null));
+    return { c, ic, mode, off, una, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, room, action, rangeLine, sel, battery, batteryPct, heatOnly, sending };
   }
 
   private get name() {
@@ -500,20 +513,55 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     </div>`;
   }
 
-  /** Compact row (under 300 px): name, what it does now, −, setpoint, +. */
+  /**
+   * Compact row (under 300 px, and the thermostat row of the floating panel, catalog sections 09
+   * and 19): icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
+   */
   private compactRow() {
     const a = this.ac();
-    const btn = "flex:none;width:40px;height:40px;border-radius:12px;border:0;display:grid;place-items:center;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:20px;cursor:pointer";
-    const value = a.range ? (this._side === "low" ? a.range.low : a.range.high) : a.target;
-    // Narrow cells (e.g. 3 columns): drop the name first, then −/+ (the icon still opens the details).
+    const cfg = this._config;
+    const e = this.entity(cfg.entity);
+    const value = a.una ? "—" : a.range ? (this._side === "low" ? a.range.low : a.range.high) : a.target;
+    // Narrow cells (e.g. 3 columns): drop the name under 240 px (a low battery is then a dot on
+    // the icon), then −/+ under 192 px – the narrowest the icon and −/value/+ fit in (the
+    // catalog says 170; between the two the + would stick out). The icon still opens the details.
     const w = this._width;
-    const named = !w || w >= 240, stepper = !w || w >= 170;
-    return html`<div data-fx style="display:flex;align-items:center;justify-content:${named ? "flex-start" : "space-between"};gap:${named ? 10 : 6}px;padding:${named ? "8px 8px 8px 12px" : "8px"};border-radius:20px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1)">${WFX}
-      <button class="press" @click=${() => this.moreInfo(this._config.entity)} aria-label=${this.name} style="flex:none;width:34px;height:34px;border-radius:12px;border:0;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};cursor:pointer">${icon(a.ic)}</button>
-      ${named ? html`<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;line-height:18px;white-space:nowrap"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${this.name}</span>${a.battery ? html`<span role="img" title=${a.battery} aria-label=${a.battery} style="flex:none;display:inline-flex;color:var(--lumen-warning)">${icon("mdi:battery-alert-variant-outline", "font-size:16px")}</span>` : nothing}</div><div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.short}</div></div>` : nothing}
-      ${stepper ? html`<button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:minus")}</button>` : nothing}
-      <span style="flex:none;min-width:${stepper ? 46 : 0}px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;opacity:${a.off ? 0.4 : 1}">${value}</span>
-      ${stepper ? html`<button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${btn};opacity:${a.off ? 0.4 : 1}">${icon("mdi:plus")}</button>` : nothing}
+    const named = !w || w >= 240, stepper = !w || w >= 192;
+    const act = String(e?.attributes.hvac_action ?? "");
+    const heating = !a.una && !a.off && (act === "heating" || act === "preheating");
+    const cooling = !a.una && !a.off && act === "cooling";
+    // Heat-only devices are radiators (on / off glyph); air conditioners keep their mode icon.
+    const glyph = cfg.icon ?? (a.heatOnly ? (a.off || a.una ? "mdi:radiator-off" : "mdi:radiator") : a.ic);
+    const tint = a.una ? "var(--lumen-unavailable)" : a.off ? "var(--lumen-text-3)" : heating ? "var(--lumen-orange)" : cooling ? "var(--lumen-info)" : a.heatOnly ? "var(--lumen-text-2)" : a.c;
+    const tintBg = a.una ? "transparent" : heating || cooling || (!a.off && !a.heatOnly) ? `color-mix(in srgb, ${tint} 16%, transparent)` : "color-mix(in srgb, var(--lumen-text-3) 14%, transparent)";
+    const head = a.una
+      ? t(a.heatOnly ? "card.climate.thermostat_unavailable" : "card.climate.unavailable")
+      : a.off
+        ? t(a.heatOnly ? "card.climate.thermostat_off" : "card.climate.off")
+        : a.sending
+          ? t("card.climate.sending")
+          : a.action?.label ?? a.short.split(" · ")[0];
+    const headColor = a.una ? "var(--lumen-text-3)" : (heating || cooling) && !a.sending ? a.action!.color : "var(--lumen-text-2)";
+    const room = !a.una && cfg.show_current_temp !== false && a.room !== "—" ? (w && w < 320 ? a.room : t("card.climate.in_room", { t: a.room })) : "";
+    const inert = a.off || a.una;
+    const btn = `flex:none;width:40px;height:40px;border-radius:12px;border:0;padding:0;display:grid;place-items:center;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:20px;opacity:1;cursor:${inert ? "default" : "pointer"}`;
+    const title = a.battery ? `${this.name} · ${a.battery}` : this.name;
+    return html`<div data-fx title=${title} style="position:relative;display:flex;align-items:center;gap:8px;min-height:56px;padding:8px 8px 8px 10px;box-sizing:border-box;border-radius:20px;background:${a.una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};border:${a.una ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${a.una ? "" : glass};box-shadow:${a.una ? "none" : "var(--lumen-sheet-row-shadow, var(--lumen-shadow-1))"}">${WFX}
+      <button class="press" @click=${() => this.moreInfo(cfg.entity)} aria-label=${title} style="position:relative;flex:none;width:34px;height:34px;border-radius:12px;border:0;padding:0;display:grid;place-items:center;font-size:19px;background:${tintBg};color:${tint};cursor:pointer;transition:background-color 400ms, color 400ms">${icon(glyph, "display:block")}${!named && a.battery
+        ? html`<span aria-hidden="true" style="position:absolute;top:-3px;right:-3px;width:10px;height:10px;box-sizing:content-box;border-radius:50%;background:var(--lumen-warning);border:2px solid var(--lumen-surface-solid)"></span>`
+        : nothing}</button>
+      ${named
+        ? html`<div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;min-width:0"><span style="font-size:14px;font-weight:700;line-height:18px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</span>${a.battery ? batteryChip(a.batteryPct, a.battery) : nothing}</div>
+            <div style="font-size:12px;font-weight:650;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums"><span style="color:${headColor}">${head}</span>${room ? ` · ${room}` : ""}</div>
+          </div>`
+        : nothing}
+      <div style="flex:none;display:flex;align-items:center;gap:2px;margin-left:auto;opacity:${inert ? 0.38 : 1};transition:opacity 300ms">
+        ${stepper ? html`<button class="press" ?disabled=${inert} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style=${btn}>${icon("mdi:minus")}</button>` : nothing}
+        <span aria-live="polite" style="flex:none;min-width:${stepper ? 46 : 0}px;text-align:center;font-size:20px;font-weight:650;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:${a.sending ? "var(--lumen-text-3)" : "var(--lumen-text-1)"};transition:color 300ms">${value}</span>
+        ${stepper ? html`<button class="press" ?disabled=${inert} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style=${btn}>${icon("mdi:plus")}</button>` : nothing}
+      </div>
+      ${a.sending && stepper ? html`<span aria-hidden="true" style="position:absolute;top:7px;right:56px;width:10px;height:10px;box-sizing:border-box;border-radius:50%;border:2px solid var(--lumen-border-strong);border-top-color:var(--lumen-text-1);animation:lumenSpin 800ms linear infinite"></span>` : nothing}
     </div>`;
   }
 

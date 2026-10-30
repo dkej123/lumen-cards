@@ -4,6 +4,7 @@
 //   &only=<id>               one card of the gallery (ids in GALLERY below), for screenshots
 //   &weather=rainy|snowy|…   weather state;  &alarm=triggered   alarm state;  &code   lock asks for a code
 //   &only=alarm-states | lock-states | climate-states | sensor-states | general-states   catalog 2026-10-29 states
+//   &only=fab-sheet | compact-row   catalog 2026-10-30 (floating panel, 44 px compacts);  &edit   dashboard edit mode
 //   (demo code for the alarm and the locks: 1234)
 import type { HassEntities, HassEntity, HassLike } from "../src/hass/types";
 import { injectLocalFonts } from "./local-fonts";
@@ -82,6 +83,10 @@ let states: HassEntities = Object.fromEntries(
     e("climate.radiator", "heat", { friendly_name: "Radiator · bathroom", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 23, current_temperature: 21.2, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort" }),
     e("climate.office_f", "cool", { friendly_name: "AC · office", temperature_unit: "°F", hvac_modes: ["auto", "cool", "heat", "dry", "fan_only"], hvac_action: "cooling", temperature: 72, current_temperature: 76, min_temp: 61, max_temp: 86, target_temp_step: 1, fan_modes: ["auto", "1", "2", "3", "turbo"], fan_mode: "auto", swing_modes: ["off", "vertical", "both"], swing_mode: "vertical", preset_modes: ["none", "eco", "sleep", "boost"], preset_mode: "none" }),
     e("climate.off", "off", { friendly_name: "Climate · living room", hvac_modes: ["off", "cool", "heat", "dry"], fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 24.1, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }),
+    // Floating panel (catalog section 19): three Better Thermostat radiators, one valve at 9 %.
+    e("climate.th_living", "heat", { friendly_name: "Living room", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 21, current_temperature: 20.4, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort", batteries: '{"climate.valve_living": {"battery": 82}}' }),
+    e("climate.th_bedroom", "heat", { friendly_name: "Bedroom", hvac_modes: ["heat", "off"], hvac_action: "idle", temperature: 19, current_temperature: 19.6, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort" }),
+    e("climate.th_bathroom", "heat", { friendly_name: "Bathroom", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 23, current_temperature: 21.8, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort", batteries: '{"climate.valve_bath_1": {"battery": 9}, "climate.valve_bath_2": {"battery": 64}}' }),
     e("sensor.balcony", "8.1", { friendly_name: "Balcony", unit_of_measurement: "°C", device_class: "temperature" }, 180),
     e("sensor.cellar", "unavailable", { friendly_name: "Cellar", unit_of_measurement: "°C", device_class: "temperature" }),
     e("sensor.aqi", "72", { friendly_name: "AQI", device_class: "aqi" }, 10),
@@ -151,7 +156,13 @@ const make = (): HassLike => ({
     const w = words[x.state];
     return w ? w[pl ? 1 : 0] : x.state + (x.attributes.unit_of_measurement ? ` ${x.attributes.unit_of_measurement}` : "");
   },
-  callService: async (domain, service, data = {}, target) => {
+  callService: async (domain, service, data = {}, target): Promise<undefined> => {
+    // Several entities at once (the floating panel's "All" segment): one call each.
+    const many = (target as { entity_id?: unknown })?.entity_id;
+    if (Array.isArray(many)) {
+      for (const one of many) await make().callService(domain, service, data, { entity_id: one });
+      return undefined;
+    }
     const id = String((target as { entity_id?: string })?.entity_id ?? "");
     if (domainService(ctx, domain, service, data, id)) return undefined;
     if (domain === "light")
@@ -201,6 +212,7 @@ const cards: Card[] = [];
 const mk = ([type, cfg, span = 12]: Spec) => {
   const el = document.createElement(`lumen-${type}-card`) as Card;
   el.setConfig({ type: `custom:lumen-${type}-card`, ...(compact ? { layout: "compact" } : {}), ...cfg });
+  if (params.has("edit")) (el as unknown as { editMode: boolean }).editMode = true;
   el.style.gridColumn = `span ${span}`;
   el.dataset.card = type;
   cards.push(el);
@@ -291,6 +303,25 @@ const GALLERY: Record<string, Spec[]> = {
   "climate-states": [["climate", { entity: "climate.bedroom_ac", max_width: 340 }], ["climate", { entity: "climate.heat_cool", max_width: 340 }], ["climate", { entity: "climate.off", max_width: 340 }], ["climate", { entity: "climate.radiator", max_width: 340, show_range: true }], ["climate", { entity: "climate.office_f", max_width: 340, show_range: true }], ["climate", { entity: "climate.bedroom_ac", layout: "compact", max_width: 320 }], ["climate", { entity: "climate.off", layout: "compact", max_width: 320 }]],
   "sensor-states": [["sensor", { entity: "sensor.living_temp" }, 6], ["sensor", { entity: "sensor.balcony" }, 6], ["sensor", { entity: "sensor.cellar" }, 6], ["sensor", { entity: "sensor.living_temp", layout: "compact" }, 6], ["air-quality", { pm25: "sensor.pm25", pm10: "sensor.pm10" }], ["air-quality", { aqi_entity: "sensor.aqi" }], ["air-quality", { pm25: "sensor.pm25_old", pm10: "sensor.pm10_old" }], ["air-quality", { pm25: "sensor.pm25", pm10: "sensor.pm10", layout: "compact" }]],
   "general-states": [["lock", { entity: "lock.offline", max_width: 340 }], ["lock", { entity: "lock.unknown", max_width: 340 }], ["light", { entity: "light.salon_sufit" }], ["light", {}], ["sensor", { entity: "sensor.living_temp", accent_color: "pink" }, 6], ["sensor", { entity: "sensor.outside_temp", color: "green" }, 6]],
+  // Floating panel: the FAB (always, for the gallery) + the 52 px trigger row; &edit = edit mode.
+  "fab-sheet": [
+    ["fab-sheet", { title: "Heating", icon: "mdi:radiator", narrow_only: false, cards: ["th_living", "th_bedroom", "th_bathroom"].map((id) => ({ type: "custom:lumen-climate-card", entity: `climate.${id}` })) }],
+    ["chips", { chips: [{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.evening" }], fab: true, fab_narrow_only: false }],
+    ["fab-sheet", { title: "Heating", icon: "mdi:radiator", cards: ["th_living", "th_bedroom", "th_bathroom"].map((id) => ({ type: "custom:lumen-climate-card", entity: `climate.${id}` })) }],
+    ["climate", { entity: "climate.th_bathroom", max_width: 340 }],
+    ["climate", { entity: "climate.th_bathroom", layout: "compact" }, 4],
+    ["climate", { entity: "climate.th_bedroom", layout: "compact" }, 6],
+  ],
+  "compact-row": [
+    ["light", { entity: "light.sofa", icon: "mdi:sofa" }, 3],
+    ["light", { entity: "light.strip", icon: "mdi:led-strip-variant" }, 3],
+    ["entity", { entity: "binary_sensor.back_door", sub_buttons: [{ entity: "light.ceiling", icon: "mdi:ceiling-light" }] }, 2],
+    ["alarm", { entity: "alarm_control_panel.house", layout: "compact" }, 2],
+    ["lock", { entity: "lock.car", icon: "mdi:car", layout: "compact" }, 2],
+    ["person", { entity: "person.alex", avatar_color: "light-blue", layout: "compact", sub_buttons: [{ entity: "person.alex", icon: "mdi:cellphone", tap_action: { action: "more-info" } }] }, 4],
+    ["person", { entity: "person.sam", avatar_color: "amber", layout: "compact" }, 4],
+    ["button", { entity: "script.gate", icon: "mdi:gate", layout: "compact", sub_buttons: [{ entity: "light.ceiling", icon: "mdi:ceiling-light" }] }, 4],
+  ],
   "weather": [["weather-background", { weather_entity: "weather.home", show_controls: true }], ["sensor", { entity: "sensor.outside_temp", color: "light-blue" }, 6], ["entity", { entity: "binary_sensor.front_door" }, 6], ["light", { entity: "light.sofa", icon: "mdi:sofa" }, 6], ["light", { entity: "light.ceiling", icon: "mdi:ceiling-light" }, 6]],
 };
 

@@ -335,21 +335,28 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     const una = this.offline;
     const busy = !!this.busy();
     const l = this.look();
+    const st = this.lock?.state;
+    // Catalog correction 2026-10-30: hold 500 ms = the main command (lock, or unlock with the
+    // code); a tap opens the lock dialog. Nothing while a command is on its way.
     const handlers = this.presses.handlers(
       `lockcell:${this._config.entity}`,
       () => {
         if (busy || una) return;
         this._dialog = true;
       },
-      () => this.moreInfo(this._config.entity),
+      () => {
+        if (busy || una) return;
+        if (this._config.hold_action) handleAction(this, this._config.hold_action, this._config.entity, "hold");
+        else this.request(st === "locked" ? "unlock" : "lock");
+      },
     );
-    // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
     return compactCell({
       title: `${this.name} · ${l.sub}`,
       color: l.iconFg ?? "var(--lumen-text-2)",
       disabled: busy || una,
+      unavailable: una,
       handlers,
-      body: icon(busy ? "mdi:loading" : l.icon, `display:block;font-size:24px;animation:${busy ? "lumenSpin 800ms linear infinite" : "none"}`),
+      body: icon(busy ? "mdi:loading" : l.icon, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`),
     });
   }
 

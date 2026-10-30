@@ -119,11 +119,12 @@ describe("light card", () => {
     expect(text(await mount("light", { entity: "light.gone", layout: "wide" }))).toContain("Unavailable");
   });
 
-  it("compact is the low 52 px tile (owner: no square tiles)", async () => {
+  it("compact is the low 44 px tile (catalog correction 2026-10-30)", async () => {
     const el = await mount("light", { entity: "light.c", layout: "compact" });
     expect(text(el)).toContain("Off");
     const tile = el.shadowRoot!.querySelector<HTMLElement>(".tile")!;
-    expect(tile.getAttribute("style")).toContain("52px");
+    expect(tile.getAttribute("style")).toContain("height:44px");
+    expect(tile.getAttribute("style")).toContain("border-radius:16px");
   });
 
   it("horizontal drag sets the brightness from the finger position", async () => {

@@ -6,6 +6,9 @@ export interface Battery {
   low: boolean;
 }
 
+/** Low battery below this % by default (catalog section 19). */
+export const BATTERY_LOW = 15;
+
 const level = (v: unknown): number | null => {
   const n = typeof v === "object" && v !== null ? Number((v as { battery?: unknown }).battery) : Number(v);
   return Number.isFinite(n) ? n : null;
@@ -16,11 +19,11 @@ const level = (v: unknown): number | null => {
  * else Better Thermostat's `batteries` attribute (JSON text or object, one entry per valve – the
  * lowest counts), else a plain `battery_level` / `battery` attribute. null = nothing known.
  */
-export function batteryLevel(climate: HassEntity | undefined, sensor: HassEntity | undefined, threshold = 20): Battery | null {
+export function batteryLevel(climate: HassEntity | undefined, sensor: HassEntity | undefined, threshold = BATTERY_LOW): Battery | null {
   if (sensor && !["unavailable", "unknown"].includes(sensor.state)) {
     if (sensor.entity_id.startsWith("binary_sensor.")) return { pct: null, low: sensor.state === "on" };
     const pct = level(sensor.state);
-    if (pct !== null) return { pct, low: pct <= threshold };
+    if (pct !== null) return { pct, low: pct < threshold };
   }
   const a = climate?.attributes ?? {};
   let raw: unknown = a.batteries;
@@ -36,5 +39,5 @@ export function batteryLevel(climate: HassEntity | undefined, sensor: HassEntity
   if (own !== null) levels.push(own);
   if (!levels.length) return null;
   const pct = Math.min(...levels);
-  return { pct, low: pct <= threshold };
+  return { pct, low: pct < threshold };
 }
