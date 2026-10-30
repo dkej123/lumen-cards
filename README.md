@@ -628,7 +628,7 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | Setting | What it does | Default |
 |---|---|---|
 | `pm25`, `pm10`, `aqi_entity` | Your air sensors. One of the three is enough. | – |
-| `stale_hours` | After how many hours without new data the card says "Outdated data" | 1 |
+| `stale_hours` | After how many hours without new data the card says "Outdated data" | 2 |
 | `footer` | A short note at the bottom of the chart window, for example "Sensor on the balcony" | none |
 | `levels` | Your own names for the six levels (YAML only) | Very good … Extremely poor |
 | `show_values`, `show_bar` | Show the numbers / the coloured level bar | on |

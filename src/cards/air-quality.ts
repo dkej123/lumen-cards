@@ -128,7 +128,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
   private quality() {
     const c = this._config;
     const now = Date.now();
-    const q = airQuality(this.air(c.pm25), this.air(c.pm10), Number(c.stale_hours ?? 1), now, this.air(c.aqi_entity));
+    const q = airQuality(this.air(c.pm25), this.air(c.pm10), Number(c.stale_hours ?? 2), now, this.air(c.aqi_entity));
     const stale = q.stale || q.level === null;
     const l = q.level ?? 0;
     const col = stale ? "var(--lumen-unavailable)" : `var(--lumen-aq-${l})`;
@@ -267,7 +267,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
       },
       { name: "aqi_entity", selector: { entity: { domain: "sensor" } } },
       { name: "footer", selector: { text: {} } },
-      { name: "stale_hours", default: 1, selector: { number: { min: 0.25, max: 24, step: 0.25, mode: "box", unit_of_measurement: "h" } } },
+      { name: "stale_hours", default: 2, selector: { number: { min: 0.25, max: 24, step: 0.25, mode: "box", unit_of_measurement: "h" } } },
       advanced([["show_values"], ["show_bar"]]),
       appearance({ accent: false }),
     ]);
