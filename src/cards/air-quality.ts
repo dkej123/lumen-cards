@@ -5,7 +5,7 @@ import { advanced, appearance, form } from "../core/form";
 import { History } from "../core/history";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import type { HassLike } from "../hass/types";
 import { AIR_LEVELS, AQI, PM10, PM25, type AirReading, airQuality, airReading } from "../logic/air";
@@ -46,7 +46,6 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     }
     this.requestUpdate();
   }, this);
-  private presses = new Presses((type) => this.haptic(type), this);
   private lastAir = new Map<string, AirReading>();
   private disp = new Map<string, number>();
   private tweens = new Map<string, number>();

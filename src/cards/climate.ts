@@ -5,7 +5,7 @@ import { icon } from "../core/lumen-icon";
 import { appearance, fabFields, firstOf, form, hapticsField, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, fabBottom, fabEdge, fabSideOf, fabSlot, LayerController, releaseFab } from "../core/layer";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
 import { toast } from "../core/toast";
@@ -533,7 +533,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
    * and 19): icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
    */
   /** Compact row icon: tap = power on / off, hold = details. */
-  private presses = new Presses((type) => this.haptic(type), this);
 
   private compactRow() {
     const a = this.ac();

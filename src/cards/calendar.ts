@@ -1,12 +1,12 @@
 import { html, nothing } from "lit";
-import { handleAction, type ActionConfig } from "../core/actions";
+import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { advanced, appearance, firstOf, stub } from "../core/form";
 import { formX, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, tone } from "../core/styles";
 import type { HassEntity, HassLike } from "../hass/types";
@@ -48,7 +48,6 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
   private fetchedFor?: HassEntity;
   private fetchedAt = 0;
   private loading = false;
-  private presses = new Presses((type) => this.haptic(type), this);
 
   protected entityIds() {
     return [this._config.entity];
@@ -114,11 +113,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
     const c = this._config;
     const e = this.entity(c.entity);
     const name = entityName(c.name, e, c.entity);
-    const h = this.presses.handlers(
-      `cal:${c.entity}`,
-      () => (c.tap_action ? handleAction(this, c.tap_action, c.entity, "tap") : this.moreInfo(c.entity)),
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
-    );
+    const h = this.actions(`cal:${c.entity}`, c, c.entity);
     const days = this._events ? groupByDay(this._events, Date.now(), Math.max(1, Number(c.max_events ?? 5))) : null;
     const una = !e || e.state === "unavailable";
     const body = !days

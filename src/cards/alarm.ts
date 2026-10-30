@@ -5,7 +5,7 @@ import { actions, advanced, appearance, firstOf, form, stub } from "../core/form
 import { SubButtons } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
-import { Presses, pressable, spinnerStyle } from "../core/press";
+import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { alarmBanner, alarmRing, compactCell } from "../core/status-row";
 import { icon } from "../core/lumen-icon";
@@ -112,7 +112,6 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   protected static iconBelow = 100;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "armed_home", attributes: { friendly_name: t("card.alarm.name"), supported_features: 7, code_format: "number" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
 
-  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
   private pending: { from?: HassEntity; until: number } | null = null;
   private _pad: Pad | null = null;
@@ -337,22 +336,12 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     const c = this._config;
     const e = this.alarm;
     const s = alarmStatus(e, c.icon);
-    const handlers = this.presses.handlers(
-      `alarm:${c.entity}`,
-      () => this.tap(),
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
-      c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-    );
+    const handlers = this.actions(`alarm:${c.entity}`, c, c.entity, { tap: () => this.tap() });
     // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
     if (this.compact) {
       // Catalog correction 2026-10-30: hold 500 ms = the main command (arm / cancel / the
       // disarm pad), a tap = the tap action or more-info.
-      const cell = this.presses.handlers(
-        `alarmcell:${c.entity}`,
-        () => (c.tap_action ? this.tap() : this.moreInfo(c.entity)),
-        () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.primary()),
-        c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-      );
+      const cell = this.actions(`alarmcell:${c.entity}`, c, c.entity, { tap: c.tap_action ? () => this.tap() : undefined, hold: () => this.primary() });
       const anim = s.alert ? "lumenShake 900ms ease-in-out infinite" : s.busy ? "lumenBreath 2400ms ease-in-out infinite" : "none";
       const off = e?.state === "disarmed" ? cssColor(c.disarmed_color) : undefined;
       return compactCell({ title: `${this.name} · ${s.label}`, color: off ?? tone(s.tone), handlers: cell, alert: s.alert, unavailable: s.tone === "unavailable", extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });

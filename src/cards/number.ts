@@ -44,7 +44,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
       if (c.tap_action) handleAction(this, c.tap_action, c.entity, "tap");
       else this.moreInfo(c.entity);
     },
-    hold: () => (this._config.hold_action ? handleAction(this, this._config.hold_action, this._config.entity, "hold") : this.moreInfo(this._config.entity)),
+    hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
       const r = numberRange(this.num?.attributes);
       const cur = Number(this.num?.state);

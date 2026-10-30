@@ -2,9 +2,9 @@ import { html, nothing } from "lit";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
-import { handleAction, type ActionConfig } from "../core/actions";
+import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { colorOr, glass } from "../core/styles";
 import { WFX } from "../core/parts";
@@ -39,7 +39,6 @@ export function validatePerson(c: Partial<PersonConfig>): void {
 export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
   protected static compactBelow = 240;
   private failed = false;
-  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
 
   protected entityIds() {
@@ -99,12 +98,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     const key = c.entity ?? c.presence_entity ?? "";
     const name = c.name || this.entity(c.entity)?.attributes.friendly_name || key;
     const s = presence(this.sensor(), this.entity(c.entity), Date.now());
-    const h = this.presses.handlers(
-      `person:${key}`,
-      () => (c.tap_action ? handleAction(this, c.tap_action, key) : this.moreInfo(key)),
-      () => (c.hold_action ? handleAction(this, c.hold_action, key, "hold") : this.moreInfo(key)),
-      c.double_tap_action ? () => handleAction(this, c.double_tap_action, key, "double_tap") : undefined,
-    );
+    const h = this.actions(`person:${key}`, c, key);
     if (compact) {
       // The 44 px pill of the Dom panel (catalog correction 2026-10-30), not the catalog's square tile.
       return html`<div data-fx ${pressable(h)} class="press" aria-label="${name} · ${s.status}"

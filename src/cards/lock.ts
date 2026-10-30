@@ -5,7 +5,7 @@ import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { codePad, dangerBorder, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type Seg } from "../core/parts";
 import { tone } from "../core/styles";
@@ -91,7 +91,6 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   private _dialog = false;
   /** Command waiting for the code (PIN pad). */
   private _pad: { cmd: Cmd; code: string; error?: string; shake: number; busy: boolean } | null = null;
-  private presses = new Presses((type) => this.haptic(type), this);
 
   protected layer = new LayerController(
     this,
@@ -225,12 +224,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   private cardHandlers() {
     const c = this._config;
     if (!c.tap_action && !c.hold_action && !c.double_tap_action) return undefined;
-    return this.presses.handlers(
-      `lock:${c.entity}`,
-      c.tap_action ? () => handleAction(this, c.tap_action, c.entity, "tap") : undefined,
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
-      c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-    );
+    return this.actions(`lock:${c.entity}`, c, c.entity, { tap: null });
   }
 
   /**

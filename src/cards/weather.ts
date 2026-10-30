@@ -6,7 +6,7 @@ import { locale, t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
 import { WFX } from "../core/parts";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { Sheet } from "../core/sheet";
 import { glass } from "../core/styles";
@@ -131,7 +131,6 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
   private subs: Promise<() => Promise<void>>[] = [];
   private subKey?: string;
   private subTimer?: number;
-  private presses = new Presses((type) => this.haptic(type), this);
   private drag = new StripDrag();
   private sheetView = new Sheet(this, () => this.close());
   protected layer = new LayerController(this, () => (this.sheetView.open && !this.preview ? this.sheet() : nothing), () => this.close());

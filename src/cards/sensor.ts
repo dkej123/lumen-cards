@@ -1,10 +1,10 @@
 import { html, nothing } from "lit";
-import { handleAction, type ActionConfig } from "../core/actions";
+import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { actions, advanced, appearance, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { History } from "../core/history";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { colorOr, glass } from "../core/styles";
 import type { HassEntity, HassLike } from "../hass/types";
@@ -62,7 +62,6 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
   protected static compactBelow = 0;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "21.5", attributes: { friendly_name: t("card.sensor.name"), unit_of_measurement: "°C", device_class: "temperature" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
   private history = new History(() => this.requestUpdate(), this);
-  private presses = new Presses((type) => this.haptic(type), this);
 
 
   protected entityIds() {
@@ -93,12 +92,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
     const color = colorOr(c.color, "var(--lumen-accent)");
     const name = c.name || e?.attributes.friendly_name || c.entity;
     const value = sensorValue(e, this._hass);
-    const h = this.presses.handlers(
-      `sensor:${c.entity}`,
-      () => (c.tap_action ? handleAction(this, c.tap_action, c.entity) : this.moreInfo(c.entity)),
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
-      c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-    );
+    const h = this.actions(`sensor:${c.entity}`, c, c.entity);
     const una = isUnavailable(e);
     const stale = sensorStale(e, Number(c.stale_after ?? 0));
     const name2 = c.show_name === false ? "" : stale ? `${name} · ${formatAgo(e!.last_reported ?? e!.last_updated)}` : name;

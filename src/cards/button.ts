@@ -6,7 +6,6 @@ import { cssColor } from "../core/styles";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
-import { Presses } from "../core/press";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, squareTile, toneBorder, toneLook, type TileLook } from "../core/tile";
@@ -78,7 +77,6 @@ type Phase = "idle" | "wait" | "ok" | "err";
 export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
   static properties = { ...LumenBaseCard.properties, _phase: { state: true } };
   protected static compactBelow = 120;
-  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
   private _phase: Phase = "idle";
   /** Outcome of the last use: response code and text. */
@@ -252,12 +250,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     const busy = this._phase === "wait";
     const h = una
       ? undefined
-      : this.presses.handlers(
-          `button:${c.entity}`,
-          () => this.run(),
-          () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.feedback?.status_entity ?? c.entity)),
-          c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-        );
+      : this.actions(`button:${c.entity}`, c, c.entity, { tap: () => this.run(), hold: () => this.moreInfo(c.feedback?.status_entity ?? c.entity) });
     const ic = c.icon ?? e?.attributes.icon ?? ICONS[this.domain] ?? "mdi:gesture-tap";
     const look = this.look(e);
     // Owner 2026-10-29: compact is always the access bar cell (no square tile).

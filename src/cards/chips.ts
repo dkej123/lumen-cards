@@ -5,7 +5,7 @@ import { icon } from "../core/lumen-icon";
 import { advanced, appearance, fabFields, form } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_MAIN, FAB_ORDER, fabBottom, fabEdge, fabInset, fabSideOf, fabSlot, LayerController, releaseFab } from "../core/layer";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass } from "../core/styles";
 import { toast } from "../core/toast";
@@ -98,7 +98,6 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   private pulseTimer?: number;
   private fabTimer?: number;
   private lights = new LightsController(this);
-  private presses = new Presses((type) => this.haptic(type), this);
 
   protected layer = new LayerController(
     this,
@@ -160,12 +159,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   }
 
   private chipHandlers(s: ActionChip) {
-    return this.presses.handlers(
-      `chip:${s.entity}`,
-      () => this.run(s),
-      () => (s.hold_action ? handleAction(this, s.hold_action, s.entity, "hold") : this.moreInfo(s.entity)),
-      s.double_tap_action ? () => handleAction(this, s.double_tap_action, s.entity, "double_tap") : undefined,
-    );
+    return this.actions(`chip:${s.entity}`, s, s.entity, { tap: () => this.run(s) });
   }
 
   private get active(): string | null {

@@ -50,7 +50,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     source: () => this.fan,
     commit: (f) => this.setPct(f * 100),
     tap: () => this.tap(),
-    hold: () => (this._config.hold_action ? handleAction(this, this._config.hold_action, this._config.entity, "hold") : this.moreInfo(this._config.entity)),
+    hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
       const s = fanSpeed(this.fan);
       this.setPct(s.pct + d * (big ? 25 : Math.max(s.step, 10)));

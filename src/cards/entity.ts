@@ -1,11 +1,10 @@
 import { html, nothing } from "lit";
-import { handleAction, type ActionConfig } from "../core/actions";
+import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
-import { Presses } from "../core/press";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { tone } from "../core/styles";
@@ -83,7 +82,6 @@ export function entityLook(e: HassEntity | undefined, s: Status): TileLook {
 /** A state tile with optional sub-buttons; compact a square tile, below 100 px the access bar cell. */
 export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   protected static compactBelow = 120;
-  private presses = new Presses((type) => this.haptic(type), this);
   private subs = new SubButtons(this);
 
 
@@ -110,12 +108,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     const look = entityLook(e, s);
     const col = look.iconFg;
     const name = c.name || e?.attributes.friendly_name || c.entity;
-    const h = this.presses.handlers(
-      `entity:${c.entity}`,
-      () => (c.tap_action ? handleAction(this, c.tap_action, c.entity) : this.moreInfo(c.entity)),
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
-      c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
-    );
+    const h = this.actions(`entity:${c.entity}`, c, c.entity);
     const una = !e || e.state === "unavailable";
     const label = una ? t("common.unavailable") : s.label;
     if (this.compact) {

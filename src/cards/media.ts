@@ -1,12 +1,12 @@
 import { css, html, nothing, unsafeCSS } from "lit";
-import { handleAction, type ActionConfig } from "../core/actions";
+import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
 import { advanced, appearance, firstOf, stub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
-import { Presses, pressable } from "../core/press";
+import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, thinBar } from "../core/slider-tile";
 import { glass, stop } from "../core/styles";
@@ -46,7 +46,6 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}.mbtn:active:not(:disabled){transform:scale(.9)}.mbtn{transition:transform 220ms var(--lumen-ease-spring), opacity 300ms}`];
   protected static compactBelow = 280;
   private _artFailed = "";
-  private presses = new Presses((type) => this.haptic(type), this);
 
   private vol = new SlideDrag(this, {
     enabled: () => !mediaOff(this.player) && mediaSupports(this.player, MEDIA.VOLUME_SET),
@@ -113,15 +112,6 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     return mediaPlaying(e) ? mediaSupports(e, MEDIA.PAUSE) || mediaSupports(e, MEDIA.STOP) : mediaSupports(e, MEDIA.PLAY) || mediaSupports(e, MEDIA.PAUSE);
   }
 
-  private handlers() {
-    const c = this._config;
-    return this.presses.handlers(
-      `media:${c.entity}`,
-      () => (c.tap_action ? handleAction(this, c.tap_action, c.entity, "tap") : this.moreInfo(c.entity)),
-      () => (c.hold_action ? handleAction(this, c.hold_action, c.entity, "hold") : this.moreInfo(c.entity)),
-    );
-  }
-
   private art(size: number, radius: number, off: boolean, picture?: string) {
     const c = this._config;
     const showPic = !off && picture && this._artFailed !== picture;
@@ -163,7 +153,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     const artist = hasMedia ? info.artist : stateLabel;
     const last = String(e?.attributes.app_name || e?.attributes.source || "");
     const src = off ? (last ? t("card.media.last", { x: last }) : "") : hasMedia ? name : last;
-    const h = this.handlers();
+    const h = this.actions(`media:${c.entity}`, c, c.entity);
 
     if (this.compact) {
       return html`<div data-fx ${pressable(h)} class="ltile" aria-label="${name} · ${title}${artist ? ` · ${artist}` : ""}"

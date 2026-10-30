@@ -49,7 +49,7 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
     enabled: () => false,
     commit: () => undefined,
     tap: () => (this._config.tap_action ? handleAction(this, this._config.tap_action, this._config.entity, "tap") : this.toggleMenu()),
-    hold: () => (this._config.hold_action ? handleAction(this, this._config.hold_action, this._config.entity, "hold") : this.moreInfo(this._config.entity)),
+    hold: () => this.holdAction(this._config, this._config.entity)(),
   });
 
   protected layer = new LayerController(this, () => (this._menu ? this.menu() : nothing), () => this.closeMenu(true));

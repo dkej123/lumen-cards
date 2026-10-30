@@ -4,11 +4,12 @@ import type { HassEntity, HassLike } from "../hass/types";
 import { setLanguage, setLocale, t } from "./i18n";
 import { injectFonts } from "../design/fonts";
 import { weather } from "../weather/engine";
-import { haptic, openMoreInfo } from "./actions";
+import { handleAction, haptic, openMoreInfo, type ActionConfig } from "./actions";
 import { colorVars, cssColor, shared } from "./styles";
 import "./form-editor";
 import type { CardForm, LumenFormEditor } from "./form-editor";
 import { editLabel, errorCard, sampleBadge, skeleton } from "./parts";
+import { Presses } from "./press";
 import { haConditions, visibilityLabels } from "./visibility";
 import { editPreview } from "./edit-preview";
 import type { SubButton } from "./sub-buttons";
@@ -44,6 +45,13 @@ export interface BaseConfig {
   edit_note?: string;
   /** Small extra buttons on the right (cards that have room for them). */
   sub_buttons?: SubButton[];
+}
+
+/** The tap / hold / double-tap options of a card (or of one item in it, e.g. a chip). */
+export interface CardActions {
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
 }
 
 /** Narrow screen (phones, portrait tablets): sheets instead of dialogs, text scale, FAB auto mode. */
@@ -107,6 +115,9 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     el.form = form;
     return el;
   }
+
+  /** Tap / hold / double-tap state of the card's pressable parts (timers die with the card). */
+  protected presses = new Presses((type) => this.haptic(type), this);
 
   /** Set by HA in the card editor / picker preview. */
   preview = false;
@@ -390,6 +401,21 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     }
     if (this.userStyle.textContent !== css) this.userStyle.textContent = css;
     if (this.userStyle.parentNode !== this.renderRoot) this.renderRoot.appendChild(this.userStyle);
+  }
+
+  /**
+   * Press handlers of `cfg`'s actions on `entity`. Tap: `o.tap` when given (the card runs
+   * `tap_action` itself), else the configured action, else more-info (`o.tap: null` = none).
+   * Hold: the configured action, else `o.hold`, else more-info. Double tap only when configured.
+   */
+  protected actions(key: string, cfg: CardActions, entity: string, o: { tap?: (() => void) | null; hold?: () => void } = {}) {
+    const tap = o.tap ?? (cfg.tap_action ? () => handleAction(this, cfg.tap_action, entity, "tap") : o.tap === null ? undefined : () => this.moreInfo(entity));
+    return this.presses.handlers(key, tap, this.holdAction(cfg, entity, o.hold), cfg.double_tap_action ? () => handleAction(this, cfg.double_tap_action, entity, "double_tap") : undefined);
+  }
+
+  /** The configured hold action on `entity`, else `fallback` (default more-info). */
+  protected holdAction(cfg: CardActions, entity: string, fallback?: () => void): () => void {
+    return () => (cfg.hold_action ? handleAction(this, cfg.hold_action, entity, "hold") : (fallback ?? (() => this.moreInfo(entity)))());
   }
 
   protected haptic(type = "light"): void {
