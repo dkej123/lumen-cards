@@ -1,12 +1,14 @@
-import { LitElement, css, html, unsafeCSS, type CSSResultGroup, type PropertyValues } from "lit";
+import { LitElement, html, unsafeCSS, type CSSResultGroup, type PropertyValues } from "lit";
 import { tokens } from "../design/tokens";
 import type { HassEntity, HassLike } from "../hass/types";
 import { setLanguage, setLocale, t } from "./i18n";
 import { injectFonts } from "../design/fonts";
 import { weather } from "../weather/engine";
 import { handleAction, haptic, openMoreInfo, type ActionConfig } from "./actions";
-import { colorVars, cssColor, shared } from "./styles";
+import { cssColor, shared } from "./styles";
 import { findAncestor } from "./dom";
+import { HostLook } from "./controllers/host-look";
+import { UserStyles } from "./controllers/user-styles";
 import "./form-editor";
 import type { CardForm, LumenFormEditor } from "./form-editor";
 import { editLabel, errorCard, sampleBadge, skeleton } from "./parts";
@@ -66,15 +68,6 @@ export const GRID = {
 export const WIDE_PX = 1024;
 const wideQuery: MediaQueryList | undefined = typeof matchMedia === "undefined" ? undefined : matchMedia(`(min-width: ${WIDE_PX}px)`);
 
-// Fonts live next to the bundle (served at /hacsfiles/lumen-cards/).
-if (typeof document !== "undefined") injectFonts(import.meta.url.replace(/[^/]*$/, ""));
-
-
-/**
- * Base of every Lumen card: config validation hooks, `hass` gating (re-render only when the
- * card's own entities, the user, theme or language change), theme/variant/accent on the host,
- * weather surface registration and timers that die with the card.
- */
 /** CSS max-width from `max_width` (+ unit): 320 → 320px, 80 + "%" → 80%, "80%" / "320px" as written; % is capped at 100. */
 export function maxWidthCss(v: unknown, unit?: string): string | undefined {
   const m = /^\s*(\d+(?:[.,]\d+)?)\s*(px|%)?\s*$/.exec(String(v ?? ""));
@@ -85,6 +78,11 @@ export function maxWidthCss(v: unknown, unit?: string): string | undefined {
   return u === "%" ? `${Math.min(n, 100)}%` : `${n}px`;
 }
 
+/**
+ * Base of every Lumen card: config validation hooks, `hass` gating (re-render only when the
+ * card's own entities, the user, theme or language change), theme/variant/accent on the host,
+ * weather surface registration and timers that die with the card.
+ */
 export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends LitElement {
   static properties = {
     preview: { type: Boolean },
@@ -131,6 +129,18 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     el.form = form;
     return el;
   }
+
+  protected readonly hostLook = new HostLook(this, () => ({
+    dark: this.dark,
+    accent: cssColor(this._config?.accent_color),
+    glow: cssColor(this._config?.glow_color),
+    effects: this.effects,
+    maxWidth: maxWidthCss(this._config?.max_width, this._config?.max_width_unit),
+    align: this.align,
+  }));
+  protected readonly userStyles = new UserStyles(this, () => (typeof this._config?.styles === "string" ? this._config.styles : ""));
+  /** HA visibility conditions around the card while the dashboard is edited (worked out once per update). */
+  private editConds?: ReturnType<typeof haConditions>;
 
   /** Tap / hold / double-tap state of the card's pressable parts (timers die with the card). */
   protected presses = new Presses((type) => this.haptic(type), this);
@@ -229,8 +239,7 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
    * copy per screen size), without telling them apart – label them, plus the card's `edit_note`.
    */
   private withEditLabel(content: unknown) {
-    if (!this.preview || !this.isConnected) return content;
-    const conds = haConditions(this);
+    const conds = this.editConds;
     if (!conds) return content;
     const labels = [...visibilityLabels(conds.card), ...visibilityLabels(conds.section).map((l) => ({ ...l, section: true }))];
     const note = typeof this._config?.edit_note === "string" ? this._config.edit_note.trim() : "";
@@ -256,8 +265,10 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   set hass(hass: HassLike) {
     const prev = this._hass;
     this._hass = hass;
-    setLanguage(hass.locale?.language ?? hass.language);
-    setLocale(hass.locale);
+    if (!prev || prev.language !== hass.language || prev.locale !== hass.locale) {
+      setLanguage(hass.locale?.language ?? hass.language);
+      setLocale(hass.locale);
+    }
     this.onHass(hass);
     if (!prev || this.changed(prev, hass)) this.requestUpdate();
   }
@@ -305,6 +316,11 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     return t === "auto" ? !!this._hass?.themes?.darkMode : t === "dark";
   }
 
+  /** Where the card sits when `max_width` makes it narrower than its place (cards with an `align` option). */
+  protected get align(): "start" | "center" | "end" | undefined {
+    return undefined;
+  }
+
   /** Glow colour of lit lights: the configured one, a theme-wide override, else `auto`. */
   glowColor(auto: string): string {
     return cssColor(this._config?.glow_color) ?? `var(--lumen-cards-glow-color, ${auto})`;
@@ -316,6 +332,8 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
 
   connectedCallback(): void {
     super.connectedCallback();
+    // Fonts live next to the bundle (served at /hacsfiles/lumen-cards/); injected once.
+    injectFonts(import.meta.url.replace(/[^/]*$/, ""));
     wideQuery?.addEventListener("change", this.onWide);
     this._wide = wideQuery?.matches ?? true;
     weather.register(this);
@@ -345,18 +363,6 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     requestAnimationFrame(() => this.requestUpdate());
   };
 
-  /**
-   * `--lumen-accent`, `-soft`, `-ink`, `-shadow`, `-fill-a`, `-fill-b`, `-glow` (and the same for
-   * `--lumen-glow-*`) on the host from a user colour; removed when the option is cleared.
-   */
-  private userColor(name: string, c: string | undefined): void {
-    const vars = colorVars(name, c ?? "transparent");
-    for (const [k, v] of Object.entries(vars)) {
-      if (c) this.style.setProperty(k, v);
-      else this.style.removeProperty(k);
-    }
-  }
-
   /** setInterval that is cleared when the card leaves the DOM (re-added on reconnect by the caller). */
   protected every(ms: number, fn: () => void): void {
     this.timers.push(window.setInterval(fn, ms));
@@ -364,48 +370,14 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
 
   protected willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed);
-    this.setAttribute("data-lumen-theme", this.dark ? "dark" : "light");
-    // User colours (section 16): one colour C → fill, glow, icon background, shadow and ink.
-    this.userColor("accent", cssColor(this._config?.accent_color));
-    this.userColor("glow", cssColor(this._config?.glow_color));
-    this.toggleAttribute("data-wfx-card", this.effects);
-    const mw = maxWidthCss(this._config?.max_width, this._config?.max_width_unit);
-    if (mw) {
-      this.style.maxWidth = mw;
-      this.style.marginInline = "auto";
-      // A grid cell with auto margins shrinks to the content: keep the full (capped) width.
-      this.style.width = "100%";
-    } else {
-      this.style.removeProperty("max-width");
-      this.style.removeProperty("margin-inline");
-      this.style.removeProperty("width");
-    }
+    this.editConds = this.preview && this.isConnected ? haConditions(this) : undefined;
   }
 
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
-    if (this.preview && haConditions(this)) editPreview.add(this);
+    if (this.editConds) editPreview.add(this);
     else editPreview.remove(this);
-    this.applyUserStyles();
     weather.scan(this);
-  }
-
-  private userStyle?: HTMLStyleElement;
-
-  /** `styles` from the config, after the card's own CSS (so it wins). */
-  private applyUserStyles(): void {
-    const css = typeof this._config?.styles === "string" ? this._config.styles : "";
-    if (!css) {
-      this.userStyle?.remove();
-      this.userStyle = undefined;
-      return;
-    }
-    if (!this.userStyle) {
-      this.userStyle = document.createElement("style");
-      this.userStyle.className = "lumen-user-styles";
-    }
-    if (this.userStyle.textContent !== css) this.userStyle.textContent = css;
-    if (this.userStyle.parentNode !== this.renderRoot) this.renderRoot.appendChild(this.userStyle);
   }
 
   /**
@@ -431,5 +403,5 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     openMoreInfo(this, entityId);
   }
 
-  static styles: CSSResultGroup = [tokens, unsafeCSS(shared), css``];
+  static styles: CSSResultGroup = [tokens, unsafeCSS(shared)];
 }

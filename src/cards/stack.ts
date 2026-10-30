@@ -61,14 +61,12 @@ abstract class LumenStackCard extends LumenContainerCard<StackConfig> {
     return { align: "center" };
   }
 
+  protected get align() {
+    return this._config?.align;
+  }
+
   protected willUpdate(changed: Map<PropertyKey, unknown>): void {
     super.willUpdate(changed);
-    // the base centres a capped card; start / end keep it at one side
-    if (this.style.maxWidth) {
-      const a = this._config?.align;
-      this.style.marginLeft = a === "start" ? "0" : "auto";
-      this.style.marginRight = a === "end" ? "0" : "auto";
-    }
     for (const c of this.inner.cards) c.preview = this.preview;
   }
 
