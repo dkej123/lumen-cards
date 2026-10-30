@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { appearance, type Schema } from "../core/form";
+import { appearance, type Schema, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -180,6 +180,7 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
           { name: "narrow_only", default: false, selector: { boolean: {} } },
         ],
       },
+      hapticsField,
       appearance({ layout: false, effects: false }),
     ]);
   }

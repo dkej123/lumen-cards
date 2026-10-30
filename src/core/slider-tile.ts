@@ -1,6 +1,7 @@
 import { html, nothing, type ReactiveControllerHost } from "lit";
 import type { HassEntity } from "../hass/types";
 import { fractionAt } from "../logic/slider";
+import { DragTicks, haptic } from "./actions";
 import { icon } from "./lumen-icon";
 import { glass, prevent, stop } from "./styles";
 
@@ -60,8 +61,11 @@ export class SlideDrag {
   }
 
   private haptic(type = "light") {
-    this.host.dispatchEvent(new CustomEvent("haptic", { detail: type, bubbles: true, composed: true }));
+    haptic(this.host as unknown as EventTarget, type);
   }
+
+  /** Gentle ticks every 5 % while the value is dragged. */
+  private ticks = new DragTicks(5);
 
   private finish(f: number) {
     this.pend = { f, from: this.opts.source?.(), until: Date.now() + PENDING_MS };
@@ -108,6 +112,7 @@ export class SlideDrag {
         window.clearTimeout(this.holdTimer);
         if (!this.opts.enabled()) return;
         p.dragging = true;
+        this.ticks.start(fractionAt(e.clientX, p.rect) * 100);
         try {
           p.el.setPointerCapture(p.id);
         } catch {
@@ -115,6 +120,7 @@ export class SlideDrag {
         }
       }
       this.frac = fractionAt(e.clientX, p.rect);
+      this.ticks.move(this.host as unknown as EventTarget, Math.round(this.frac * 100), 0, 100);
       this.host.requestUpdate();
     },
     up: (e: PointerEvent) => {
@@ -123,6 +129,7 @@ export class SlideDrag {
       if (!p) return;
       this.press = null;
       if (p.dragging) {
+        this.ticks.end();
         const f = this.frac ?? fractionAt(e.clientX, p.rect);
         this.frac = null;
         this.finish(f);

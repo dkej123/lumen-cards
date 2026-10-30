@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { appearance, fabSideField } from "../core/form";
+import { appearance, fabSideField, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { FAB_ORDER, fabBottom, fabEdge, fabSideOf, fabSize, fabSlot, LayerController, releaseFab } from "../core/layer";
@@ -336,6 +336,7 @@ export class LumenFabSheetCard extends LumenBaseCard<FabSheetConfig> {
       fabSideField,
       { name: "badge_entities", selector: { entity: { multiple: true } } },
       { name: "cards", helper: "fab_sheet_cards", selector: { object: {} } },
+      hapticsField,
       appearance({ layout: false, effects: false }),
     ]);
   }

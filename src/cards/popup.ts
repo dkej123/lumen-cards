@@ -1,6 +1,6 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { appearance } from "../core/form";
+import { appearance, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -190,6 +190,7 @@ export class LumenPopupCard extends LumenBaseCard<PopupConfig> {
         ],
       },
       { name: "cards", selector: { object: {} } },
+      hapticsField,
       appearance({ layout: false, effects: false, accent: false }),
     ]);
   }

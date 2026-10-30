@@ -1,6 +1,6 @@
 import { html, nothing, type ReactiveController, type TemplateResult } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { handleAction } from "../core/actions";
+import { DragTicks, handleAction, haptic } from "../core/actions";
 import type { LumenBaseCard } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { t } from "../core/i18n";
@@ -159,8 +159,11 @@ export class LightsController implements ReactiveController {
   }
 
   private haptic(type = "light") {
-    this.host.dispatchEvent(new CustomEvent("haptic", { detail: type, bubbles: true, composed: true }));
+    haptic(this.host, type);
   }
+
+  /** Gentle ticks while a brightness / white / colour value is dragged. */
+  private ticks = new DragTicks(5);
 
   private moreInfo(entityId: string) {
     this.host.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId }, bubbles: true, composed: true }));
@@ -340,6 +343,7 @@ export class LightsController implements ReactiveController {
         const l = this.light(item);
         if (!l.dim || l.una) return;
         d.dragging = true;
+        this.ticks.start(l.on ? l.b : 0);
         try {
           d.el.setPointerCapture(e.pointerId);
         } catch {
@@ -348,6 +352,7 @@ export class LightsController implements ReactiveController {
       }
       const b = Math.round(Math.max(1, Math.min(100, ((e.clientX - d.left) / d.w) * 100)));
       d.cur = b;
+      this.ticks.move(this.host, b, 1, 100);
       this.overrides.set(item.entity, { ...this.overrides.get(item.entity), on: true, b });
       this.requestUpdate();
     };
@@ -358,6 +363,7 @@ export class LightsController implements ReactiveController {
       this.drag = null;
       if (d.moved) this.dragEnd = performance.now();
       if (d.dragging) {
+        this.ticks.end();
         this.haptic();
         if (d.cur !== undefined) this.setBrightness(item, d.cur);
       } else if (!d.moved && !d.held && !onSwatch(e)) this.tapOrDouble(item);
@@ -560,6 +566,7 @@ export class LightsController implements ReactiveController {
     const set = (e: PointerEvent) => {
       const r = this.slideRect!;
       const p = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      this.ticks.move(this.host, Math.round(p * 100), 0, 100);
       if (kind === "b") {
         const b = Math.round(p * 100);
         this.overrides.set(item.entity, b < 1 ? { on: false } : { ...this.overrides.get(item.entity), on: true, b });
@@ -594,6 +601,7 @@ export class LightsController implements ReactiveController {
       down: (e: PointerEvent) => {
         this.slideRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         this.sliding = kind;
+        this.ticks.end();
         try {
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         } catch {
@@ -607,6 +615,7 @@ export class LightsController implements ReactiveController {
       up: () => {
         if (this.sliding !== kind) return;
         this.sliding = null;
+        this.ticks.end();
         this.haptic();
         const ov = this.overrides.get(item.entity) ?? {};
         if (kind === "b") this.setBrightness(item, ov.on === false ? 0 : (ov.b ?? 100));

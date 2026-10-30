@@ -20,8 +20,61 @@ export const fireEvent = (node: EventTarget, type: string, detail?: unknown): vo
 /** Native HA more-info dialog. */
 export const openMoreInfo = (node: EventTarget, entityId: string): void => fireEvent(node, "hass-more-info", { entityId });
 
-/** Companion-app haptics: success, warning, failure, light, medium, heavy, selection. */
-export const haptic = (node: EventTarget, type: string): void => fireEvent(node, "haptic", type);
+/** Vibration (ms) in a plain mobile browser, where HA's `haptic` event does nothing. */
+const VIBRATE: Record<string, number | number[]> = { selection: 6, light: 10, medium: 18, heavy: 28, success: [12, 40, 12], warning: [20, 60, 20], failure: [30, 60, 30] };
+
+/** Running inside the HA companion app (it turns `haptic` events into native haptics). */
+const inApp = () => {
+  if (typeof window === "undefined") return false;
+  const w = window as unknown as { externalApp?: unknown; webkit?: { messageHandlers?: { externalBus?: unknown } } };
+  return !!w.externalApp || !!w.webkit?.messageHandlers?.externalBus;
+};
+
+/**
+ * Haptics: success, warning, failure, light, medium, heavy, selection. The companion app maps HA's
+ * `haptic` event to native feedback; a mobile browser gets a short navigator.vibrate (Android).
+ */
+export const haptic = (node: EventTarget, type: string): void => {
+  // `haptics: false` on the card (default on) silences it.
+  if ((node as { _config?: { haptics?: boolean } })._config?.haptics === false) return;
+  fireEvent(node, "haptic", type);
+  if (!inApp() && typeof navigator !== "undefined" && "vibrate" in navigator) {
+    try {
+      navigator.vibrate(VIBRATE[type] ?? 10);
+    } catch {
+      /* not allowed before a user gesture */
+    }
+  }
+};
+
+/**
+ * Gentle ticks while a value is dragged (brightness, speed, position, volume…): a `selection`
+ * tick every `step` units and a firmer `medium` one at either end of the scale.
+ */
+export class DragTicks {
+  private last: number | null = null;
+  constructor(private step = 5) {}
+
+  /** The drag starts at `value` (no tick). */
+  start(value: number): void {
+    this.last = Math.round(value / this.step);
+  }
+
+  move(node: EventTarget, value: number, min = 0, max = 100): void {
+    const bucket = Math.round(value / this.step);
+    if (this.last === null) {
+      this.last = bucket;
+      return;
+    }
+    if (bucket === this.last) return;
+    this.last = bucket;
+    haptic(node, value <= min || value >= max ? "medium" : "selection");
+  }
+
+  end(): void {
+    this.last = null;
+  }
+}
 
 /**
  * A configured action goes to HA's own handler (`hass-action`), so confirmation, navigation,

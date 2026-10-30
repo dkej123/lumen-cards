@@ -67,6 +67,7 @@ const LABELS: Record<string, string> = {
   done_action: "editor.done_action",
   battery_entity: "editor.battery_entity",
   step: "editor.step",
+  haptics: "editor.haptics",
   fab_side: "editor.fab_side",
   device_class: "editor.device_class",
   battery_low: "editor.battery_low",
@@ -119,6 +120,7 @@ const HELPERS: Record<string, string> = {
   max_width: "editor.help.max_width",
   battery_entity: "editor.help.battery_entity",
   step: "editor.help.step",
+  haptics: "editor.help.haptics",
   fab_side: "editor.help.fab_side",
   device_class: "editor.help.device_class",
   sub_buttons: "editor.help.sub_buttons",
@@ -187,9 +189,13 @@ export const advanced = (shows: [string, boolean?][] = [], opts: { subButtons?: 
     ...(shows.length ? [{ name: "", type: "grid", flatten: true, schema: shows.map(([name, def = true]) => ({ name, default: def, selector: { boolean: {} } })) }] : []),
     ...(opts.extra ?? []),
     ...(opts.subButtons ? [subButtonsField()] : []),
+    hapticsField,
     { name: "styles", selector: { text: { multiline: true } } },
   ],
 });
+
+/** Vibration feedback (taps, holds, drag ticks); on by default. */
+export const hapticsField: Schema = { name: "haptics", default: true, selector: { boolean: {} } };
 
 /** Floating-button fields (climate, scene chips). */
 /** Side of the floating button (left for left-handed use). */

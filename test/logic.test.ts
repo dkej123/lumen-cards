@@ -150,3 +150,29 @@ describe("thermostat battery (Better Thermostat)", async () => {
     expect(batteryLevel(e("climate.x", "heat"), undefined)).toBeNull();
   });
 });
+
+describe("drag haptics", async () => {
+  const { DragTicks } = await import("../src/core/actions");
+  it("a selection tick every 5 %, medium at the ends, nothing within a step", () => {
+    const fired: string[] = [];
+    const node = new EventTarget();
+    node.addEventListener("haptic", (e) => fired.push((e as CustomEvent).detail));
+    const t = new DragTicks(5);
+    t.start(50);
+    t.move(node, 51);
+    t.move(node, 52);
+    expect(fired).toEqual([]);
+    t.move(node, 56);
+    t.move(node, 61);
+    t.move(node, 100);
+    expect(fired).toEqual(["selection", "selection", "medium"]);
+  });
+  it("haptics: false on the card silences it", async () => {
+    const { haptic } = await import("../src/core/actions");
+    const fired: string[] = [];
+    const card = Object.assign(new EventTarget(), { _config: { haptics: false } });
+    card.addEventListener("haptic", (e) => fired.push((e as CustomEvent).detail));
+    haptic(card, "light");
+    expect(fired).toEqual([]);
+  });
+});

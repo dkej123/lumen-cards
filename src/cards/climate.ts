@@ -2,7 +2,7 @@ import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
-import { appearance, fabFields, firstOf, form, stub } from "../core/form";
+import { appearance, fabFields, firstOf, form, hapticsField, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, fabBottom, fabEdge, fabSideOf, fabSlot, LayerController, releaseFab } from "../core/layer";
 import { Presses, pressable } from "../core/press";
@@ -735,6 +735,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
               { name: "battery_low", selector: { number: { min: 1, max: 99, step: 1, mode: "box", unit_of_measurement: "%" } } },
             ],
           },
+          hapticsField,
           { name: "styles", selector: { text: { multiline: true } } },
         ],
       },

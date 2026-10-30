@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { handleAction, type ActionConfig } from "./actions";
+import { handleAction, haptic, type ActionConfig } from "./actions";
 import type { LumenBaseCard } from "./base-card";
 import { t } from "./i18n";
 import { icon } from "./lumen-icon";
@@ -42,7 +42,7 @@ export class SubButtons {
   private presses: Presses;
 
   constructor(private host: LumenBaseCard) {
-    this.presses = new Presses((type) => host.dispatchEvent(new CustomEvent("haptic", { detail: type ?? "light", bubbles: true, composed: true })));
+    this.presses = new Presses((type) => haptic(host, type ?? "light"));
   }
 
   dispose() {
