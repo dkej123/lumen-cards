@@ -3,7 +3,7 @@ import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
-import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
+import { actions, advanced, appearance, firstOf, form, nameIcon, stub } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
@@ -149,7 +149,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   static getConfigForm() {
     return form([
       { name: "entity", required: true, selector: { entity: {} } },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      nameIcon(),
       { name: "device_class", selector: { select: { mode: "dropdown", options: ["door", "garage_door", "window", "opening", "moisture", "smoke", "motion", "occupancy"].map((value) => ({ value, label: t(`editor.device_class.${value}`) })) } } },
       actions(),
       advanced([["show_name"], ["show_icon"], ["show_state"]], { subButtons: true }),

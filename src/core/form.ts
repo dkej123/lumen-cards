@@ -113,6 +113,22 @@ const LABELS: Record<string, string> = {
   show_minmax: "editor.show_minmax",
   show_hours: "editor.show_hours",
   show_warnings: "editor.show_warnings",
+  show_tilt: "editor.show_tilt",
+  show_volume: "editor.show_volume",
+  show_progress: "editor.show_progress",
+  show_source: "editor.show_source",
+  show_title: "editor.show_title",
+  icon_animation: "editor.icon_animation",
+  secondary_entity: "editor.secondary_entity",
+  days: "editor.days",
+  max_events: "editor.max_events",
+  items: "editor.nav_items",
+  position: "editor.nav_position",
+  narrow_only: "editor.narrow_only",
+  hash: "editor.hash",
+  show_trigger: "editor.show_trigger",
+  auto_close: "editor.auto_close",
+  badge_entities: "editor.badge_entities",
 };
 
 const HELPERS: Record<string, string> = {
@@ -152,6 +168,17 @@ const HELPERS: Record<string, string> = {
   disarmed_color: "editor.help.disarmed_color",
   height: "editor.help.height",
   warnings_entity: "editor.help.warnings_entity",
+  secondary_entity: "editor.help.secondary_entity",
+  days: "editor.help.days",
+  items: "editor.help.nav_items",
+  position: "editor.help.nav_position",
+  hash: "editor.help.hash",
+  cards: "editor.help.cards",
+  show_trigger: "editor.help.show_trigger",
+  auto_close: "editor.help.auto_close",
+  badge_entities: "editor.help.badge_entities",
+  narrow_only_fab: "editor.help.narrow_only_fab",
+  fab_sheet_cards: "editor.help.fab_sheet_cards",
 };
 
 /** A field's own `title` wins over the shared label of its name (e.g. `hours` of the weather card). */
@@ -256,7 +283,7 @@ export const fabFields = (): Schema[] => [
   fabSideField,
 ];
 
-export const actions = (withTap = true): Schema => ({
+export const actions = (withTap = true, withDouble = true): Schema => ({
   name: "",
   type: "expandable",
   flatten: true,
@@ -265,7 +292,8 @@ export const actions = (withTap = true): Schema => ({
   schema: [
     ...(withTap ? [{ name: "tap_action", selector: { ui_action: {} } }] : []),
     { name: "hold_action", selector: { ui_action: {} } },
-    { name: "double_tap_action", selector: { ui_action: {} } },
+    // slider tiles: a horizontal drag is not a double tap
+    ...(withDouble ? [{ name: "double_tap_action", selector: { ui_action: {} } }] : []),
   ],
 });
 
@@ -273,6 +301,17 @@ export const actions = (withTap = true): Schema => ({
  * Editor form. `assertConfig` throws only for configs the form cannot show (HA then falls back to
  * the YAML editor) – never for a field that is just empty while the user edits.
  */
+/** `name` + `icon` side by side. */
+export const nameIcon = (): Schema => ({
+  name: "",
+  type: "grid",
+  flatten: true,
+  schema: [
+    { name: "name", selector: { text: {} } },
+    { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
+  ],
+});
+
 export function form(schema: Schema[], assertConfig?: (c: Record<string, unknown>) => void) {
   return { schema, computeLabel, computeHelper, assertConfig };
 }

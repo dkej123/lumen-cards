@@ -2,8 +2,7 @@ import { css, html, nothing, unsafeCSS } from "lit";
 import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, entityStub } from "../core/form";
-import { formX, nameIcon, tapHold } from "../core/form-extra";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
 import { WFX } from "../core/parts";
@@ -211,10 +210,10 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   static getStubConfig = entityStub("media_player", "media_player.example");
 
   static getConfigForm() {
-    return formX([
+    return form([
       { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
       nameIcon(),
-      tapHold(),
+      actions(true, false),
       advanced([["show_progress"], ["show_volume"], ["show_source"]]),
       appearance({ layout: "width" }),
     ]);

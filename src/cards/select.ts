@@ -3,8 +3,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { Pending } from "../core/controllers/pending";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, firstOf, stub } from "../core/form";
-import { formX, nameIcon, tapHold } from "../core/form-extra";
+import { actions, advanced, appearance, firstOf, form, nameIcon, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
@@ -227,11 +226,11 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
   }
 
   static getConfigForm() {
-    return formX([
+    return form([
       { name: "entity", required: true, selector: { entity: { domain: ["input_select", "select"] } } },
       nameIcon(),
       { name: "secondary_entity", selector: { entity: {} } },
-      tapHold(),
+      actions(true, false),
       advanced(),
       appearance({ layout: "width" }),
     ]);

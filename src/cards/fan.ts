@@ -2,8 +2,7 @@ import { css, nothing, unsafeCSS } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, entityStub } from "../core/form";
-import { formX, nameIcon, tapHold } from "../core/form-extra";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, sliderTile } from "../core/slider-tile";
@@ -120,10 +119,10 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
   static getStubConfig = entityStub("fan", "fan.example");
 
   static getConfigForm() {
-    return formX([
+    return form([
       { name: "entity", required: true, selector: { entity: { domain: "fan" } } },
       nameIcon(),
-      tapHold(),
+      actions(true, false),
       advanced([["show_state"], ["icon_animation"]]),
       appearance({ layout: "width" }),
     ]);

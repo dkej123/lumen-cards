@@ -3,8 +3,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { Pending } from "../core/controllers/pending";
 import { callOrToast, entityName } from "../core/call";
-import { advanced, appearance, entityStub } from "../core/form";
-import { formX, nameIcon, tapHold } from "../core/form-extra";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, segButtons, sliderTile, thinBar } from "../core/slider-tile";
@@ -176,10 +175,10 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   static getStubConfig = entityStub("cover", "cover.example");
 
   static getConfigForm() {
-    return formX([
+    return form([
       { name: "entity", required: true, selector: { entity: { domain: "cover" } } },
       nameIcon(),
-      tapHold(),
+      actions(true, false),
       advanced([["show_state"], ["show_buttons"], ["show_tilt"]]),
       appearance({ layout: "width" }),
     ]);

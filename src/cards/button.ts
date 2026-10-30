@@ -4,7 +4,7 @@ import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { cssColor } from "../core/styles";
-import { actions, advanced, appearance, entityStub, form } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
@@ -286,7 +286,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     return form(
       [
         { name: "entity", required: true, selector: { entity: {} } },
-        { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+        nameIcon(),
         { name: "color", selector: { ui_color: {} } },
         {
           name: "secondary_info",

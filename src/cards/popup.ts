@@ -1,8 +1,7 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { LumenBaseCard } from "../core/base-card";
 import { LumenContainerCard, type ContainerConfig } from "../core/container-card";
-import { appearance, hapticsField } from "../core/form";
-import { formX } from "../core/form-extra";
+import { appearance, form, hapticsField } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { registerCard } from "../core/register";
@@ -152,7 +151,7 @@ export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
   }
 
   static getConfigForm() {
-    return formX([
+    return form([
       { name: "hash", required: true, selector: { text: {} } },
       {
         name: "",

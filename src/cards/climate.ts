@@ -4,7 +4,7 @@ import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
-import { appearance, entityStub, fabFields, form, hapticsField } from "../core/form";
+import { appearance, entityStub, fabFields, form, hapticsField, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { WFX } from "../core/parts";
@@ -628,7 +628,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   static getConfigForm() {
     return form([
       { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      nameIcon(),
       {
         name: "",
         type: "grid",

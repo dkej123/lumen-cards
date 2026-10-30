@@ -1,7 +1,7 @@
 import { css, html, nothing, svg, type TemplateResult } from "lit";
 import { ref } from "lit/directives/ref.js";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { advanced, appearance, form, stub } from "../core/form";
+import { advanced, appearance, form, select, stub } from "../core/form";
 import { locale, t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
@@ -665,7 +665,6 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
   }
 
   static getConfigForm() {
-    const select = (options: [string, string][]) => ({ select: { mode: "dropdown", options: options.map(([value, label]) => ({ value, label: t(label) })) } });
     return form([
       { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
       { name: "warnings_entity", selector: { entity: { domain: ["sensor", "binary_sensor"] } } },

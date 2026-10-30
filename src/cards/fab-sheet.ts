@@ -2,8 +2,7 @@ import { html, nothing } from "lit";
 import { type BaseConfig } from "../core/base-card";
 import { assertCards, LumenContainerCard } from "../core/container-card";
 import { PENDING_MS } from "../core/controllers/pending";
-import { appearance, fabSideField, hapticsField } from "../core/form";
-import { formX } from "../core/form-extra";
+import { appearance, fabSideField, form, hapticsField } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
@@ -299,7 +298,7 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
   }
 
   static getConfigForm() {
-    return formX([
+    return form([
       {
         name: "",
         type: "grid",

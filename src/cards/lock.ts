@@ -4,7 +4,7 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { icon } from "../core/lumen-icon";
-import { actions, advanced, appearance, entityStub, form } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { pressable } from "../core/press";
@@ -347,7 +347,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   static getConfigForm() {
     return form([
       { name: "entity", required: true, selector: { entity: { domain: "lock" } } },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      nameIcon(),
       { name: "busy_entity", selector: { entity: { domain: ["input_boolean", "binary_sensor", "switch"] } } },
       actions(),
       advanced([["show_state"]]),

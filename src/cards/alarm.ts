@@ -4,7 +4,7 @@ import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
-import { actions, advanced, appearance, entityStub, form } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { SubButtons } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -338,7 +338,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   static getConfigForm() {
     return form([
       { name: "entity", required: true, selector: { entity: { domain: "alarm_control_panel" } } },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      nameIcon(),
       { name: "arm_modes", selector: { select: { multiple: true, mode: "list", options: ["armed_home", "armed_away", "armed_night", "armed_vacation", "armed_custom_bypass"].map((value) => ({ value, label: modeLabel(value) })) } } },
       {
         name: "",

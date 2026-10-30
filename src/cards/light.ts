@@ -1,6 +1,6 @@
 import { html } from "lit";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { actions, advanced, appearance, entityStub, form } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { COMPACT_H } from "../core/status-row";
@@ -66,15 +66,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
   static getConfigForm() {
     return form([
       { name: "entity", required: true, selector: { entity: { domain: "light" } } },
-      {
-        name: "",
-        type: "grid",
-        flatten: true,
-        schema: [
-          { name: "name", selector: { text: {} } },
-          { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-        ],
-      },
+      nameIcon(),
       { name: "power_entity", selector: { entity: { domain: ["switch", "light", "input_boolean"] } } },
       actions(),
       advanced([["show_state"], ["show_color_button"]]),

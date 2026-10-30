@@ -3,7 +3,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
-import { advanced, appearance, firstOf, form, stub } from "../core/form";
+import { advanced, appearance, firstOf, form, nameIcon, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { activate } from "../core/press";
@@ -207,7 +207,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     return form([
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", selector: { select: { mode: "dropdown", options: colors } } }] },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+      nameIcon(),
       { name: "", type: "grid", flatten: true, schema: [{ name: "value", selector: { text: {} } }, { name: "value_entity", selector: { entity: {} } }] },
       { name: "show_chip", default: true, selector: { boolean: {} } },
       {

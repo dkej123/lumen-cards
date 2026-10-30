@@ -2,8 +2,7 @@ import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
-import { advanced, appearance, entityStub } from "../core/form";
-import { formX, tapHold } from "../core/form-extra";
+import { actions, advanced, appearance, entityStub, form } from "../core/form";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
 import { WFX } from "../core/parts";
@@ -156,7 +155,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
   static getStubConfig = entityStub("calendar", "calendar.home");
 
   static getConfigForm() {
-    return formX([
+    return form([
       { name: "entity", required: true, selector: { entity: { domain: "calendar" } } },
       {
         name: "",
@@ -169,7 +168,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
           { name: "max_events", default: 5, selector: { number: { min: 1, max: 30, step: 1, mode: "box" } } },
         ],
       },
-      tapHold(),
+      actions(true, false),
       advanced([["show_title"]]),
       appearance({ layout: false, accent: false }),
     ]);
