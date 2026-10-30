@@ -595,7 +595,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 | `hours` | How many hours the chart covers | 12 |
 | `color` | Colour of the chart | accent colour |
 | `show_name`, `show_graph` | Show the name / the chart | on |
-| `stale_after` | After how many hours without a new reading the card shows it as outdated | 2 |
+| `stale_after` | After how many hours without a new reading the card shows it as outdated. Empty or 0 = never (many thermometers only report when the temperature changes). | none |
 
 <a id="lumen-climate-card"></a>
 

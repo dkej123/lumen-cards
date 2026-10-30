@@ -490,7 +490,7 @@
   "editor.help.presence_entity": "E.g. a BLE sensor; without it the person's zone counts",
   "editor.help.secondary_entity": "Its state is the second line (e.g. the vacuum status)",
   "editor.help.show_trigger": "A row in the dashboard that opens the pop-up; off = the card is invisible",
-  "editor.help.stale_after": "No new reading for this long = dashed card, \"Outdated · 3 h\"",
+  "editor.help.stale_after": "Empty or 0 = never. No new reading for this many hours = dashed card, \"Outdated · 3 h\". Many thermometers only report when the temperature changes",
   "editor.help.step": "How much − and + change the setpoint. Empty = the device's step",
   "editor.help.styles": "CSS added to the card, e.g. .press { border-radius: 8px }",
   "editor.help.sub_buttons": "Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden",

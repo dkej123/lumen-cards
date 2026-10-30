@@ -24,7 +24,7 @@ export interface SensorConfig extends BaseConfig {
   double_tap_action?: ActionConfig;
   show_name?: boolean;
   show_graph?: boolean;
-  /** Hours without a new reading after which the value counts as outdated (dashed card). Default 2. */
+  /** Hours without a new reading after which the value counts as outdated (dashed card). Default none. */
   stale_after?: number;
 }
 
@@ -101,7 +101,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
       c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
     );
     const una = isUnavailable(e);
-    const stale = sensorStale(e, Number(c.stale_after ?? 2));
+    const stale = sensorStale(e, Number(c.stale_after ?? 0));
     const name2 = c.show_name === false ? "" : stale ? `${name} · ${formatAgo(e!.last_reported ?? e!.last_updated)}` : name;
     const label = stale ? `${name} ${value} · ${t("card.sensor.stale", { x: formatAgo(e!.last_reported ?? e!.last_updated) })}` : `${name} ${value}`;
     const border = una || stale ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)";
@@ -150,7 +150,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
           { name: "color", selector: { ui_color: {} } },
         ],
       },
-      { name: "stale_after", default: 2, selector: { number: { min: 0, max: 168, step: 0.5, mode: "box", unit_of_measurement: "h" } } },
+      { name: "stale_after", selector: { number: { min: 0, max: 168, step: 0.5, mode: "box", unit_of_measurement: "h" } } },
       actions(),
       advanced([["show_name"], ["show_graph"]]),
       appearance({ layout: "width" }),

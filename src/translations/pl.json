@@ -490,7 +490,7 @@
   "editor.help.presence_entity": "Np. czujnik BLE; bez niego liczy się strefa osoby",
   "editor.help.secondary_entity": "Jej stan jest drugą linią (np. stan odkurzacza)",
   "editor.help.show_trigger": "Wiersz w dashboardzie otwierający pop-up; wyłączony = karta niewidoczna",
-  "editor.help.stale_after": "Brak nowego odczytu przez tyle czasu = przerywana ramka, „Nieaktualne · 3 h”",
+  "editor.help.stale_after": "Puste lub 0 = nigdy. Brak nowego odczytu przez tyle godzin = przerywana ramka, „Nieaktualne · 3 h”. Wiele termometrów wysyła odczyt tylko przy zmianie temperatury",
   "editor.help.step": "O ile zmieniają nastawę przyciski − i +. Puste = krok z urządzenia",
   "editor.help.styles": "CSS wstawiany do karty, np. .press { border-radius: 8px }",
   "editor.help.sub_buttons": "Małe przyciski po prawej stronie karty, każdy z własną encją i akcją. Widać najwyżej 4, na wąskiej karcie 2, w kompakcie 1; reszta jest ukryta",

@@ -250,7 +250,10 @@ describe("09 climate", () => {
 describe("10 sensor / 11 air quality", () => {
   it("outdated: dashed frame and the age; unavailable: dash and no chart", async () => {
     const h = hass(ent("sensor.balcony", "8.1", { unit_of_measurement: "°C", device_class: "temperature" }, 3 * 3600), ent("sensor.cellar", "unavailable", { unit_of_measurement: "°C" }));
-    const stale = await mount("sensor", { entity: "sensor.balcony" }, h);
+    // No threshold by default: an old reading looks normal.
+    const fresh = await mount("sensor", { entity: "sensor.balcony" }, h);
+    expect(root(fresh).querySelector<HTMLElement>("[data-fx]")!.getAttribute("style")).not.toContain("dashed");
+    const stale = await mount("sensor", { entity: "sensor.balcony", stale_after: 2 }, h);
     const s = root(stale).querySelector<HTMLElement>("[data-fx]")!;
     expect(s.getAttribute("style")).toContain("dashed");
     expect(s.textContent).toContain("3 h ago");
