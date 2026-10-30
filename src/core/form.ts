@@ -93,6 +93,7 @@ const LABELS: Record<string, string> = {
   sub_buttons: "editor.sub_buttons",
   styles: "editor.styles",
   max_width: "editor.max_width",
+  max_width_unit: "editor.max_width_unit",
   disarmed_color: "editor.disarmed_color",
   height: "editor.height",
   warnings_entity: "editor.warnings_entity",
@@ -185,7 +186,15 @@ export const appearance = ({ glow = false, effects = true, layout = "screen", ac
       flatten: true,
       schema: [...(glow ? [{ name: "glow_color", selector: { ui_color: {} } }] : []), ...(accent ? [{ name: "accent_color", selector: { ui_color: {} } }] : [])],
     },
-    { name: "max_width", selector: { number: { min: 120, max: 2000, step: 10, mode: "box", unit_of_measurement: "px" } } },
+    {
+      name: "",
+      type: "grid",
+      flatten: true,
+      schema: [
+        { name: "max_width", selector: { number: { min: 1, max: 2000, step: 1, mode: "box" } } },
+        { name: "max_width_unit", default: "px", selector: select([["px", "editor.unit.px"], ["%", "editor.unit.percent"]]) },
+      ],
+    },
     ...(effects ? [{ name: "weather_effects", default: true, selector: { boolean: {} } }] : []),
   ],
 });

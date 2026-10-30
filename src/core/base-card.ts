@@ -26,8 +26,10 @@ export interface BaseConfig {
   accent_color?: string | [number, number, number];
   /** Weather effects drawn on this card (needs a lumen-weather-background-card card in the view). */
   weather_effects?: boolean;
-  /** The card is never wider than this (px) and stays centred in its grid cell. */
-  max_width?: number;
+  /** The card is never wider than this and stays centred in its grid cell (`max_width_unit`, or "80%" / "320px"). */
+  max_width?: number | string;
+  /** Unit of a numeric `max_width`: px (default) or % of the grid cell. */
+  max_width_unit?: "px" | "%";
   /** Floating button side (cards with a FAB): right (default) or left. */
   fab_side?: "right" | "left";
   /** Vibration feedback on taps, holds and drags (default on). */
@@ -53,6 +55,16 @@ if (typeof document !== "undefined") injectFonts(import.meta.url.replace(/[^/]*$
  * card's own entities, the user, theme or language change), theme/variant/accent on the host,
  * weather surface registration and timers that die with the card.
  */
+/** CSS max-width from `max_width` (+ unit): 320 → 320px, 80 + "%" → 80%, "80%" / "320px" as written; % is capped at 100. */
+export function maxWidthCss(v: unknown, unit?: string): string | undefined {
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*(px|%)?\s*$/.exec(String(v ?? ""));
+  if (!m) return undefined;
+  const n = Number(m[1].replace(",", "."));
+  const u = m[2] ?? (unit === "%" ? "%" : "px");
+  if (!(n > 0)) return undefined;
+  return u === "%" ? `${Math.min(n, 100)}%` : `${n}px`;
+}
+
 export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends LitElement {
   static properties = {
     preview: { type: Boolean },
@@ -319,9 +331,9 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     this.userColor("accent", cssColor(this._config?.accent_color));
     this.userColor("glow", cssColor(this._config?.glow_color));
     this.toggleAttribute("data-wfx-card", this.effects);
-    const mw = Number(this._config?.max_width);
-    if (mw > 0) {
-      this.style.maxWidth = `${mw}px`;
+    const mw = maxWidthCss(this._config?.max_width, this._config?.max_width_unit);
+    if (mw) {
+      this.style.maxWidth = mw;
       this.style.marginInline = "auto";
       // A grid cell with auto margins shrinks to the content: keep the full (capped) width.
       this.style.width = "100%";

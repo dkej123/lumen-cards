@@ -478,7 +478,8 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `accent_color` | Colour of buttons and highlights (switched-on things, extra buttons, sliders; the active chip and floating button; the reminder pill – it wins over the reminder's own `color`). Not offered on cards with nothing to colour (greeting, title, air quality, calendar, pop-up). | from the theme |
 | `glow_color` | Colour of the glow around lit lights (light and chips cards) | the light's own colour |
 | `weather_effects` | Raindrops, snow and so on drawn on this card. Needs the weather background card in the same view. | on |
-| `max_width` | The card is never wider than this many pixels and stays centred in its place. Handy in a Panel view or very wide sections; in a normal sections view the columns already keep cards narrow. | full width |
+| `max_width` | The card is never wider than this and stays centred in its place: pixels, or percent of its grid place with `max_width_unit: "%"` (or `max_width: 80%`). Handy in a Panel view or very wide sections; in a normal sections view the columns already keep cards narrow. | full width |
+| `max_width_unit` | `px` or `%` for a numeric `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | What happens when you tap, hold or double-tap: switch, show details, open another page, run a script… | depends on the card |
 | `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
 | `styles` | For tinkerers: your own CSS inside the card | none |
@@ -818,7 +819,7 @@ warnings_entity: sensor.weather_warnings   # optional
 | `hours` | **Hours on the card**: 4–8. The card shows only as many as fit at 44 px or more. | 6 |
 | `show_feels`, `show_minmax`, `show_hours`, `show_warnings` | Feels-like temperature, today's low / high, the row of hours and the warnings on the card | on |
 | `sun_entity` | Day / night icons now | `sun.sun` |
-| `color_scheme`, `accent_color`, `max_width`, `weather_effects`, `styles` | As on every card | – |
+| `color_scheme`, `accent_color`, `max_width`, `max_width_unit`, `weather_effects`, `styles` | As on every card | – |
 
 Tap opens the details sheet, hold opens Home Assistant's own weather dialog. Sunrise and sunset in the sheet are calculated from the location of your Home Assistant.
 

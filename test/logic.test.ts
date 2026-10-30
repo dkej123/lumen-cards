@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { maxWidthCss } from "../src/core/base-card";
 import { setLanguage, setLocale } from "../src/core/i18n";
 import { cssColor, tone } from "../src/core/styles";
 import type { HassEntity } from "../src/hass/types";
@@ -185,5 +186,18 @@ describe("drag haptics", async () => {
     card.addEventListener("haptic", (e) => fired.push((e as CustomEvent).detail));
     haptic(card, "light");
     expect(fired).toEqual([]);
+  });
+});
+
+describe("max_width", () => {
+  it("px by default, % with the unit or written in, capped at 100 %", () => {
+    expect(maxWidthCss(320)).toBe("320px");
+    expect(maxWidthCss(80, "%")).toBe("80%");
+    expect(maxWidthCss("80%")).toBe("80%");
+    expect(maxWidthCss("400px", "%")).toBe("400px");
+    expect(maxWidthCss(150, "%")).toBe("100%");
+    expect(maxWidthCss(undefined)).toBeUndefined();
+    expect(maxWidthCss(0)).toBeUndefined();
+    expect(maxWidthCss("wide")).toBeUndefined();
   });
 });

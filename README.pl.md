@@ -474,7 +474,8 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `accent_color` | Kolor przycisków i wyróżnień (włączone urządzenia, dodatkowe przyciski, suwaki, aktywny chip i pływający przycisk, pigułka przypomnienia – ma pierwszeństwo przed jej polem `color`). Nie ma go w kartach bez niczego do pokolorowania (powitanie, tytuł, jakość powietrza, kalendarz, pop-up). | z motywu |
 | `glow_color` | Kolor poświaty włączonych świateł (karty światła i chipów) | kolor światła |
 | `weather_effects` | Krople, śnieg itp. na tej karcie. Wymaga karty tła pogodowego w tym samym widoku. | wł. |
-| `max_width` | Karta nie będzie szersza niż tyle pikseli i zostanie wyśrodkowana w swoim miejscu. Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |
+| `max_width` | Karta nie będzie szersza niż ta wartość i zostanie wyśrodkowana w swoim miejscu: piksele albo procent miejsca w siatce z `max_width_unit: "%"` (lub `max_width: 80%`). Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |
+| `max_width_unit` | `px` albo `%` dla liczbowego `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
 | `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
