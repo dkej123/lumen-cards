@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, form } from "../core/form";
 import { History } from "../core/history";
@@ -47,8 +48,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     this.requestUpdate();
   }, this);
   private lastAir = new Map<string, AirReading>();
-  private disp = new Map<string, number>();
-  private tweens = new Map<string, number>();
+  private tweens = new Tweens(this);
 
   private closeTimer?: number;
 
@@ -75,7 +75,6 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.tweens.clear();
     window.clearTimeout(this.closeTimer);
     this._sheet = null;
   }
@@ -85,32 +84,9 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     if (!this._config || !this._hass) return;
     this.history.load(this._hass, this.ids);
     this.ids.forEach((id) => this.history.track(this._hass, id));
-    this.tweenTo("pm25", this.air(this._config.pm25)?.value ?? null);
-    this.tweenTo("pm10", this.air(this._config.pm10)?.value ?? null);
-    this.tweenTo("aqi", this.air(this._config.aqi_entity)?.value ?? null);
-  }
-
-  private tweenTo(key: string, to: number | null, ms = 450) {
-    if (to === null) {
-      this.disp.delete(key);
-      return;
-    }
-    if (this.tweens.get(key) === to) return;
-    this.tweens.set(key, to);
-    const from = this.disp.get(key);
-    if (from === undefined || matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      this.disp.set(key, to);
-      return;
-    }
-    const t0 = performance.now();
-    const step = (tt: number) => {
-      if (this.tweens.get(key) !== to) return;
-      const p = Math.min(1, (tt - t0) / ms);
-      this.disp.set(key, from + (to - from) * (1 - Math.pow(1 - p, 3)));
-      this.requestUpdate();
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+    this.tweens.to("pm25", this.air(this._config.pm25)?.value ?? null);
+    this.tweens.to("pm10", this.air(this._config.pm10)?.value ?? null);
+    this.tweens.to("aqi", this.air(this._config.aqi_entity)?.value ?? null);
   }
 
   /** Live PM reading, or the last valid one while the sensor is `unknown`. */
@@ -130,9 +106,9 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     const col = stale ? "var(--lumen-unavailable)" : `var(--lumen-aq-${l})`;
     const lvl = AIR_LEVELS[l];
     const own = Array.isArray(c.levels) ? c.levels[l] : undefined;
-    const pm25 = this.disp.get("pm25");
-    const pm10 = this.disp.get("pm10");
-    const aqi = this.disp.get("aqi");
+    const pm25 = this.tweens.get("pm25");
+    const pm10 = this.tweens.get("pm10");
+    const aqi = this.tweens.get("aqi");
     const f0 = (v?: number) => (v === undefined ? "—" : formatNumber(v, 0));
     const parts = [c.pm25 ? `PM2.5 ${f0(pm25)}` : "", c.pm10 ? `PM10 ${f0(pm10)}` : "", c.aqi_entity ? `AQI ${f0(aqi)}` : ""].filter(Boolean);
     return {

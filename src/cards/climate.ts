@@ -2,6 +2,7 @@ import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { PENDING_MS, Pending } from "../core/controllers/pending";
+import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
 import { appearance, fabFields, firstOf, form, hapticsField, stub } from "../core/form";
 import { t } from "../core/i18n";
@@ -175,8 +176,11 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private acQueued = false;
   private acHold?: number;
   private acHeld = false;
-  private disp?: number;
-  private tweenTo?: number;
+  private tweens = new Tweens(this);
+  /** The setpoint as shown (gliding to a new value). */
+  private get disp(): number | undefined {
+    return this.tweens.get("set");
+  }
 
   protected layer = new LayerController(
     this,
@@ -214,7 +218,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     super.disconnectedCallback();
     // A pending setpoint is still sent (acTimer): the user chose it.
     window.clearTimeout(this.acHold);
-    this.tweenTo = undefined;
     this._dlg = false;
     releaseFab(this);
   }
@@ -244,31 +247,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       this.rangeTarget = null;
       this.acSentAt = 0;
     }
-    this.tween(this.acTarget ?? reported);
-  }
-
-  /** Setpoint number tween (450 ms ease-out cubic). */
-  private tween(to: number | null) {
-    if (to === null) {
-      this.disp = undefined;
-      return;
-    }
-    if (this.tweenTo === to) return;
-    this.tweenTo = to;
-    const from = this.disp;
-    if (from === undefined || matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      this.disp = to;
-      return;
-    }
-    const t0 = performance.now();
-    const step = (tt: number) => {
-      if (this.tweenTo !== to) return;
-      const p = Math.min(1, (tt - t0) / 450);
-      this.disp = from + (to - from) * (1 - Math.pow(1 - p, 3));
-      this.requestUpdate();
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+    this.tweens.to("set", this.acTarget ?? reported);
   }
 
   private call(domain: string, service: string, data: Record<string, unknown>, entity?: string) {
