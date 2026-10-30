@@ -435,22 +435,24 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
     // Only when the strip starts at the current hour (a forecast may start later).
     const nowCol = today && !!now && now.temp !== null && hours[0]?.t === hourStart(Date.now());
     const vals = hours.map((h, i) => (nowCol && i === 0 ? { ...h, temp: now!.temp!, feel: now!.feels, cond: now!.cond } : h));
-    const chart = stripChart(vals.map((h) => h.temp), vals.map((h) => h.mm), vals.map((h) => h.feel));
-    const marks = stripMarks(vals, this.sunOf);
+    // A short strip fills the sheet (max 520 px, 18 px spacers); a long one keeps 52 px columns and scrolls.
+    const col = Math.max(COL_W, Math.floor((Math.min(520, window.innerWidth) - 36) / Math.max(1, vals.length)));
+    const chart = stripChart(vals.map((h) => h.temp), vals.map((h) => h.mm), vals.map((h) => h.feel), col);
+    const marks = stripMarks(vals, this.sunOf, col);
     const six = vals.findIndex((h) => h.h === 6);
-    const x0 = today ? 0 : Math.max(0, Math.min(six > 0 ? six : 0, vals.length - 6)) * COL_W;
+    const x0 = today ? 0 : Math.max(0, Math.min(six > 0 ? six : 0, vals.length - 6)) * col;
     const mmUnit = now?.mmUnit ?? this.current().mmUnit;
     const head = vals.map((h, i) => {
       const isNow = nowCol && i === 0;
       const ico = isNow && now ? now.icon : conditionIcon(h.cond, isNightHour(h.t, this.sunOf(h)));
-      return html`<div style="flex:none;width:52px;display:flex;flex-direction:column;align-items:center">
+      return html`<div style="flex:none;width:${col}px;display:flex;flex-direction:column;align-items:center">
         <span style="height:22px;display:flex;align-items:flex-end;font-size:12px;font-weight:${isNow ? 800 : 700};color:${isNow ? "var(--lumen-text-1)" : "var(--lumen-text-2)"};font-variant-numeric:tabular-nums">${isNow ? t("card.forecast.now") : formatClock(h.t)}</span>
         <span style="height:30px;display:grid;place-items:center;font-size:22px;color:var(--lumen-text-2)">${icon(ico, "display:block")}</span>
         <span style="height:20px;font:700 15px/20px var(--lumen-font);font-variant-numeric:tabular-nums">${deg(h.temp)}</span>
       </div>`;
     });
     const foot = vals.map(
-      (h) => html`<div style="flex:none;width:52px;display:flex;flex-direction:column;align-items:center;font-variant-numeric:tabular-nums">
+      (h) => html`<div style="flex:none;width:${col}px;display:flex;flex-direction:column;align-items:center;font-variant-numeric:tabular-nums">
         <span style="height:16px;font:700 11px/16px var(--lumen-font);color:${(h.pp ?? 0) >= 20 ? "var(--lumen-info)" : "var(--lumen-text-3)"}">${h.pp === null ? "" : `${Math.round(h.pp)}%`}</span>
         <span style="height:16px;font:600 11px/16px var(--lumen-font);color:var(--lumen-text-3);white-space:nowrap">${h.mm > 0 ? `${formatNumber(h.mm)} ${mmUnit}` : ""}</span>
       </div>`,
@@ -459,14 +461,14 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
         style="display:flex;margin:0 -18px;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y;scrollbar-width:none;cursor:grab;user-select:none;-webkit-user-select:none;${today ? "" : "padding:2px 0 14px"}">
       <div style="flex:none;width:18px"></div>
       <div style="position:relative;flex:none;width:${chart.w}px">
-        ${nowCol ? html`<div style="position:absolute;left:0;top:0;bottom:0;width:52px;border-radius:14px;background:var(--lumen-surface-2)"></div>` : nothing}
+        ${nowCol ? html`<div style="position:absolute;left:0;top:0;bottom:0;width:${col}px;border-radius:14px;background:var(--lumen-surface-2)"></div>` : nothing}
         <div style="position:relative;display:flex">${head}</div>
         <svg width=${chart.w} height="52" viewBox="0 0 ${chart.w} 52" style="display:block;position:relative;overflow:visible;color:var(--lumen-orange)">
           ${svg`<path d=${chart.area} fill="currentColor" opacity="0.14"></path>
           <path d=${chart.bars} fill="var(--lumen-info)" opacity="0.45"></path>
           <path d=${chart.feel} fill="none" stroke="var(--lumen-info)" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"></path>
           <path d=${chart.line} fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
-          ${nowCol ? svg`<circle cx="26" cy=${chart.firstY} r="3.5" fill="var(--lumen-surface-solid)" stroke="currentColor" stroke-width="2"></circle>` : nothing}`}
+          ${nowCol ? svg`<circle cx=${col / 2} cy=${chart.firstY} r="3.5" fill="var(--lumen-surface-solid)" stroke="currentColor" stroke-width="2"></circle>` : nothing}`}
         </svg>
         <div style="position:relative;display:flex">${foot}</div>
         ${marks.map(
@@ -596,7 +598,7 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
               return html`<div style="border-top:1px solid var(--lumen-border)">
                 <div class="wxday" role=${has ? "button" : nothing} tabindex=${has ? 0 : nothing} aria-expanded=${has ? String(open) : nothing} title=${has ? "" : t("card.forecast.no_hours")}
                   @click=${has ? () => this.toggleDay(i) : nothing} @keydown=${has ? (e: KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), this.toggleDay(i)) : nothing}
-                  style="cursor:${has ? "pointer" : "default"};display:grid;grid-template-columns:46px 24px 40px 26px minmax(16px,1fr) 26px 36px 18px;gap:6px;align-items:center;min-height:56px;user-select:none;-webkit-user-select:none">
+                  style="cursor:${has ? "pointer" : "default"};display:grid;grid-template-columns:46px 24px 40px 32px minmax(16px,1fr) 32px 36px 18px;gap:6px;align-items:center;min-height:56px;user-select:none;-webkit-user-select:none">
                   <div style="min-width:0"><div style="font-size:14px;font-weight:700;line-height:18px;white-space:nowrap">${this.dayName(d.d)}</div><div style="font-size:11px;font-weight:600;line-height:14px;color:var(--lumen-text-3);font-variant-numeric:tabular-nums">${new Intl.DateTimeFormat(locale(), { day: "numeric", month: "numeric" }).format(date)}</div></div>
                   <span title=${condLabel(d.cond)} style="font-size:24px;color:var(--lumen-text-2)">${icon(conditionIcon(d.cond), "display:block")}</span>
                   <div style="text-align:center;font-variant-numeric:tabular-nums"><div style="font-size:12px;font-weight:700;line-height:15px;color:${(d.pp ?? 0) >= 20 ? "var(--lumen-info)" : "var(--lumen-text-3)"}">${d.pp === null ? "" : `${Math.round(d.pp)}%`}</div><div style="font-size:10.5px;font-weight:600;line-height:13px;color:var(--lumen-text-3);white-space:nowrap">${d.mm === null || d.mm < 0.1 ? "" : `${formatNumber(d.mm)} ${mmUnit}`}</div></div>

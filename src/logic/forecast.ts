@@ -280,25 +280,25 @@ const CHART_H = 52;
 
 /**
  * Temperature line, apparent temperature line, area and precipitation bars for a strip of n
- * columns (SVG n × 52 by 52). Both lines share the Y scale (min span 4°, band 8–28 px).
+ * columns (SVG n × col by 52; col 52 px, wider when a short strip fills the sheet). Both lines share the Y scale (min span 4°, band 8–28 px).
  */
-export function stripChart(temps: number[], mms: number[], feels: (number | null)[] = []) {
-  const w = temps.length * COL_W;
+export function stripChart(temps: number[], mms: number[], feels: (number | null)[] = [], col = COL_W) {
+  const w = temps.length * col;
   const fs = temps.map((t, i) => feels[i] ?? t);
   const mn = Math.min(...temps, ...fs);
   const mx = Math.max(...temps, ...fs);
   const range = Math.max(4, mx - mn);
   const mid = (mn + mx) / 2;
   const y = (t: number) => +(18 - ((t - mid) / range) * 20).toFixed(1);
-  const pts = temps.map((t, i) => [i * COL_W + COL_W / 2, y(t)]);
+  const pts = temps.map((t, i) => [i * col + col / 2, y(t)]);
   const line = "M" + pts.map((p) => `${p[0]} ${p[1]}`).join(" L");
-  const feel = "M" + fs.map((t, i) => `${i * COL_W + COL_W / 2} ${y(t)}`).join(" L");
-  const area = `${line} L${w - COL_W / 2} ${CHART_H} L${COL_W / 2} ${CHART_H} Z`;
+  const feel = "M" + fs.map((t, i) => `${i * col + col / 2} ${y(t)}`).join(" L");
+  const area = `${line} L${w - col / 2} ${CHART_H} L${col / 2} ${CHART_H} Z`;
   let bars = "";
   mms.forEach((v, i) => {
     if (v > 0) {
       const bh = +Math.max(2, Math.min(1, v / 4) * 18).toFixed(1);
-      bars += `M${i * COL_W + 18} ${CHART_H - bh}h16v${bh}h-16Z`;
+      bars += `M${i * col + col / 2 - 8} ${CHART_H - bh}h16v${bh}h-16Z`;
     }
   });
   return { w, line, feel, area, bars: bars || "M0 0", firstY: pts[0]?.[1] ?? 18 };
@@ -314,16 +314,16 @@ export interface StripMark {
 }
 
 /** Sunrise / sunset (dashed, exact minute) and midnight (solid) markers over the chart. */
-export function stripMarks(hours: Hour[], sunOf: (h: Hour) => { rise: number; set: number } | null): StripMark[] {
+export function stripMarks(hours: Hour[], sunOf: (h: Hour) => { rise: number; set: number } | null, col = COL_W): StripMark[] {
   const marks: StripMark[] = [];
   hours.forEach((h, i) => {
     const sun = sunOf(h);
     if (sun) {
       for (const [at, icon] of [[sun.rise, "mdi:weather-sunset-up"], [sun.set, "mdi:weather-sunset-down"]] as const) {
-        if (at >= h.t && at < h.t + HOUR_MS) marks.push({ left: +(i * COL_W + ((at - h.t) / HOUR_MS) * COL_W).toFixed(1), icon, at, style: "dashed" });
+        if (at >= h.t && at < h.t + HOUR_MS) marks.push({ left: +(i * col + ((at - h.t) / HOUR_MS) * col).toFixed(1), icon, at, style: "dashed" });
       }
     }
-    if (i > 0 && h.h === 0) marks.push({ left: i * COL_W, icon: "", day: h.d, style: "solid" });
+    if (i > 0 && h.h === 0) marks.push({ left: i * col, icon: "", day: h.d, style: "solid" });
   });
   return marks;
 }
