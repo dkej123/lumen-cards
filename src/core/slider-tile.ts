@@ -2,6 +2,7 @@ import { html, nothing, type ReactiveController, type ReactiveControllerHost } f
 import type { HassEntity } from "../hass/types";
 import { fractionAt } from "../logic/slider";
 import { DragTicks, haptic } from "./actions";
+import { Pending } from "./controllers/pending";
 import { icon } from "./lumen-icon";
 import { glass, prevent, stop } from "./styles";
 
@@ -11,7 +12,6 @@ import { glass, prevent, stop } from "./styles";
 // pan-y); without a move it is a tap. Buttons inside stop the pointer events.
 
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
-const PENDING_MS = 10_000;
 
 export interface SlideOpts {
   /** Dragging allowed (entity available and settable). */
@@ -40,13 +40,15 @@ export class SlideDrag implements ReactiveController {
   frac: number | null = null;
   private press: Press | null = null;
   private holdTimer?: number;
-  private pend?: { f: number; from?: HassEntity; until: number };
+  /** The committed fraction until the entity answers (or 10 s). */
+  private pend: Pending<number>;
 
   constructor(
     private host: ReactiveControllerHost & HTMLElement,
     private opts: SlideOpts,
   ) {
     host.addController(this);
+    this.pend = new Pending<number>(host, () => this.opts.source?.());
   }
 
   hostDisconnected(): void {
@@ -58,16 +60,11 @@ export class SlideDrag implements ReactiveController {
   }
 
   /** Value to show: the finger while dragging, then the committed value until the entity changes. */
-  value(e: HassEntity | undefined = this.opts.source?.()): number | null {
+  value(): number | null {
     if (this.press?.dragging && this.frac !== null) return this.frac;
-    const p = this.pend;
-    if (!p) return null;
-    if (e !== p.from || Date.now() > p.until) {
-      this.pend = undefined;
-      return null;
-    }
-    return p.f;
+    return this.pend.value ?? null;
   }
+
 
   private haptic(type = "light") {
     haptic(this.host, type);
@@ -77,7 +74,7 @@ export class SlideDrag implements ReactiveController {
   private ticks = new DragTicks(1);
 
   private finish(f: number) {
-    this.pend = { f, from: this.opts.source?.(), until: Date.now() + PENDING_MS };
+    this.pend.set(f);
     this.haptic();
     this.opts.commit(f);
   }

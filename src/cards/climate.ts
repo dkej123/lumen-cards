@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { icon } from "../core/lumen-icon";
 import { appearance, fabFields, firstOf, form, hapticsField, stub } from "../core/form";
 import { t } from "../core/i18n";
@@ -63,7 +64,6 @@ export interface ClimateConfig extends BaseConfig {
   show_battery?: boolean;
 }
 
-const PENDING_MS = 10_000;
 /** The setpoint goes out this long after the last −/+ tap. */
 export const SETPOINT_DEBOUNCE_MS = 1000;
 const AC_LAST_KEY = "lumen-ac-last:";
@@ -164,7 +164,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private _dlg = false;
   /** heat_cool with a range: which end the ± buttons move. */
   private _side: "low" | "high" = "low";
-  private pending = new Map<string, { from?: HassEntity; until: number }>();
+  /** A mode / fan / power command sent: spinner until the entity answers (or 10 s). */
+  private pending = new Pending(this, () => this.entity(this._config?.entity));
   private acLast = "cool";
   private acTarget: number | null = null;
   private rangeTarget: { low: number; high: number } | null = null;
@@ -203,12 +204,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
 
   connectedCallback(): void {
     super.connectedCallback();
+    // the setpoint sent stops counting after PENDING_MS (no answer from the device)
     this.every(1000, () => {
-      const now = Date.now();
-      let changed = false;
-      for (const [id, p] of this.pending) if (p.until < now) changed = this.pending.delete(id) || changed;
-      if (this.acSentAt && now - this.acSentAt > PENDING_MS) changed = true;
-      if (changed) this.requestUpdate();
+      if (this.acSentAt && Date.now() - this.acSentAt > PENDING_MS) this.requestUpdate();
     });
   }
 
@@ -229,7 +227,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   protected willUpdate(changed: Map<string, unknown>): void {
     super.willUpdate(changed);
     if (!this._config || !this._hass) return;
-    for (const [id, p] of this.pending) if (this.entity(id) !== p.from) this.pending.delete(id);
     const ac = this.entity(this._config.entity);
     if (ac && ac.state !== "off" && !isUnavailable(ac) && ac.state !== this.acLast) writeAcLast(ac.entity_id, (this.acLast = ac.state));
     const reported = typeof ac?.attributes.temperature === "number" ? ac.attributes.temperature : null;
@@ -274,14 +271,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     requestAnimationFrame(step);
   }
 
-  private setPending(id: string) {
-    this.pending.set(id, { from: this.entity(id), until: Date.now() + PENDING_MS });
-    this.requestUpdate();
-  }
-
   private call(domain: string, service: string, data: Record<string, unknown>, entity?: string) {
     return this._hass?.callService(domain, service, data, entity ? { entity_id: entity } : undefined).catch((err: Error) => {
-      if (entity) this.pending.delete(entity);
+      this.pending.clear();
       toast(this, { icon: "mdi:alert-circle", tone: "danger", title: t("common.error"), text: err.message ?? String(err) });
     });
   }
@@ -359,7 +351,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const una = isUnavailable(e);
     const mode = una ? "off" : e!.state;
     const c = MODE_COLOR[mode] ?? "var(--lumen-accent)";
-    const busy = this.pending.has(cfg.entity);
+    const busy = this.pending.active;
     const f = this.fahrenheit;
     const room = formatTemp(typeof e?.attributes.current_temperature === "number" ? e.attributes.current_temperature : null, f);
     const target = this.disp;
@@ -379,7 +371,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         if (una) return;
         this.haptic();
         if (k !== "off") writeAcLast(cfg.entity, (this.acLast = k));
-        this.setPending(cfg.entity);
+        this.pending.set(true);
         this.call("climate", "set_hvac_mode", { hvac_mode: k }, cfg.entity);
       },
     }));
@@ -390,7 +382,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       on: () => {
         if (off || una) return;
         this.haptic();
-        this.setPending(cfg.entity);
+        this.pending.set(true);
         this.call("climate", "set_fan_mode", { fan_mode: k }, cfg.entity);
       },
     }));
@@ -400,7 +392,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       on: () => {
         if (off || una) return;
         this.haptic();
-        this.setPending(cfg.entity);
+        this.pending.set(true);
         this.call("climate", "set_swing_mode", { swing_mode: k }, cfg.entity);
       },
     }));
@@ -411,14 +403,14 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       on: () => {
         if (una) return;
         this.haptic();
-        this.setPending(cfg.entity);
+        this.pending.set(true);
         this.call("climate", "set_preset_mode", { preset_mode: k }, cfg.entity);
       },
     }));
     const power = () => {
       if (busy || una) return;
       this.haptic();
-      this.setPending(cfg.entity);
+      this.pending.set(true);
       if (cfg.power_action) {
         handleAction(this, cfg.power_action, cfg.entity, "tap");
         return;

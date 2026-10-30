@@ -8,6 +8,7 @@ import { LayerController } from "../core/layer";
 import { glass, prevent, stop } from "../core/styles";
 import { toast } from "../core/toast";
 import type { HassEntity } from "../hass/types";
+import { PENDING_MS } from "../core/controllers/pending";
 import { isUnavailable } from "../hass/types";
 import {
   HUE_PRESETS, brightnessPct, ctPresets, hsOf, hsToRgb, hueName, isDimmable, kelvinRange, lightPower, miredPresets, mixedGroup,
@@ -43,7 +44,6 @@ interface Drag {
   moved: boolean; dragging: boolean; held: boolean; cur?: number;
 }
 
-const PENDING_MS = 10_000;
 /** Horizontal movement (px) that turns a press into a brightness drag (catalog "Zachowanie"). */
 export const DRAG_PX = 6;
 const HUD_H = 40;

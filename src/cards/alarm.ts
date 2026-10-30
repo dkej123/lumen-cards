@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { Pending } from "../core/controllers/pending";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons } from "../core/sub-buttons";
 import { t } from "../core/i18n";
@@ -45,7 +46,6 @@ export interface AlarmConfig extends BaseConfig {
   pending_time?: number;
 }
 
-const PENDING_MS = 10_000;
 const MODE_KEY = "lumen-alarm-mode:";
 const WHITE = "#fff";
 
@@ -113,7 +113,8 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "armed_home", attributes: { friendly_name: t("card.alarm.name"), supported_features: 7, code_format: "number" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
 
   private subs = new SubButtons(this);
-  private pending: { from?: HassEntity; until: number } | null = null;
+  /** A command sent by the tap action: spinner until the alarm changes (or 10 s). */
+  private pending = new Pending(this, () => this.alarm);
   private _pad: Pad | null = null;
 
   protected layer = new LayerController(
@@ -148,20 +149,11 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
 
   connectedCallback(): void {
     super.connectedCallback();
+    // Countdown bars tick every second.
     this.every(1000, () => {
-      if (this.pending && this.pending.until < Date.now()) {
-        this.pending = null;
-        this.requestUpdate();
-      }
-      // Countdown bars tick every second.
       const st = this.alarm?.state;
       if (st === "arming" || st === "pending") this.requestUpdate();
     });
-  }
-
-  protected willUpdate(changed: Map<string, unknown>): void {
-    super.willUpdate(changed);
-    if (this.pending && this.alarm !== this.pending.from) this.pending = null;
   }
 
   private get alarm() {
@@ -189,8 +181,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
 
   private runTap() {
     const c = this._config;
-    this.pending = { from: this.alarm, until: Date.now() + PENDING_MS };
-    this.requestUpdate();
+    this.pending.set(true);
     handleAction(this, c.tap_action, c.entity, "tap");
   }
 
@@ -321,7 +312,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   private buttons(e: HassEntity | undefined, s: Status): Seg[] {
     const st = e?.state;
     if (!e || s.tone === "unavailable" || this._config.show_buttons === false) return [];
-    const busy = !!this.pending;
+    const busy = this.pending.active;
     if (st === "disarmed") return [{ icon: "mdi:shield-lock-outline", label: t("card.alarm.arm"), spin: busy, tap: () => this.arm() }];
     if (st === "arming") return [{ icon: "mdi:close", label: t("card.alarm.cancel"), spin: busy, tap: () => this.disarm() }];
     if (st === "pending") return [{ icon: "mdi:dialpad", label: this.needsCode(false) ? t("card.lock.code") : t("card.alarm.disarm"), spin: busy, tap: () => this.disarm() }];
@@ -355,7 +346,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     return html`<div data-fx ${pressable(handlers)} aria-label="${this.name} · ${l.sub}" class="press alarmrow" style=${rowFrame(l, true)}>${WFX}
       <div style="position:relative;display:flex;align-items:center;gap:10px;min-height:34px">
         ${rowIcon(l)}${rowText(this.name, l, c.show_state !== false)}
-        ${this.pending && !btns.length ? html`<span style=${spinnerStyle(16)}></span>` : nothing}
+        ${this.pending.active && !btns.length ? html`<span style=${spinnerStyle(16)}></span>` : nothing}
         ${btns.length ? segs(btns, false, "rowbtns") : nothing}${this.subs.render(c.sub_buttons)}${l.una ? unplugged() : nothing}
       </div>${bar}
     </div>`;

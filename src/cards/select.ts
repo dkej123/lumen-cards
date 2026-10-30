@@ -1,6 +1,7 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { Pending } from "../core/controllers/pending";
 import { callOrToast, entityName } from "../core/call";
 import { advanced, appearance, firstOf, stub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
@@ -43,7 +44,8 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
   protected static compactBelow = 200;
   /** Open list: viewport position of its anchor. */
   private _menu: { top?: number; bottom?: number; right: number; width: number; maxH: number } | null = null;
-  private pending: { option: string; from?: HassEntity; until: number } | null = null;
+  /** The option just chosen, shown until the entity answers (or 10 s). */
+  private pending = new Pending<string>(this, () => this.sel);
 
   private press = new SlideDrag(this, {
     enabled: () => false,
@@ -121,18 +123,15 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
     this.closeMenu(true);
     if (option === this.current()) return;
     this.haptic();
-    this.pending = { option, from: this.sel, until: Date.now() + 10_000 };
+    this.pending.set(option);
     const domain = c.entity.split(".")[0] === "select" ? "select" : "input_select";
     callOrToast(this, this._hass, domain, "select_option", { option }, c.entity).then((ok) => {
-      if (!ok) this.pending = null;
-      this.requestUpdate();
+      if (!ok) this.pending.clear();
     });
   }
 
   private current(): string | undefined {
-    const p = this.pending;
-    if (p && (p.from !== this.sel || Date.now() > p.until)) this.pending = null;
-    return this.pending?.option ?? (isUnavailable(this.sel) ? undefined : this.sel?.state);
+    return this.pending.value ?? (isUnavailable(this.sel) ? undefined : this.sel?.state);
   }
 
   /** HA's translated option label when it has one (select entities with translations). */

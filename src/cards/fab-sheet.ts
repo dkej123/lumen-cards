@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { PENDING_MS } from "../core/controllers/pending";
 import { appearance, fabSideField, hapticsField } from "../core/form";
 import { formX } from "../core/form-extra";
 import { t } from "../core/i18n";
@@ -43,7 +44,6 @@ export function fabSheetInner(c: CardConfig): CardConfig {
 const BULK_ICON: Record<string, string> = { comfort: "mdi:sofa-outline", eco: "mdi:leaf", off: "mdi:power" };
 const BULK_LABEL: Record<string, string> = { comfort: "card.climate.preset.comfort", eco: "card.climate.preset.eco", off: "common.off_short" };
 const ORANGE = "var(--lumen-orange)";
-const PENDING_MS = 10_000;
 
 /**
  * Floating panel (catalog section 19): one FAB in the shared stack that opens a bottom sheet with

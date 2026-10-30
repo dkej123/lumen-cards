@@ -1,13 +1,14 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { Pending } from "../core/controllers/pending";
 import { callOrToast, entityName } from "../core/call";
 import { advanced, appearance, firstOf, stub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, segButtons, sliderTile, thinBar } from "../core/slider-tile";
-import type { HassEntity, HassLike } from "../hass/types";
+import type { HassLike } from "../hass/types";
 import { COVER, activeButton, coverIcon, coverState, coverSupports, tiltDegrees } from "../logic/cover";
 
 export interface CoverConfig extends BaseConfig {
@@ -36,14 +37,15 @@ export function validateCover(c: Partial<CoverConfig>): void {
 export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   protected static compactBelow = 200;
   /** Open / close just pressed: shows Opening… / Closing… before HA reports it. */
-  private target: { pos: number; from?: HassEntity; until: number } | null = null;
+  /** The pressed command (position %) until HA sends a new state for the cover (or 10 s). */
+  private target = new Pending<number>(this, () => this.cover);
 
   private pos = new SlideDrag(this, {
     enabled: () => this.canSetPosition,
     source: () => this.cover,
     commit: (f) => this.setPosition(Math.round(f * 100)),
     tap: () => this.tap(),
-    hold: () => this.hold(),
+    hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
       const f = this.pos.value();
       const p = f !== null ? f * 100 : (coverState(this.cover).position ?? 0);
@@ -88,28 +90,28 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   private call(service: string, data: Record<string, unknown> = {}) {
     this.requestUpdate();
     return callOrToast(this, this._hass, "cover", service, data, this._config.entity).then((ok) => {
-      if (!ok) this.target = null;
+      if (!ok) this.target.clear();
       this.requestUpdate();
     });
   }
 
   private setPosition(p: number) {
-    this.target = { pos: p, from: this.cover, until: Date.now() + 10_000 };
+    this.target.set(p);
     this.call("set_cover_position", { position: p });
   }
 
   private open() {
-    this.target = { pos: 100, from: this.cover, until: Date.now() + 10_000 };
+    this.target.set(100);
     this.call("open_cover");
   }
 
   private close() {
-    this.target = { pos: 0, from: this.cover, until: Date.now() + 10_000 };
+    this.target.set(0);
     this.call("close_cover");
   }
 
   private stop() {
-    this.target = null;
+    this.target.clear();
     this.call("stop_cover");
   }
 
@@ -119,28 +121,11 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     handleAction(this, c.tap_action ?? { action: "toggle" }, c.entity, "tap");
   }
 
-  private hold() {
-    const c = this._config;
-    if (c.hold_action) handleAction(this, c.hold_action, c.entity, "hold");
-    else this.moreInfo(c.entity);
-  }
-
-  /** The pressed command until HA sends a new state for the cover (or 10 s). */
-  private liveTarget(): number | null {
-    const tg = this.target;
-    if (!tg) return null;
-    if (tg.from !== this.cover || Date.now() > tg.until) {
-      this.target = null;
-      return null;
-    }
-    return tg.pos;
-  }
-
   protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
     const e = this.cover;
-    const s = coverState(e, this.liveTarget());
+    const s = coverState(e, this.target.value ?? null);
     const una = s.key === "unavailable";
     const name = entityName(c.name, e, c.entity);
     const dragged = this.pos.value();
