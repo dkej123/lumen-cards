@@ -8,6 +8,15 @@ export type Schema = Record<string, unknown>;
 
 /** Field labels: the Polish label is the key of the translation. Standard fields (entity, name, icon, actions) keep HA's own labels. */
 const LABELS: Record<string, string> = {
+  entity: "editor.entity",
+  name: "editor.name",
+  icon: "editor.icon",
+  tap_action: "editor.tap_action",
+  hold_action: "editor.hold_action",
+  double_tap_action: "editor.double_tap_action",
+  cards: "editor.cards",
+  value: "editor.value",
+  value_entity: "editor.value_entity",
   power_entity: "editor.power_entity",
   layout: "editor.layout",
   color_scheme: "editor.color_scheme",
