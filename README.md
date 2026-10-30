@@ -248,6 +248,10 @@ A bar with buttons for your dashboard's views (or pop-ups). It can stick to the 
 
 A window with any cards you like, Lumen or not, opened by a link like `#living-room` (for example from the navigation bar or a button). Close it with ×, Esc, a tap outside, or by swiping down. The card itself is invisible on the dashboard unless you want a row that opens it.
 
+### Weather
+
+The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWeatherMap…): a slim 44 px line, just an icon with the temperature (to stand next to the greeting), or a card with the next hours. Tap it for the details sheet: now (feels like, wind, humidity, pressure, UV, visibility, sunrise and sunset), today hourly with a chart of the temperature and the feels-like temperature, the next days (tap a day to see its hours) and weather warnings, e.g. from IMGW-PIB Monitor. Every tile shows only when your weather entity has that value.
+
 ### Floating panel
 
 One floating round button that opens a sheet with any cards – typically all your thermostats in one place instead of a floating button for each. The button shows how many of them are heating, turns orange with a soft pulse while something heats, and warns about a weak valve battery or a device that is offline. In the sheet you get one row per thermostat (−/+ to change the temperature) and, when the thermostats share their presets, **All: Comfort / Eco / Off** for all of them at once. On a computer it is a row in the grid that opens the same sheet.
@@ -510,6 +514,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `fab_narrow_only` | **Auto: only on narrow screens.** The floating button appears only on phones and portrait tablets; on wider screens the normal row stays. Untick to always use the floating button. | on |
 | `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
 | `title` | Heading above the items of the floating button | "Scenes" |
+| `fab_icon` | **Button icon** of the floating button | `mdi:palette-outline` |
 
 <a id="lumen-person-card"></a>
 
@@ -793,6 +798,28 @@ cards:
 | `color_scheme`, `accent_color`, `styles` | As on every card | – |
 
 The button joins the stack of floating buttons: above the scenes button (48 px), or on its own place in the corner (64 px) when it is the only one. Order from the bottom: scenes, panels (in the dashboard's order), alarm. The warning corner shows a battery below the thermostat card's `battery_low` (15 % by default) or an offline entity. While the dashboard is edited the card is always the row, marked "FAB on phones".
+
+<a id="lumen-weather-card"></a>
+
+### Weather (`lumen-weather-card`)
+
+```yaml
+type: custom:lumen-weather-card
+entity: weather.home
+warnings_entity: sensor.weather_warnings   # optional
+```
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | The weather entity (`weather.*`). Hourly and daily forecasts are used when the integration provides them. | – |
+| `warnings_entity` | Optional sensor with a `warnings` list attribute (IMGW-PIB Monitor and similar: `event`, `level` 1–3, `valid_from`, `valid_to`, `content`). Warnings that are on now or start within 24 h show as pills on the card and as bars in the sheet. | – |
+| `layout` | **Auto** (a line when the card is narrower than 240 px, the card from 240 px), **Line**, **Card** or **Icon and temperature only** (no background, for next to the greeting) | auto |
+| `hours` | **Hours on the card**: 4–8. The card shows only as many as fit at 44 px or more. | 6 |
+| `show_feels`, `show_minmax`, `show_hours`, `show_warnings` | Feels-like temperature, today's low / high, the row of hours and the warnings on the card | on |
+| `sun_entity` | Day / night icons now | `sun.sun` |
+| `color_scheme`, `accent_color`, `max_width`, `weather_effects`, `styles` | As on every card | – |
+
+Tap opens the details sheet, hold opens Home Assistant's own weather dialog. Sunrise and sunset in the sheet are calculated from the location of your Home Assistant.
 
 ---
 

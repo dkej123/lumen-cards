@@ -25,6 +25,8 @@ import "./cards/nav";
 import "./cards/popup";
 // Catalog section 19.
 import "./cards/fab-sheet";
+// Catalog section 20.
+import "./cards/weather";
 
 declare const __LUMEN_VERSION__: string;
 

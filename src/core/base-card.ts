@@ -16,9 +16,9 @@ export interface BaseConfig {
   type: string;
   /**
    * auto: compact when the card itself is narrow (or, for text cards, on a narrow screen);
-   * wide / compact force one look.
+   * wide / compact force one look; icon = icon + value without a background (weather card).
    */
-  layout?: "auto" | "wide" | "compact";
+  layout?: "auto" | "wide" | "compact" | "icon";
   color_scheme?: "auto" | "light" | "dark";
   /** Glow / fill of lit lights: HA colour name, hex or RGB triple. Default: from the light. */
   glow_color?: string | [number, number, number];

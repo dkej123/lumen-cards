@@ -202,21 +202,29 @@ export class Sheet {
     </div>`;
   }
 
-  /** Scrim + sheet for the body-level layer. `extra` sits between the header and the list (fixed). */
-  render(h: SheetHead, body: unknown, extra: unknown = nothing): TemplateResult {
+  /** ✕ of a custom header (see `render` opts.head). */
+  get closeHandler() {
+    return this.close;
+  }
+
+  /**
+   * Scrim + sheet for the body-level layer. `extra` sits between the header and the list (fixed).
+   * `opts.head` replaces the header row (weather sheet), `opts.body` the list padding / gap.
+   */
+  render(h: SheetHead, body: unknown, extra: unknown = nothing, opts: { head?: unknown; body?: string; maxHeight?: string } = {}): TemplateResult {
     const closing = this.closing;
     const dragging = this.grabY !== null;
     return html`<div style="position:absolute;inset:0;z-index:40">
       <div @click=${this.scrim} style="position:absolute;inset:0;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:${closing ? `lumenFadeOut ${CLOSE_MS}ms forwards` : "lumenFadeIn 200ms ease-out both"}"></div>
-      <div role="dialog" aria-modal="true" aria-label=${h.title} style="position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:85%;display:flex;flex-direction:column;animation:${closing ? `lumenSheetOut ${CLOSE_MS}ms var(--lumen-ease-in-out) forwards` : "lumenSheetIn 280ms cubic-bezier(.2,.8,.2,1) both"}">
+      <div role="dialog" aria-modal="true" aria-label=${h.title} style="position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:${opts.maxHeight ?? "85%"};display:flex;flex-direction:column;animation:${closing ? `lumenSheetOut ${CLOSE_MS}ms var(--lumen-ease-in-out) forwards` : "lumenSheetIn 280ms cubic-bezier(.2,.8,.2,1) both"}">
         <div style="flex:1;min-height:0;display:flex;flex-direction:column;border-radius:28px 28px 0 0;background:var(--lumen-surface-solid);color:var(--lumen-text-1);box-shadow:var(--lumen-shadow-2);transform:translateY(${this.dy}px);transition:${dragging ? "none" : "transform 320ms cubic-bezier(.2,.8,.2,1)"}">
           <div @pointerdown=${this.grab.down} @pointermove=${this.grab.move} @pointerup=${this.grab.up} @pointercancel=${this.grab.up}
-            style="flex:none;display:flex;flex-direction:column;gap:10px;padding:10px 14px 0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab">
+            style="flex:none;display:flex;flex-direction:column;${opts.head ? "padding:10px 18px 0;border-bottom:1px solid var(--lumen-border)" : "gap:10px;padding:10px 14px 0"};touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab">
             <span style="align-self:center;width:36px;height:5px;border-radius:3px;background:var(--lumen-border-strong)"></span>
-            ${Sheet.header(h, this.close)}
+            ${opts.head ?? Sheet.header(h, this.close)}
           </div>
           ${extra}
-          <div class="lumen-noscroll" style="--lumen-sheet-row-shadow:none;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))">${body}</div>
+          <div class="lumen-noscroll" style="--lumen-sheet-row-shadow:none;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;${opts.body ?? "gap:8px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))"}">${body}</div>
         </div>
       </div>
     </div>`;

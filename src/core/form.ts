@@ -93,6 +93,11 @@ const LABELS: Record<string, string> = {
   sub_buttons: "editor.sub_buttons",
   styles: "editor.styles",
   max_width: "editor.max_width",
+  warnings_entity: "editor.warnings_entity",
+  show_feels: "editor.show_feels",
+  show_minmax: "editor.show_minmax",
+  show_hours: "editor.show_hours",
+  show_warnings: "editor.show_warnings",
 };
 
 const HELPERS: Record<string, string> = {
@@ -127,9 +132,12 @@ const HELPERS: Record<string, string> = {
   fab_side: "editor.help.fab_side",
   device_class: "editor.help.device_class",
   sub_buttons: "editor.help.sub_buttons",
+  weather_hours: "editor.help.weather_hours",
+  warnings_entity: "editor.help.warnings_entity",
 };
 
-export const computeLabel = (s: { name?: string; title?: string }) => (s.name && LABELS[s.name] ? t(LABELS[s.name]) : s.title ? t(s.title) : undefined);
+/** A field's own `title` wins over the shared label of its name (e.g. `hours` of the weather card). */
+export const computeLabel = (s: { name?: string; title?: string }) => (s.title ? t(s.title) : s.name && LABELS[s.name] ? t(LABELS[s.name]) : undefined);
 export const computeHelper = (s: { name?: string; helper?: string }) => {
   const key = s.helper ?? s.name;
   return key && HELPERS[key] ? t(HELPERS[key]) : undefined;
