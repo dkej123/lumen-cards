@@ -10,6 +10,7 @@ import { toast } from "../core/toast";
 import type { HassEntity } from "../hass/types";
 import { PENDING_MS } from "../core/controllers/pending";
 import { WFX } from "../core/parts";
+import { adaptiveSheet } from "../core/sheet";
 import { isUnavailable } from "../hass/types";
 import {
   HUE_PRESETS, brightnessPct, ctPresets, hsOf, hsToRgb, hueName, isDimmable, kelvinRange, lightPower, miredPresets, mixedGroup,
@@ -689,15 +690,16 @@ export class LightsController implements ReactiveController {
     if (!sh) return nothing;
     const isSheet = this.host.narrowScreen;
     const item = sh.item;
-    const anim = sh.closing
-      ? isSheet ? "lumenSheetOut 250ms var(--lumen-ease-in-out) forwards" : "lumenModalOut 220ms ease forwards"
-      : isSheet ? "lumenSheetIn 560ms var(--lumen-ease-spring) both" : "lumenModalIn 460ms var(--lumen-ease-spring) both";
     const l = this.light(item);
     const title = lightName(item, l.e);
     const body = sh.view === "wheel" && l.color ? this.wheelView(item, l) : this.mainView(item, l);
-    return html`<div style="position:absolute;inset:0;z-index:50;display:flex;align-items:${isSheet ? "flex-end" : "center"};justify-content:center;padding:${isSheet ? "0" : "24px"};box-sizing:border-box;font-family:var(--lumen-font);color:var(--lumen-text-1)">
-      <div @click=${this.scrimClose} style="position:absolute;inset:0;background:var(--lumen-scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:${sh.closing ? "lumenFadeOut 250ms forwards" : "lumenFadeIn 300ms both"}"></div>
-      <div role="dialog" aria-modal="true" aria-label=${title} style="position:relative;width:100%;max-width:${isSheet ? "520px" : "420px"};animation:${anim}">
+    return adaptiveSheet({
+      narrow: isSheet,
+      closing: sh.closing,
+      label: title,
+      wideWidth: 420,
+      onScrim: this.scrimClose,
+      panel: html`
         <div style="transform:translateY(${this.sheetDy}px);transition:${this.grabY !== null ? "none" : "transform 460ms var(--lumen-ease-spring)"};background:var(--lumen-surface-solid);border-radius:${isSheet ? "28px 28px 0 0" : "28px"};box-shadow:var(--lumen-shadow-2);border:1px solid var(--lumen-border);padding:${isSheet ? "4px" : "18px"} 18px calc(18px + ${isSheet ? "env(safe-area-inset-bottom)" : "0px"});max-height:86vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box">
           <div @pointerdown=${this.grab.down} @pointermove=${this.grab.move} @pointerup=${this.grab.up} @pointercancel=${this.grab.up} style="touch-action:none;cursor:${isSheet ? "grab" : "default"}">
             ${isSheet ? html`<div style="display:flex;justify-content:center;padding:6px 0 12px"><span style="width:40px;height:5px;border-radius:3px;background:var(--lumen-border-strong)"></span></div>` : nothing}
@@ -715,8 +717,8 @@ export class LightsController implements ReactiveController {
           </div>
           ${body}
         </div>
-      </div>
-    </div>`;
+`,
+    });
   }
 
   /** Sheet content: brightness, whites (4 presets in mireds), 8 hue swatches + the colour wheel. */

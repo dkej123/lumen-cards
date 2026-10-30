@@ -9,6 +9,7 @@ import { LayerController } from "../core/layer";
 import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
+import { adaptiveSheet } from "../core/sheet";
 import type { HassLike } from "../hass/types";
 import { AIR_LEVELS, AQI, PM10, PM25, type AirReading, airQuality, airReading } from "../logic/air";
 import { formatAgo, formatClock, formatNumber } from "../logic/time";
@@ -147,9 +148,6 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
   private sheet() {
     const sh = this._sheet!;
     const isSheet = this.narrowScreen;
-    const anim = sh.closing
-      ? isSheet ? "lumenSheetOut 250ms var(--lumen-ease-in-out) forwards" : "lumenModalOut 220ms ease forwards"
-      : isSheet ? "lumenSheetIn 560ms var(--lumen-ease-spring) both" : "lumenModalIn 460ms var(--lumen-ease-spring) both";
     const aq = this.quality();
     const { pm25, pm10, aqi_entity, footer } = this._config;
     const chart = (name: string, entity: string | undefined, value: number | undefined, thresholds: number[], unit = " µg/m³") => {
@@ -162,9 +160,13 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
         <div style="display:flex;justify-content:space-between;font:500 10.5px var(--lumen-mono);color:var(--lumen-text-3)"><span>−24 h</span><span>−12 h</span><span>${t("card.air_quality.now")}</span></div>
       </div>`;
     };
-    return html`<div style="position:absolute;inset:0;z-index:50;display:flex;align-items:${isSheet ? "flex-end" : "center"};justify-content:center;padding:${isSheet ? "0" : "24px"};box-sizing:border-box;font-family:var(--lumen-font);color:var(--lumen-text-1)">
-      <div @click=${this.scrimClose} style="position:absolute;inset:0;background:var(--lumen-scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:${sh.closing ? "lumenFadeOut 250ms forwards" : "lumenFadeIn 300ms both"}"></div>
-      <div role="dialog" aria-modal="true" aria-label=${t("card.air_quality.name")} style="position:relative;width:100%;max-width:${isSheet ? "520px" : "560px"};animation:${anim}">
+    return adaptiveSheet({
+      narrow: isSheet,
+      closing: sh.closing,
+      label: t("card.air_quality.name"),
+      wideWidth: 560,
+      onScrim: this.scrimClose,
+      panel: html`
         <div style="background:var(--lumen-surface-solid);border-radius:${isSheet ? "30px 30px 0 0" : "28px"};box-shadow:var(--lumen-shadow-2);border:1px solid var(--lumen-border);padding:6px 20px calc(28px + ${isSheet ? "env(safe-area-inset-bottom)" : "0px"});max-height:86vh;overflow:auto;overscroll-behavior:contain;box-sizing:border-box">
           ${isSheet ? html`<div style="display:flex;justify-content:center;padding:8px 0 10px"><span style="width:40px;height:5px;border-radius:3px;background:var(--lumen-border-strong)"></span></div>` : nothing}
           <div style="display:flex;align-items:center;gap:12px;padding:10px 0 16px">
@@ -180,8 +182,8 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
             <div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);border-top:1px solid var(--lumen-border);padding-top:12px">${footer ? `${footer} · ` : ""}${t("card.air_quality.last_reading")} ${aq.readAt ? formatClock(aq.readAt) : "—"}</div>
           </div>
         </div>
-      </div>
-    </div>`;
+`,
+    });
   }
 
   protected renderCard() {

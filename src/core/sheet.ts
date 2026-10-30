@@ -268,3 +268,17 @@ export const emptySheet = (title: string, text: string) =>
     <div style="font-size:15px;font-weight:750">${title}</div>
     <div style="max-width:240px;font-size:13px;font-weight:500;line-height:1.5;color:var(--lumen-text-2);text-wrap:pretty">${text}</div>
   </div>`;
+
+/**
+ * Window of the light details and the air quality chart: a bottom sheet on a narrow screen, a
+ * centred modal (`wideWidth`) otherwise, over a 6 px blurred scrim. `panel` is the card's own box.
+ */
+export function adaptiveSheet(o: { narrow: boolean; closing: boolean; label: string; wideWidth: number; onScrim: () => void; panel: unknown }) {
+  const anim = o.closing
+    ? o.narrow ? "lumenSheetOut 250ms var(--lumen-ease-in-out) forwards" : "lumenModalOut 220ms ease forwards"
+    : o.narrow ? "lumenSheetIn 560ms var(--lumen-ease-spring) both" : "lumenModalIn 460ms var(--lumen-ease-spring) both";
+  return html`<div style="position:absolute;inset:0;z-index:50;display:flex;align-items:${o.narrow ? "flex-end" : "center"};justify-content:center;padding:${o.narrow ? "0" : "24px"};box-sizing:border-box;font-family:var(--lumen-font);color:var(--lumen-text-1)">
+    <div @click=${o.onScrim} style="position:absolute;inset:0;background:var(--lumen-scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:${o.closing ? "lumenFadeOut 250ms forwards" : "lumenFadeIn 300ms both"}"></div>
+    <div role="dialog" aria-modal="true" aria-label=${o.label} style="position:relative;width:100%;max-width:${o.narrow ? "520px" : `${o.wideWidth}px`};animation:${anim}">${o.panel}</div>
+  </div>`;
+}
