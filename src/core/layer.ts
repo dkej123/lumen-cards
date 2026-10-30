@@ -47,8 +47,23 @@ const deepActive = (): HTMLElement | null => {
  * A `[role=dialog]` in the layer gets dialog behaviour: focus moves into it, Tab stays inside,
  * Escape calls `close`, and focus returns to where it was when the dialog goes away.
  */
+const VIEW_TAGS = new Set(["HUI-SECTIONS-VIEW", "HUI-MASONRY-VIEW", "HUI-PANEL-VIEW", "HUI-SIDEBAR-VIEW", "HUI-VIEW", "HUI-VIEW-CONTAINER"]);
+
+/** Nearest Lovelace view around `el`, across shadow roots. */
+function viewOf(el: Element): Element | undefined {
+  let n: Node | null = el;
+  while (n) {
+    if (n instanceof Element && VIEW_TAGS.has(n.tagName)) return n;
+    n = n instanceof ShadowRoot ? n.host : n.parentNode;
+  }
+  return undefined;
+}
+
 export class LayerController implements ReactiveController {
   private el?: LumenLayerElement;
+  /** The dashboard view the card is in: FABs keep to its edges (not over HA's sidebar). */
+  private view?: Element;
+  private viewRo?: ResizeObserver;
   private dialog?: HTMLElement;
   private returnFocus?: HTMLElement | null;
 
@@ -127,6 +142,7 @@ export class LayerController implements ReactiveController {
       const name = this.host.style.item(i);
       if (name.startsWith("--")) vars.push(`${name}:${this.host.style.getPropertyValue(name)}`);
     }
+    vars.push(...this.viewEdges());
     this.el.style.cssText = vars.join(";") + (this.dialog ? ";z-index:7" : "");
     render(html`<div class="root">${tpl}</div>`, this.el.shadowRoot!, { host: this.host });
     this.syncDialog();
@@ -136,7 +152,28 @@ export class LayerController implements ReactiveController {
     this.teardown();
   }
 
+  /** `--lumen-fab-view-left/right`: distance of the view's edges from the window's (HA sidebar etc.). */
+  private viewEdges(): string[] {
+    if (!this.view?.isConnected) {
+      this.viewRo?.disconnect();
+      this.view = viewOf(this.host);
+      if (this.view && typeof ResizeObserver !== "undefined") {
+        // The sidebar opening / closing moves the view without a window resize.
+        this.viewRo = new ResizeObserver(() => this.host.requestUpdate());
+        this.viewRo.observe(this.view);
+      }
+    }
+    if (!this.view) return [];
+    const r = this.view.getBoundingClientRect();
+    if (!r.width) return [];
+    const right = Math.max(0, document.documentElement.clientWidth - r.right);
+    return [`--lumen-fab-view-left:${Math.max(0, Math.round(r.left))}px`, `--lumen-fab-view-right:${Math.round(right)}px`];
+  }
+
   private teardown(): void {
+    this.viewRo?.disconnect();
+    this.viewRo = undefined;
+    this.view = undefined;
     if (!this.el) return;
     render(nothing, this.el.shadowRoot!, { host: this.host });
     this.el.removeEventListener("keydown", this.onKey);
@@ -202,7 +239,7 @@ export const fabBottom = (slot: number) =>
   `calc(var(--lumen-cards-fab-bottom, 24px) + ${slot === 0 ? 0 : FAB_MAIN + FAB_GAP + (slot - 1) * (FAB_SMALL + FAB_GAP)}px + env(safe-area-inset-bottom))`;
 
 /** Distance of every FAB's outer edge from the screen edge (themes: --lumen-cards-fab-right / -left). */
-export const fabInset = (side: FabSide = "right") => `var(--lumen-cards-fab-${side}, 16px)`;
+export const fabInset = (side: FabSide = "right") => `calc(var(--lumen-fab-view-${side}, 0px) + var(--lumen-cards-fab-${side}, 16px))`;
 
 /** `right:` / `left:` declaration of a FAB on `side`. */
 export const fabEdge = (side: FabSide = "right") => `${side}:${fabInset(side)}`;

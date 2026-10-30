@@ -366,8 +366,8 @@ describe("chips and floating buttons", () => {
     expect(fabSize(2)).toBe(48);
     expect(fabBottom(1)).toContain("+ 76px");
     expect(fabBottom(2)).toContain("+ 136px");
-    expect(fabEdge("right")).toBe("right:var(--lumen-cards-fab-right, 16px)");
-    expect(fabEdge("left")).toBe("left:var(--lumen-cards-fab-left, 16px)");
+    expect(fabEdge("right")).toBe("right:calc(var(--lumen-fab-view-right, 0px) + var(--lumen-cards-fab-right, 16px))");
+    expect(fabEdge("left")).toBe("left:calc(var(--lumen-fab-view-left, 0px) + var(--lumen-cards-fab-left, 16px))");
     // A left-handed panel starts its own stack at the bottom of the left edge.
     const panel = { requestUpdate: vi.fn() };
     expect(fabSlot(panel, FAB_ORDER.panels, "left")).toBe(0);
