@@ -248,6 +248,10 @@ Pasek z przyciskami do widoków dashboardu (albo pop-upów). Może przykleić si
 
 Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` (np. z paska nawigacji albo przycisku). Zamykasz je ×, klawiszem Esc, dotknięciem obok albo przesunięciem w dół. Sama karta jest na dashboardzie niewidoczna, chyba że chcesz wiersz, który ją otwiera.
 
+### Skalowanie
+
+Opakowanie na dowolne karty, Lumen albo inne: układa je w siatce jak w sekcji i ustawia całej grupie jedną maksymalną szerokość, w procentach miejsca albo w pikselach, wyśrodkowaną albo przy brzegu. Karty w środku nie zmieniają rozmiaru czcionek, tylko szerokość.
+
 ### Pływający panel
 
 Jeden pływający okrągły przycisk, który otwiera arkusz z dowolnymi kartami – najczęściej wszystkimi termostatami w jednym miejscu zamiast osobnego przycisku dla każdego. Przycisk pokazuje, ile z nich grzeje, przy grzaniu robi się pomarańczowy i delikatnie pulsuje, a o słabej baterii głowicy albo niedostępnym urządzeniu ostrzega znaczkiem w rogu. W arkuszu każdy termostat to jeden wiersz (−/+ zmienia temperaturę), a gdy termostaty mają te same presety, na górze jest **Wszystkie: Komfort / Eco / Wył.** dla wszystkich naraz. Na komputerze karta jest wierszem w siatce, który otwiera ten sam arkusz.
@@ -768,6 +772,29 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML) | – |
 | `show_trigger` | Pokazuj na dashboardzie wiersz, który otwiera pop-up (inaczej karta jest niewidoczna) | wył. |
 | `auto_close` | Zamknij samo po tylu sekundach (0 = nigdy) | 0 |
+
+### Skalowanie (`lumen-scale-card`)
+
+```yaml
+type: custom:lumen-scale-card
+max_width: 80
+max_width_unit: "%"
+cards:
+  - type: custom:lumen-light-card
+    entity: light.salon
+  - type: tile
+    entity: sun.sun
+    grid_options:
+      columns: 6
+```
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML), w siatce 12 kolumn jak w sekcji – każda zajmuje swoje `grid_options.columns` | – |
+| `max_width`, `max_width_unit` | Szerokość całej grupy: piksele albo procent miejsca karty w siatce (lub `max_width: 80%`) | cała szerokość |
+| `align` | Położenie węższej grupy: `center` (na środku), `start` (do lewej), `end` (do prawej) | `center` |
+
+Warunki widoczności ustawiaj na samej karcie skalowania; warunki kart w środku nie są brane pod uwagę.
 
 <a id="lumen-fab-sheet-card"></a>
 

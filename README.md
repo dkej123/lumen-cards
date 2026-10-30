@@ -252,6 +252,10 @@ A window with any cards you like, Lumen or not, opened by a link like `#living-r
 
 The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWeatherMap…): a slim 44 px line, just an icon with the temperature (to stand next to the greeting), or a card with the next hours. Tap it for the details sheet: now (feels like, wind, humidity, pressure, UV, visibility, sunrise and sunset), today hourly with a chart of the temperature and the feels-like temperature, the next days (tap a day to see its hours) and weather warnings, e.g. from IMGW-PIB Monitor. Every tile shows only when your weather entity has that value.
 
+### Scale
+
+A wrapper for any cards, Lumen or not: lays them out in a grid like a section and gives the whole group one max. width, as a percent of its place or in pixels, centred or at one side. The cards inside keep their text size, only the width changes.
+
 ### Floating panel
 
 One floating round button that opens a sheet with any cards – typically all your thermostats in one place instead of a floating button for each. The button shows how many of them are heating, turns orange with a soft pulse while something heats, and warns about a weak valve battery or a device that is offline. In the sheet you get one row per thermostat (−/+ to change the temperature) and, when the thermostats share their presets, **All: Comfort / Eco / Off** for all of them at once. On a computer it is a row in the grid that opens the same sheet.
@@ -776,6 +780,29 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | `cards` | The cards inside (any Home Assistant cards, edited as YAML) | – |
 | `show_trigger` | Show a row on the dashboard that opens the pop-up (otherwise the card is invisible) | off |
 | `auto_close` | Close by itself after this many seconds (0 = never) | 0 |
+
+### Scale (`lumen-scale-card`)
+
+```yaml
+type: custom:lumen-scale-card
+max_width: 80
+max_width_unit: "%"
+cards:
+  - type: custom:lumen-light-card
+    entity: light.living_room
+  - type: tile
+    entity: sun.sun
+    grid_options:
+      columns: 6
+```
+
+| Option | What it does | Default |
+|---|---|---|
+| `cards` | The cards inside (any Home Assistant cards, edited in YAML), in a 12-column grid like a section – each spans its `grid_options.columns` | – |
+| `max_width`, `max_width_unit` | Width of the whole group: pixels or percent of the card's grid place (or `max_width: 80%`) | full width |
+| `align` | Where a narrower group sits: `center`, `start` (left), `end` (right) | `center` |
+
+Set visibility conditions on the scale card itself; conditions of the cards inside are not applied.
 
 <a id="lumen-fab-sheet-card"></a>
 

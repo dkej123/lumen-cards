@@ -95,6 +95,7 @@ const LABELS: Record<string, string> = {
   edit_note: "editor.edit_note",
   max_width: "editor.max_width",
   max_width_unit: "editor.max_width_unit",
+  align: "editor.align",
   disarmed_color: "editor.disarmed_color",
   height: "editor.height",
   warnings_entity: "editor.warnings_entity",
@@ -150,7 +151,7 @@ export const computeHelper = (s: { name?: string; helper?: string }) => {
   return key && HELPERS[key] ? t(HELPERS[key]) : undefined;
 };
 
-const select = (options: [string, string][]) => ({
+export const select = (options: [string, string][]) => ({
   select: { mode: "dropdown", options: options.map(([value, label]) => ({ value, label: t(label) })) },
 });
 
@@ -188,16 +189,19 @@ export const appearance = ({ glow = false, effects = true, layout = "screen", ac
       flatten: true,
       schema: [...(glow ? [{ name: "glow_color", selector: { ui_color: {} } }] : []), ...(accent ? [{ name: "accent_color", selector: { ui_color: {} } }] : [])],
     },
-    {
-      name: "",
-      type: "grid",
-      flatten: true,
-      schema: [
-        { name: "max_width", selector: { number: { min: 1, max: 2000, step: 1, mode: "box" } } },
-        { name: "max_width_unit", default: "px", selector: select([["px", "editor.unit.px"], ["%", "editor.unit.percent"]]) },
-      ],
-    },
+    maxWidthField(),
     ...(effects ? [{ name: "weather_effects", default: true, selector: { boolean: {} } }] : []),
+  ],
+});
+
+/** Max. width with its unit (px / % of the grid place), side by side. */
+export const maxWidthField = (unit = "px"): Schema => ({
+  name: "",
+  type: "grid",
+  flatten: true,
+  schema: [
+    { name: "max_width", selector: { number: { min: 1, max: 2000, step: 1, mode: "box" } } },
+    { name: "max_width_unit", default: unit, selector: select([["px", "editor.unit.px"], ["%", "editor.unit.percent"]]) },
   ],
 });
 
