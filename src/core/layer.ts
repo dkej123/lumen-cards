@@ -75,6 +75,31 @@ export class LayerController implements ReactiveController {
     host.addController(this);
   }
 
+  /** First path segment of the dashboard the card was shown on (HA keeps other dashboards alive). */
+  private home?: string;
+  private onNavigate = () => this.host.requestUpdate();
+
+  hostConnected(): void {
+    window.addEventListener("location-changed", this.onNavigate);
+    window.addEventListener("popstate", this.onNavigate);
+  }
+
+  /**
+   * The card is really on screen: its dashboard is the open one and its view is laid out. HA keeps
+   * a dashboard you left connected in the background – without this its floating buttons and
+   * dialogs (in a body-level layer) would show over the next dashboard.
+   */
+  private onScreen(): boolean {
+    const seg = location.pathname.split("/")[1] ?? "";
+    const view = this.view?.isConnected ? this.view : viewOf(this.host);
+    if (view) {
+      const r = view.getBoundingClientRect();
+      if (!r.width && !r.height) return false;
+    }
+    if (this.home === undefined) this.home = seg;
+    return seg === this.home;
+  }
+
   private onKey = (e: KeyboardEvent) => {
     if (!this.dialog) return;
     if (e.key === "Escape" && this.close) {
@@ -124,6 +149,12 @@ export class LayerController implements ReactiveController {
   }
 
   hostUpdated(): void {
+    if (!this.onScreen()) {
+      // Off screen: no layer, and its FAB slot goes to the cards that are shown.
+      releaseFab(this.host);
+      this.teardown();
+      return;
+    }
     const tpl = this.content();
     if (tpl === nothing) {
       this.teardown();
@@ -149,6 +180,8 @@ export class LayerController implements ReactiveController {
   }
 
   hostDisconnected(): void {
+    window.removeEventListener("location-changed", this.onNavigate);
+    window.removeEventListener("popstate", this.onNavigate);
     this.teardown();
   }
 
