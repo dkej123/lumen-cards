@@ -152,6 +152,22 @@ describe("climate", () => {
     el.remove();
   });
 
+  it("compact row: a tap on the icon turns the thermostat on / off", async () => {
+    const h = hass();
+    h.states["climate.r"] = ent("climate.r", "off", { hvac_modes: ["off", "heat"], temperature: 21, min_temp: 5, max_temp: 30 });
+    const el = document.createElement("lumen-climate-card") as Card;
+    el.setConfig({ type: "custom:lumen-climate-card", entity: "climate.r", layout: "compact" });
+    el.hass = h;
+    document.body.append(el);
+    await el.updateComplete;
+    const btn = el.shadowRoot!.querySelector<HTMLElement>('button[aria-pressed]')!;
+    btn.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true, pointerId: 1 }));
+    btn.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true, pointerId: 1 }));
+    await new Promise((r) => setTimeout(r, 400));
+    expect(h.calls.at(-1)).toEqual(["climate", "set_hvac_mode", { hvac_mode: "heat" }, { entity_id: "climate.r" }]);
+    el.remove();
+  });
+
   it("step 0.5 over a 0.1 device: snaps to the grid; rapid taps send once, 1 s after the last", async () => {
     const h = hass();
     h.states["climate.bt"] = ent("climate.bt", "heat", { hvac_modes: ["off", "heat"], temperature: 23.6, min_temp: 5, max_temp: 30, target_temp_step: 0.1 });
