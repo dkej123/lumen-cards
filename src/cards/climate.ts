@@ -367,12 +367,12 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const fan = e?.attributes.fan_mode ?? "auto";
     const sel = (a: boolean, color: string) =>
       a ? `background:var(--lumen-surface-solid);color:${color};box-shadow:var(--lumen-shadow-1)` : "background:transparent;color:var(--lumen-text-2);box-shadow:none";
-    // The entity's own modes in the catalog's order (hvac_modes narrows them).
+    // The entity's own modes in the catalog's order; `hvac_modes` narrows them and sets the order.
     const hvac: string[] = e?.attributes.hvac_modes ?? ["off", "heat", "cool"];
-    const wanted = cfg.hvac_modes?.length ? cfg.hvac_modes : hvac;
+    const order = cfg.hvac_modes?.length ? cfg.hvac_modes.filter((k) => MODES[k]) : Object.keys(MODES);
     // heat_cool reads "Auto" when the device has no separate auto mode (catalog section 09).
     const label = (k: string) => t(k === "heat_cool" && !hvac.includes("auto") ? "common.auto" : MODES[k][0]);
-    const modes = Object.keys(MODES).filter((k) => hvac.includes(k) && wanted.includes(k)).map((k) => ({
+    const modes = order.filter((k) => hvac.includes(k)).map((k) => ({
       k, label: label(k), ic: MODES[k][1], active: mode === k,
       color: k === "off" ? "var(--lumen-text-1)" : MODE_COLOR[k],
       on: () => {
@@ -385,7 +385,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     }));
     const fanModes: string[] = e?.attributes.fan_modes ?? [];
     const wantedFans = cfg.fan_modes?.length ? cfg.fan_modes : fanModes;
-    const fans = fanModes.filter((k) => wantedFans.includes(k)).map((k) => ({
+    const fans = (cfg.fan_modes?.length ? wantedFans.filter((k) => fanModes.includes(k)) : fanModes).map((k) => ({
       k, label: FANS[k] ? t(FANS[k][0]) : k, ic: FANS[k]?.[1] ?? (/^\d+$/.test(k) ? `mdi:fan-speed-${Math.min(3, Number(k))}` : "mdi:fan"), active: fan === k,
       on: () => {
         if (off || una) return;

@@ -268,3 +268,24 @@ describe("lumen-bar-card", () => {
     expect(barInner({ type: "tile", entity: "light.x" })).toEqual({ type: "tile", entity: "light.x" });
   });
 });
+
+describe("climate mode order", () => {
+  it("hvac_modes / fan_modes keep the configured order", async () => {
+    await import("../src/lumen-cards");
+    const el = document.createElement("lumen-climate-card") as HTMLElement & { setConfig(c: unknown): void; hass: unknown; updateComplete: Promise<boolean> };
+    el.setConfig({ type: "custom:lumen-climate-card", entity: "climate.ac", layout: "wide", hvac_modes: ["off", "heat", "cool"], fan_modes: ["auto", "low", "high"] });
+    el.hass = {
+      states: { "climate.ac": { entity_id: "climate.ac", state: "off", attributes: { hvac_modes: ["cool", "heat", "off", "dry"], fan_modes: ["high", "low", "auto", "turbo"], fan_mode: "low", temperature: 22 }, last_changed: "", last_updated: "" } },
+      language: "en", callService: async () => undefined, callWS: async () => undefined,
+    };
+    document.body.append(el);
+    await el.updateComplete;
+    const labels = (sel: string) => [...el.shadowRoot!.querySelectorAll(sel)].map((b) => b.textContent!.trim());
+    const all = labels("button");
+    for (const l of ["Off", "Heat", "Cool", "Auto", "Low", "High"]) expect(all).toContain(l);
+    expect(all.indexOf("Off")).toBeLessThan(all.indexOf("Heat"));
+    expect(all.indexOf("Heat")).toBeLessThan(all.indexOf("Cool"));
+    expect(all.indexOf("Auto")).toBeLessThan(all.indexOf("High"));
+    el.remove();
+  });
+});
