@@ -602,6 +602,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 | `fan_modes` | Which fan buttons to show (more than 5 become a list) | all the device has |
 | `preset_modes` | Which presets to show | all the device has |
 | `min_temp`, `max_temp` | Narrow the temperature range (empty = the device's own range) | the device's |
+| `step` | How much − and + change the setpoint (e.g. `0.5` when the thermostat reports 0.1). The setpoint is sent 1 s after the last tap. | the device's step |
 | `fab` | **Show as a floating button** in the corner | off |
 | `fab_narrow_only` | **Auto: only on narrow screens**: floating button on phones, normal card on big screens | on |
 | `power_action` | What the power button does, if you want your own script instead | turns on the last used mode / turns off |

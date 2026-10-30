@@ -27,6 +27,8 @@ export interface ClimateConfig extends BaseConfig {
   icon?: string;
   /** Power button action. Default: on = the last used mode, off = climate.turn_off. */
   power_action?: ActionConfig;
+  /** Setpoint step of the −/+ buttons (default: the device's target_temp_step). */
+  step?: number;
   /** Narrower setpoint range than the device's (optional). */
   min_temp?: number;
   max_temp?: number;
@@ -62,7 +64,7 @@ export interface ClimateConfig extends BaseConfig {
 
 const PENDING_MS = 10_000;
 /** The setpoint goes out this long after the last −/+ tap. */
-export const SETPOINT_DEBOUNCE_MS = 800;
+export const SETPOINT_DEBOUNCE_MS = 1000;
 const AC_LAST_KEY = "lumen-ac-last:";
 const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
@@ -304,19 +306,24 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const { entity } = this._config;
     const e = this.entity(entity);
     if (!e || isUnavailable(e) || e.state === "off") return;
-    const step = Number(e.attributes.target_temp_step ?? (e.attributes.temperature_unit === "°F" ? 1 : 0.5));
+    const step = this.stepOf(e);
     const [lo, hi] = this.limits(e);
+    // Off-grid values (e.g. 23.6 with step 0.5) first snap to the grid in the direction of the tap.
+    const move = (v: number) => {
+      const n = delta > 0 ? Math.floor(v / step + 1e-6) + 1 : Math.ceil(v / step - 1e-6) - 1;
+      return Math.round(n * step * 100) / 100;
+    };
     const clamp = (v: number) => Math.max(lo, Math.min(hi, v));
     const r = this.rangeTarget ?? this.range(e);
     let data: Record<string, number>;
     if (r) {
-      const next = { ...r, [this._side]: clamp(r[this._side] + delta * step) };
+      const next = { ...r, [this._side]: clamp(move(r[this._side])) };
       if (next.low > next.high) return;
       this.rangeTarget = next;
       data = { target_temp_low: next.low, target_temp_high: next.high };
     } else {
       const current = this.acTarget ?? Number(e.attributes.temperature ?? (lo + hi) / 2);
-      this.acTarget = clamp(current + delta * step);
+      this.acTarget = clamp(move(current));
       data = { temperature: this.acTarget };
     }
     this.haptic("selection");
@@ -329,6 +336,13 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       this.acSentAt = Date.now();
       this.call("climate", "set_temperature", data, entity);
     }, SETPOINT_DEBOUNCE_MS);
+  }
+
+  /** −/+ step: the card's `step`, else the device's target_temp_step (0.5 °C / 1 °F without one). */
+  private stepOf(e: HassEntity): number {
+    const own = Number(this._config.step);
+    if (own > 0) return own;
+    return Number(e.attributes.target_temp_step ?? (e.attributes.temperature_unit === "°F" ? 1 : 0.5));
   }
 
   /** °F per the entity or HA's unit system (no conversion: the device's numbers as they are). */
@@ -427,7 +441,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const r = this.rangeTarget ?? this.range(e);
     const range = r ? { low: formatTemp(r.low, f), high: formatTemp(r.high, f) } : null;
     const lim = e ? this.limits(e) : null;
-    const stepVal = Number(e?.attributes.target_temp_step ?? (f ? 1 : 0.5));
+    const stepVal = e ? this.stepOf(e) : f ? 1 : 0.5;
     const rangeLine = lim ? t("card.climate.range", { min: formatTemp(lim[0]).replace("°", ""), max: formatTemp(lim[1]).replace("°", ""), unit: f ? "°F" : "°C", step: Number.isInteger(stepVal) ? String(stepVal) : formatNumber(stepVal) }) : "";
     const heatOnly = hvac.every((m) => m === "heat" || m === "off");
     const ic = cfg.icon ?? (mode === "heat_cool" || mode === "auto" ? "mdi:thermostat-auto" : heatOnly ? "mdi:radiator" : "mdi:air-conditioner");
@@ -658,6 +672,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         schema: [
           { name: "min_temp", selector: { number: { min: 0, max: 100, step: 0.5, mode: "box" } } },
           { name: "max_temp", selector: { number: { min: 0, max: 100, step: 0.5, mode: "box" } } },
+          { name: "step", selector: { number: { min: 0.1, max: 5, step: 0.1, mode: "box", unit_of_measurement: "°" } } },
         ],
       },
       {

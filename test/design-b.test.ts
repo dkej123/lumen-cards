@@ -218,7 +218,7 @@ describe("09 climate", () => {
     await el.updateComplete;
     vi.useFakeTimers();
     (el as unknown as { step(d: number): void }).step(1);
-    vi.advanceTimersByTime(900);
+    vi.advanceTimersByTime(1100);
     vi.useRealTimers();
     expect(h.calls.at(-1)).toEqual(["climate", "set_temperature", { target_temp_low: 20, target_temp_high: 25.5 }, { entity_id: "climate.ac" }]);
   });

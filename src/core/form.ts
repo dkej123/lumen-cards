@@ -66,6 +66,7 @@ const LABELS: Record<string, string> = {
   message: "editor.message",
   done_action: "editor.done_action",
   battery_entity: "editor.battery_entity",
+  step: "editor.step",
   battery_low: "editor.battery_low",
   show_battery: "editor.show_battery",
   dialog: "editor.dialog",
@@ -115,6 +116,7 @@ const HELPERS: Record<string, string> = {
   styles: "editor.help.styles",
   max_width: "editor.help.max_width",
   battery_entity: "editor.help.battery_entity",
+  step: "editor.help.step",
   sub_buttons: "editor.help.sub_buttons",
 };
 

@@ -600,6 +600,7 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy kar
 | `fan_modes` | Które przyciski nadmuchu pokazać (więcej niż 5 zamienia się w listę) | wszystkie, które ma urządzenie |
 | `preset_modes` | Które presety pokazać | wszystkie, które ma urządzenie |
 | `min_temp`, `max_temp` | Zawęża zakres temperatur (puste = zakres urządzenia) | zakres urządzenia |
+| `step` | O ile zmieniają nastawę − i + (np. `0.5`, gdy termostat podaje 0,1). Nastawa idzie do urządzenia 1 s po ostatnim dotknięciu. | krok z urządzenia |
 | `fab` | **Pokaż jako pływający przycisk** w rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie**: pływający przycisk na telefonie, zwykła karta na dużym ekranie | wł. |
 | `power_action` | Co robi przycisk zasilania, jeśli wolisz własny skrypt | włącza ostatni tryb / wyłącza |

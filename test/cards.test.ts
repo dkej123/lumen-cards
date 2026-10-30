@@ -146,9 +146,31 @@ describe("climate", () => {
     await el.updateComplete;
     vi.useFakeTimers();
     el.step(1);
-    vi.advanceTimersByTime(900);
+    vi.advanceTimersByTime(1100);
     vi.useRealTimers();
     expect(h.calls.at(-1)).toEqual(["climate", "set_temperature", { temperature: 69 }, { entity_id: "climate.f" }]);
+    el.remove();
+  });
+
+  it("step 0.5 over a 0.1 device: snaps to the grid; rapid taps send once, 1 s after the last", async () => {
+    const h = hass();
+    h.states["climate.bt"] = ent("climate.bt", "heat", { hvac_modes: ["off", "heat"], temperature: 23.6, min_temp: 5, max_temp: 30, target_temp_step: 0.1 });
+    const el = document.createElement("lumen-climate-card") as Card & { step(d: number): void };
+    el.setConfig({ type: "custom:lumen-climate-card", entity: "climate.bt", step: 0.5 });
+    el.hass = h;
+    document.body.append(el);
+    await el.updateComplete;
+    vi.useFakeTimers();
+    const before = h.calls.length;
+    el.step(1);
+    vi.advanceTimersByTime(900);
+    el.step(1);
+    vi.advanceTimersByTime(900);
+    expect(h.calls.length).toBe(before);
+    vi.advanceTimersByTime(200);
+    vi.useRealTimers();
+    expect(h.calls.length).toBe(before + 1);
+    expect(h.calls.at(-1)).toEqual(["climate", "set_temperature", { temperature: 24.5 }, { entity_id: "climate.bt" }]);
     el.remove();
   });
 });
