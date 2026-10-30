@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons } from "../core/sub-buttons";
@@ -92,22 +93,12 @@ const writeMode = (entity: string, mode: string) => {
   }
 };
 
-interface Pad {
-  kind: "arm" | "disarm";
-  code: string;
-  mode: string;
-  error?: string;
-  shake: number;
-  busy: boolean;
-}
-
 /**
  * One alarm (catalog section 05): a row with the state and Arm / Disarm when wide, a tile when
  * compact, only the icon below 100 px. Arm opens the code pad with the mode choice (modes the
  * entity supports), Disarm the pad alone; HA checks the code, a failed call shakes the dots.
  */
 export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
-  static properties = { ...LumenBaseCard.properties, _pad: { state: true } };
   protected static compactBelow = 200;
   protected static iconBelow = 100;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "armed_home", attributes: { friendly_name: t("card.alarm.name"), supported_features: 7, code_format: "number" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
@@ -115,23 +106,23 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   private subs = new SubButtons(this);
   /** A command sent by the tap action: spinner until the alarm changes (or 10 s). */
   private pending = new Pending(this, () => this.alarm);
-  private _pad: Pad | null = null;
+  private pad = new CodePad<{ kind: "arm" | "disarm"; mode: string }>(this);
 
   protected layer = new LayerController(
     this,
     () => {
       if (this.preview) return nothing;
       const c = this._config;
-      const alert = this.triggered && !this._pad;
+      const alert = this.triggered && !this.pad.state;
       const ring = alert && c.screen_ring !== false ? alarmRing() : nothing;
       // Phones: the banner floats at the top of the screen (a grid cell is too small for it).
       const banner = alert && c.banner !== false && this.compact
         ? html`<div style="position:absolute;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top));z-index:9;pointer-events:auto;max-width:520px;margin:0 auto">${alarmBanner(true, this.bannerText, () => this.primary())}</div>`
         : nothing;
-      if (ring === nothing && banner === nothing && !this._pad) return nothing;
-      return html`${ring}${banner}${this._pad ? this.pad() : nothing}`;
+      if (ring === nothing && banner === nothing && !this.pad.state) return nothing;
+      return html`${ring}${banner}${this.pad.state ? this.padView() : nothing}`;
     },
-    () => (this._pad = null),
+    () => this.pad.close(),
   );
 
   protected entityIds() {
@@ -140,11 +131,6 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
 
   protected validate(c: AlarmConfig) {
     validateAlarm(c);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._pad = null;
   }
 
   connectedCallback(): void {
@@ -215,7 +201,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     const modes = armModes(this.alarm, this._config.arm_modes);
     const last = readMode(this._config.entity);
     const mode = last && modes.includes(last) ? last : modes.includes("armed_away") ? "armed_away" : modes[0];
-    this._pad = { kind: "arm", code: "", mode, shake: 0, busy: false };
+    this.pad.show({ kind: "arm", mode });
   }
 
   private disarm() {
@@ -224,7 +210,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       this.send("disarm", "");
       return;
     }
-    this._pad = { kind: "disarm", code: "", mode: "", shake: 0, busy: false };
+    this.pad.show({ kind: "disarm", mode: "" });
   }
 
   /** alarm_arm_<mode> / alarm_disarm; a rejected call (wrong code) keeps the pad open with the error. */
@@ -232,25 +218,25 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     if (!this._hass) return;
     const c = this._config;
     const service = kind === "arm" ? `alarm_arm_${mode.replace("armed_", "")}` : "alarm_disarm";
-    if (this._pad) this._pad = { ...this._pad, busy: true, error: undefined };
+    this.pad.sending();
     this.haptic();
     try {
       await this._hass.callService("alarm_control_panel", service, code ? { code } : {}, { entity_id: c.entity });
       if (kind === "arm") writeMode(c.entity, mode);
-      this._pad = null;
+      this.pad.close();
     } catch (err) {
       const msg = (err as Error)?.message ?? String(err);
       this.haptic("failure");
-      if (this._pad) this._pad = { ...this._pad, busy: false, code: "", error: /code/i.test(msg) || code ? t("card.alarm.wrong_code") : msg, shake: this._pad.shake + 1 };
+      this.pad.failed(/code/i.test(msg) || code ? t("card.alarm.wrong_code") : msg);
     }
   }
 
-  private pad() {
-    const p = this._pad!;
+  private padView() {
+    const p = this.pad.state!;
     const arm = p.kind === "arm";
     const kind = !this.needsCode(arm) ? "none" : this.alarm?.attributes.code_format === "text" ? "text" : "pin";
     const modes: PadMode[] | undefined = arm
-      ? armModes(this.alarm, this._config.arm_modes).map((m) => ({ icon: ARMED_ICON[m], label: modeLabel(m), active: p.mode === m, on: () => this._pad && (this._pad = { ...this._pad, mode: m }) }))
+      ? armModes(this.alarm, this._config.arm_modes).map((m) => ({ icon: ARMED_ICON[m], label: modeLabel(m), active: p.mode === m, on: () => this.pad.patch({ mode: m }) }))
       : undefined;
     const s = alarmStatus(this.alarm);
     return codePad({
@@ -260,26 +246,15 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       color: arm ? "var(--lumen-ok)" : "var(--lumen-danger)",
       modes: modes && modes.length > 1 ? modes : undefined,
       kind,
-      code: p.code,
-      error: p.error,
-      shakeKey: p.shake,
-      busy: p.busy,
+      ...this.pad.props(),
       act: arm ? t("card.alarm.arm_with", { mode: modeLabel(p.mode).toLocaleLowerCase() }) : t("card.alarm.disarm"),
       narrow: this.narrowScreen,
-      // Read the live pad state: several key presses may land before the next render.
-      onKey: (k) => {
-        const cur = this._pad;
-        if (!cur) return;
-        const code = cur.error ? "" : cur.code;
-        this._pad = { ...cur, error: undefined, code: k === "bk" ? code.slice(0, -1) : code.length < 12 ? code + k : code };
-      },
-      onText: (v) => this._pad && (this._pad = { ...this._pad, error: undefined, code: v }),
       submit: () => {
-        const cur = this._pad;
+        const cur = this.pad.state;
         if (!cur || cur.busy || (kind !== "none" && !cur.code)) return;
         this.send(cur.kind, cur.code, cur.mode);
       },
-      close: () => (this._pad = null),
+      close: () => this.pad.close(),
     });
   }
 

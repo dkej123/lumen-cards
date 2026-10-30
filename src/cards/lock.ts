@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { CodePad } from "../core/controllers/code-pad";
 import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
@@ -82,7 +83,7 @@ export const lockPadKind = (format: unknown): "pin" | "text" =>
  * when the command went through.
  */
 export class LumenLockCard extends LumenBaseCard<LockConfig> {
-  static properties = { ...LumenBaseCard.properties, _cmd: { state: true }, _dialog: { state: true }, _pad: { state: true } };
+  static properties = { ...LumenBaseCard.properties, _cmd: { state: true }, _dialog: { state: true } };
   protected static compactBelow = 200;
   protected static iconBelow = 100;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "locked", attributes: { friendly_name: t("card.lock.name"), supported_features: 1 }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
@@ -90,11 +91,11 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   private _cmd: { cmd: Cmd; sawBusy: boolean; since: number } | null = null;
   private _dialog = false;
   /** Command waiting for the code (PIN pad). */
-  private _pad: { cmd: Cmd; code: string; error?: string; shake: number; busy: boolean } | null = null;
+  private pad = new CodePad<{ cmd: Cmd }>(this);
 
   protected layer = new LayerController(
     this,
-    () => (this.preview ? nothing : this._pad ? this.pad() : this._dialog ? this.dialog() : nothing),
+    () => (this.preview ? nothing : this.pad.state ? this.padView() : this._dialog ? this.dialog() : nothing),
     () => this.closeDialog(),
   );
 
@@ -140,14 +141,14 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
 
   private closeDialog() {
     this._dialog = false;
-    this._pad = null;
+    this.pad.close();
   }
 
   /** Lock right away; unlock / open ask for the code first when the lock has a `code_format`. */
   private request(cmd: Cmd) {
     if (this.busy() || this.offline) return;
     if (cmd !== "lock" && this.lock?.attributes.code_format) {
-      this._pad = { cmd, code: "", shake: 0, busy: false };
+      this.pad.show({ cmd });
       return;
     }
     this.send(cmd);
@@ -159,19 +160,19 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     if (this.busy() || !this._hass) return;
     this.haptic();
     this._cmd = { cmd, sawBusy: false, since: Date.now() };
-    if (this._pad) this._pad = { ...this._pad, busy: true, error: undefined };
+    this.pad.sending();
     try {
       await this._hass.callService("lock", cmd, code ? { code } : {}, { entity_id: c.entity });
-      this._pad = null;
+      this.pad.close();
     } catch (err) {
       this._cmd = null;
       const msg = (err as Error)?.message ?? String(err);
       this.haptic("failure");
-      if (this._pad) {
-        this._pad = { ...this._pad, busy: false, code: "", error: t("card.alarm.wrong_code"), shake: this._pad.shake + 1 };
+      if (this.pad.state) {
+        this.pad.failed(t("card.alarm.wrong_code"));
       } else if (cmd === "lock" && this.lock?.attributes.code_format) {
         // A lock that wants the code for locking too.
-        this._pad = { cmd, code: "", shake: 0, busy: false };
+        this.pad.show({ cmd });
       } else {
         toast(this, { icon: "mdi:alert-circle", tone: "danger", title: t("common.error"), text: msg });
       }
@@ -262,8 +263,8 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
   }
 
   /** PIN pad (catalog PAD) before unlock / open when the lock has a code_format. */
-  private pad() {
-    const p = this._pad!;
+  private padView() {
+    const p = this.pad.state!;
     const open = p.cmd === "open";
     const kind = lockPadKind(this.lock?.attributes.code_format);
     return codePad({
@@ -272,22 +273,11 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
       icon: open ? "mdi:door-open" : p.cmd === "lock" ? "mdi:lock" : "mdi:lock-open-variant-outline",
       color: "var(--lumen-warning)",
       kind,
-      code: p.code,
-      error: p.error,
-      shakeKey: p.shake,
-      busy: p.busy,
+      ...this.pad.props(),
       act: open ? t("card.lock.open_action") : p.cmd === "lock" ? t("card.lock.lock") : t("card.lock.unlock"),
       narrow: this.narrowScreen,
-      // Read the live pad state: several key presses may land before the next render.
-      onKey: (k) => {
-        const cur = this._pad;
-        if (!cur) return;
-        const code = cur.error ? "" : cur.code;
-        this._pad = { ...cur, error: undefined, code: k === "bk" ? code.slice(0, -1) : code.length < 12 ? code + k : code };
-      },
-      onText: (v) => this._pad && (this._pad = { ...this._pad, error: undefined, code: v }),
       submit: () => {
-        const cur = this._pad;
+        const cur = this.pad.state;
         if (cur && !cur.busy && cur.code) this.send(cur.cmd, cur.code);
       },
       close: () => this.closeDialog(),
