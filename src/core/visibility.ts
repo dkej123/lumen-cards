@@ -1,4 +1,5 @@
 // HA visibility conditions around a card, as labels for the dashboard edit mode.
+import { composedAncestors, isHaView, type HuiWrapper } from "./dom";
 
 /** One HA visibility condition (card or section `visibility`). */
 interface Condition {
@@ -54,16 +55,12 @@ export function visibilityLabels(conds: unknown): VisibilityLabel[] {
 export function haConditions(host: Element): { card: unknown[]; section: unknown[] } | undefined {
   if (host.parentElement?.localName !== "hui-card") return undefined;
   const found = { card: [] as unknown[], section: [] as unknown[] };
-  let n: Node | null = host;
-  for (let i = 0; i < 40 && n; i++) {
-    const parent: Node | null = n.parentNode;
-    n = parent instanceof ShadowRoot ? parent.host : parent;
-    if (!(n instanceof HTMLElement)) continue;
-    if (n.localName === "hui-card" || n.localName === "hui-section") {
-      const v = (n as HTMLElement & { config?: { visibility?: unknown } }).config?.visibility;
-      if (Array.isArray(v)) found[n.localName === "hui-card" ? "card" : "section"].push(...v);
+  for (const el of composedAncestors(host)) {
+    if (isHaView(el)) return found;
+    if (el.localName === "hui-card" || el.localName === "hui-section") {
+      const v = (el as HuiWrapper).config?.visibility;
+      if (Array.isArray(v)) found[el.localName === "hui-card" ? "card" : "section"].push(...v);
     }
-    if (/^hui-.*-view$/.test(n.localName)) return found;
   }
   return undefined;
 }

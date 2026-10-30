@@ -1,11 +1,12 @@
 import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { advanced, appearance, entityStub } from "../core/form";
 import { formX, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
+import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, tone } from "../core/styles";
@@ -29,7 +30,6 @@ export interface CalendarConfig extends BaseConfig {
 
 type HassApi = HassLike & { callApi?<T>(method: "GET", path: string): Promise<T> };
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const REFRESH_MS = 5 * 60_000;
 
 export function validateCalendar(c: Partial<CalendarConfig>): void {

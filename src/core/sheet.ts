@@ -22,9 +22,12 @@ declare global {
 export const SHEET_CLOSE_DRAG = 40;
 const CLOSE_MS = 250;
 
+/** HA's card helpers (its card factory), or undefined outside HA. */
+export const cardHelpers = (): Promise<Helpers | undefined> => window.loadCardHelpers?.().catch(() => undefined) ?? Promise.resolve(undefined);
+
 /** An inner card: HA's own card factory, or (outside HA) a custom element created directly. */
 export async function createCard(cfg: CardConfig): Promise<CardEl> {
-  const helpers = await window.loadCardHelpers?.().catch(() => undefined);
+  const helpers = await cardHelpers();
   if (helpers) return helpers.createCardElement(cfg);
   const type = String(cfg.type ?? "");
   const el = document.createElement(type.startsWith("custom:") ? type.slice(7) : `hui-${type}-card`) as CardEl;

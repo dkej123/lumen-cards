@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, form } from "../core/form";
 import { t } from "../core/i18n";

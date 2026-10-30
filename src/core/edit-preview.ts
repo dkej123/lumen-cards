@@ -1,4 +1,5 @@
 import { html, render } from "lit";
+import { viewOf, type HuiWrapper } from "./dom";
 import { t } from "./i18n";
 import { icon } from "./lumen-icon";
 import { visibleAt } from "./visibility";
@@ -13,22 +14,11 @@ export type PreviewMode = "all" | "narrow" | "wide";
 const WIDTH: Record<Exclude<PreviewMode, "all">, number> = { narrow: 390, wide: 1440 };
 const KEY = "lumen-edit-preview";
 
-const VIEW = /^hui-.*-view$/;
-
 /** Outermost wrapper that holds only `el` (edit-mode frame, grid cell), in the same root. */
 function frameOf(el: HTMLElement): HTMLElement {
   let n = el;
   for (let i = 0; i < 6 && n.parentElement && n.parentElement.children.length === 1; i++) n = n.parentElement;
   return n;
-}
-
-function viewOf(el: Element): Element | undefined {
-  let n: Node | null = el;
-  for (let i = 0; i < 60 && n; i++) {
-    if (n instanceof Element && VIEW.test(n.localName)) return n;
-    n = n instanceof ShadowRoot ? n.host : n.parentNode;
-  }
-  return undefined;
 }
 
 /** hui-section / hui-card elements of a view, through the shadow roots of HA's own elements. */
@@ -132,7 +122,7 @@ class EditPreview {
     if (this.mode !== "all") {
       const w = WIDTH[this.mode];
       for (const el of wrappers(view.shadowRoot ?? view)) {
-        const v = (el as HTMLElement & { config?: { visibility?: unknown } }).config?.visibility;
+        const v = (el as HuiWrapper).config?.visibility;
         if (!visibleAt(v, w)) hide.add(frameOf(el));
       }
     }

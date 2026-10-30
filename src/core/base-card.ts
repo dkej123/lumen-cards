@@ -6,6 +6,7 @@ import { injectFonts } from "../design/fonts";
 import { weather } from "../weather/engine";
 import { handleAction, haptic, openMoreInfo, type ActionConfig } from "./actions";
 import { colorVars, cssColor, shared } from "./styles";
+import { findAncestor } from "./dom";
 import "./form-editor";
 import type { CardForm, LumenFormEditor } from "./form-editor";
 import { editLabel, errorCard, sampleBadge, skeleton } from "./parts";
@@ -247,12 +248,7 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   protected get inCardPicker(): boolean {
     if (!this.preview) return false;
     if (this._inPicker !== undefined) return this._inPicker;
-    let n: Node | null = this;
-    for (let i = 0; i < 16 && n; i++) {
-      const parent: Node | null = n.parentNode;
-      n = parent instanceof ShadowRoot ? parent.host : parent;
-      if (n instanceof Element && n.localName === "hui-card-picker") return (this._inPicker = true);
-    }
+    if (findAncestor(this, (el) => el.localName === "hui-card-picker", 16)) return (this._inPicker = true);
     // Only cached once the card is in the page (the picker attaches previews after creating them).
     if (this.isConnected) this._inPicker = false;
     return false;

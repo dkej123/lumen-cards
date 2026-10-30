@@ -1,12 +1,12 @@
 import { html, nothing, type TemplateResult } from "lit";
 import { icon } from "./lumen-icon";
+import { WFX } from "./parts";
 import { pressable, spinnerStyle, type PressHandlers } from "./press";
 import { glass } from "./styles";
 
 // Row and compact square tiles of the Lumen Cards catalog (`R` and `C`), shared by the entity,
 // button and person cards. Colours come in as a `TileLook` so each card keeps its own state logic.
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 export interface TileLook {
   /** Icon cell background / glyph colour. */

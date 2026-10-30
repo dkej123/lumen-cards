@@ -1,5 +1,6 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { findAncestor } from "../core/dom";
 import { appearance, firstOf, form, stub } from "../core/form";
 import { icon } from "../core/lumen-icon";
 import { t } from "../core/i18n";
@@ -30,6 +31,9 @@ export function validateWeatherBackground(c: Partial<WeatherBackgroundConfig>): 
  * floating layer (mist, wind) above them. Also drives the per-card weather surfaces of
  * every Lumen card in the view. One per view; takes no space unless it shows its switches.
  */
+/** The views whose parent hosts the background. */
+const VIEWS = new Set(["hui-view", "hui-panel-view", "hui-sections-view", "hui-masonry-view"]);
+
 export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundConfig> {
   protected static grid = GRID.full;
   /** A full-screen layer, not a card in the grid: no loading skeleton. */
@@ -144,17 +148,9 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
 
   /** The view element of the dashboard this card is in (falls back to <body>). */
   private backgroundHost(): Element {
-    let node: Node | null = this;
-    while (node) {
-      const el = node as Element;
-      if (el.localName === "hui-view" || el.localName === "hui-panel-view" || el.localName === "hui-sections-view" || el.localName === "hui-masonry-view") {
-        const parent = el.parentNode;
-        if (parent instanceof Element || parent instanceof ShadowRoot) return parent as Element;
-      }
-      node = el.parentNode ?? (el.getRootNode() as ShadowRoot).host ?? null;
-      if (node === el) break;
-    }
-    return document.body;
+    const view = findAncestor(this, (el) => VIEWS.has(el.localName));
+    const parent = view?.parentNode;
+    return parent instanceof Element || parent instanceof ShadowRoot ? (parent as Element) : document.body;
   }
 
   /** Effect switches of the design edit bar (web row style). */

@@ -1,11 +1,12 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
 import { advanced, appearance, entityStub } from "../core/form";
 import { formX, nameIcon, tapHold } from "../core/form-extra";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
+import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { SlideDrag, TILE_CSS, thinBar } from "../core/slider-tile";
@@ -28,7 +29,6 @@ export interface MediaConfig extends BaseConfig {
   hold_action?: ActionConfig;
 }
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 /** Artwork stand-in (design `ART`). */
 const ART = "linear-gradient(135deg, oklch(0.64 0.17 35), oklch(0.46 0.16 300))";
 

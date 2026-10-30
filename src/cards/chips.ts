@@ -1,11 +1,12 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, fabFields, form } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_MAIN, FAB_ORDER, FabController, fabInset, fabSideOf, LayerController } from "../core/layer";
+import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass } from "../core/styles";
@@ -45,7 +46,6 @@ export interface ChipsConfig extends BaseConfig {
   fab_icon?: string;
 }
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const TYPES = ["action", "light"];
 /** Default tap of an action chip by domain. */
 const RUN: Record<string, [string, string]> = {

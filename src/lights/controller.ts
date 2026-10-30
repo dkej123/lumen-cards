@@ -9,6 +9,7 @@ import { glass, prevent, stop } from "../core/styles";
 import { toast } from "../core/toast";
 import type { HassEntity } from "../hass/types";
 import { PENDING_MS } from "../core/controllers/pending";
+import { WFX } from "../core/parts";
 import { isUnavailable } from "../hass/types";
 import {
   HUE_PRESETS, brightnessPct, ctPresets, hsOf, hsToRgb, hueName, isDimmable, kelvinRange, lightPower, miredPresets, mixedGroup,
@@ -51,7 +52,6 @@ const HUD_GAP = 12;
 const HUD_MIN_TOP = 8;
 /** HA toolbar height above the dashboard (the design measured from its own frame). */
 const TOP = 56;
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const onSwatch = (e: Event) => !!(e.target as Element | null)?.closest?.("[data-ct]");
 const RAINBOW = "conic-gradient(#f55, #fd5, #5d7, #5cf, #86f, #f5b, #f55)";
 const WHEEL = "radial-gradient(circle, #fff 0%, rgba(255,255,255,0) 70%), conic-gradient(from 90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)";

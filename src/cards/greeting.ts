@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { advanced, appearance, form } from "../core/form";
 import { locale, t } from "../core/i18n";
 import { registerCard } from "../core/register";

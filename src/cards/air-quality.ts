@@ -1,11 +1,12 @@
 import { html, nothing } from "lit";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
 import { advanced, appearance, form } from "../core/form";
 import { History } from "../core/history";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
+import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import type { HassLike } from "../hass/types";
@@ -28,7 +29,6 @@ export interface AirQualityConfig extends BaseConfig {
   stale_hours?: number;
 }
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 export function validateAirQuality(c: Partial<AirQualityConfig>): void {
   if (!c.pm25 && !c.pm10 && !c.aqi_entity) throw new Error(t("card.air_quality.error.sensor"));

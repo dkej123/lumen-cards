@@ -5,8 +5,8 @@ import type { PressHandlers } from "./press";
 import { activate, pressable, spinnerStyle } from "./press";
 import { glass, prevent, tone } from "./styles";
 import type { Status } from "../logic/status";
+import { WFX } from "./parts";
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 /** Alarm status row (design `statusRow`). */
 export function statusRow(s: Status, title: string, opts: { pending?: boolean; handlers?: PressHandlers; showState?: boolean; extra?: unknown } = {}) {

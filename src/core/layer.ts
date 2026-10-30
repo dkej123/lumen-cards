@@ -1,5 +1,6 @@
 import { html, nothing, render, type ReactiveController, type ReactiveControllerHost, type TemplateResult } from "lit";
 import { tokens } from "../design/tokens";
+import { composedAncestors, isHaView, viewOf } from "./dom";
 import { shared } from "./styles";
 
 // Sheets, dialogs, FABs and the brightness HUD of the design are positioned in the
@@ -47,30 +48,15 @@ const deepActive = (): HTMLElement | null => {
  * A `[role=dialog]` in the layer gets dialog behaviour: focus moves into it, Tab stays inside,
  * Escape calls `close`, and focus returns to where it was when the dialog goes away.
  */
-const VIEW_TAGS = new Set(["HUI-SECTIONS-VIEW", "HUI-MASONRY-VIEW", "HUI-PANEL-VIEW", "HUI-SIDEBAR-VIEW", "HUI-VIEW", "HUI-VIEW-CONTAINER"]);
-
-/** Nearest Lovelace view around `el`, across shadow roots. */
-function viewOf(el: Element): Element | undefined {
-  let n: Node | null = el;
-  while (n) {
-    if (n instanceof Element && VIEW_TAGS.has(n.tagName)) return n;
-    n = n instanceof ShadowRoot ? n.host : n.parentNode;
-  }
-  return undefined;
-}
-
 /**
  * HA hides a card or a whole section with a visibility condition (e.g. screen width) by
  * `hidden` on its hui-card / hui-section wrapper, but keeps it connected: its floating button
  * must not show then (one copy of a card per screen size).
  */
 export function hiddenByHa(host: Element): boolean {
-  let n: Node | null = host;
-  for (let i = 0; i < 40 && n; i++) {
-    const parent: Node | null = n.parentNode;
-    n = parent instanceof ShadowRoot ? parent.host : parent;
-    if (n instanceof HTMLElement && n.localName.startsWith("hui-") && n.hidden) return true;
-    if (n instanceof HTMLElement && /^hui-.*-view$/.test(n.localName)) return false;
+  for (const el of composedAncestors(host)) {
+    if (el instanceof HTMLElement && el.localName.startsWith("hui-") && el.hidden) return true;
+    if (isHaView(el)) return false;
   }
   return false;
 }

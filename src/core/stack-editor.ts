@@ -1,16 +1,16 @@
 import { LitElement, html, nothing } from "lit";
 import type { CardForm, LumenFormEditor } from "./form-editor";
 import "./form-editor";
+import { cardHelpers } from "./sheet";
 
 type Config = Record<string, unknown> & { cards?: unknown[] };
 type StackEditor = HTMLElement & { hass?: unknown; lovelace?: unknown; setConfig(c: unknown): void };
-type Helpers = { createCardElement(c: unknown): HTMLElement };
 
 /** HA's own visual editor of stack cards (tabs, card picker, per-card editors), loaded lazily. */
 async function haStackEditor(): Promise<StackEditor | undefined> {
   try {
-    const helpers = (await (window as unknown as { loadCardHelpers?: () => Promise<Helpers> }).loadCardHelpers?.()) as Helpers | undefined;
-    helpers?.createCardElement({ type: "vertical-stack", cards: [] });
+    // creating a stack card makes HA load its element (and with it the editor)
+    (await cardHelpers())?.createCardElement({ type: "vertical-stack", cards: [] });
     await customElements.whenDefined("hui-vertical-stack-card");
     const ctor = customElements.get("hui-vertical-stack-card") as unknown as { getConfigElement?: () => Promise<StackEditor> } | undefined;
     return await ctor?.getConfigElement?.();

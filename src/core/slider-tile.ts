@@ -4,6 +4,7 @@ import { fractionAt } from "../logic/slider";
 import { DragTicks, haptic } from "./actions";
 import { Pending } from "./controllers/pending";
 import { icon } from "./lumen-icon";
+import { WFX } from "./parts";
 import { glass, prevent, stop } from "./styles";
 
 // Slider tiles of the catalog (section 14: cover, fan, number) and the thin bars (cover tilt,
@@ -11,7 +12,6 @@ import { glass, prevent, stop } from "./styles";
 // horizontal move > 6 px sets the value from the finger (setPointerCapture, touch-action
 // pan-y); without a move it is a tap. Buttons inside stop the pointer events.
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 export interface SlideOpts {
   /** Dragging allowed (entity available and settable). */

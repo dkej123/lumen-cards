@@ -1,12 +1,13 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { Tweens } from "../core/controllers/tween";
 import { icon } from "../core/lumen-icon";
 import { appearance, entityStub, fabFields, form, hapticsField } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
+import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
@@ -69,7 +70,6 @@ export interface ClimateConfig extends BaseConfig {
 /** The setpoint goes out this long after the last −/+ tap. */
 export const SETPOINT_DEBOUNCE_MS = 1000;
 const AC_LAST_KEY = "lumen-ac-last:";
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 /** Modes in the catalog's order. */
 const MODES: Record<string, [string, string]> = {

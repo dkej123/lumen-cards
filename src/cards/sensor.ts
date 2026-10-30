@@ -1,10 +1,11 @@
 import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig, GRID } from "../core/base-card";
+import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { actions, advanced, appearance, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { History } from "../core/history";
+import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { colorOr, glass } from "../core/styles";
@@ -35,7 +36,6 @@ export interface SensorConfig extends BaseConfig {
 /** Below this height (px) the full card becomes the one-line row. */
 const ONE_LINE_BELOW = 48;
 
-const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 
 export function validateSensor(c: Partial<SensorConfig>): void {
   requireEntity(c, { msg: "card.sensor.error.entity" });
