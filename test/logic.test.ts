@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { setLanguage, setLocale } from "../src/core/i18n";
 import { cssColor, tone } from "../src/core/styles";
 import type { HassEntity } from "../src/hass/types";
@@ -153,19 +153,22 @@ describe("thermostat battery (Better Thermostat)", async () => {
 
 describe("drag haptics", async () => {
   const { DragTicks } = await import("../src/core/actions");
-  it("a selection tick every 5 %, medium at the ends, nothing within a step", () => {
+  it("a selection tick every 1 %, light at the ends, at most one per 25 ms", () => {
+    vi.useFakeTimers();
     const fired: string[] = [];
     const node = new EventTarget();
     node.addEventListener("haptic", (e) => fired.push((e as CustomEvent).detail));
-    const t = new DragTicks(5);
+    const t = new DragTicks();
     t.start(50);
-    t.move(node, 51);
-    t.move(node, 52);
+    t.move(node, 50.3);
     expect(fired).toEqual([]);
-    t.move(node, 56);
-    t.move(node, 61);
-    t.move(node, 100);
-    expect(fired).toEqual(["selection", "selection", "medium"]);
+    t.move(node, 51);
+    t.move(node, 52); // within 25 ms: skipped
+    vi.advanceTimersByTime(30);
+    t.move(node, 53);
+    t.move(node, 100); // the end always ticks
+    vi.useRealTimers();
+    expect(fired).toEqual(["selection", "selection", "light"]);
   });
   it("haptics: false on the card silences it", async () => {
     const { haptic } = await import("../src/core/actions");

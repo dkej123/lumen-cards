@@ -478,7 +478,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `tap_action`, `hold_action`, `double_tap_action` | What happens when you tap, hold or double-tap: switch, show details, open another page, run a script… | depends on the card |
 | `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
 | `styles` | For tinkerers: your own CSS inside the card | none |
-| `haptics` | Gentle vibration on tap, hold and while dragging (a tick every 5 %, a firmer one at the ends). Works in the HA app and Android browsers. | on |
+| `haptics` | Gentle vibration on tap, hold and while dragging (the lightest tick every 1 %, slightly firmer at the ends). Works in the HA app and Android browsers. | on |
 
 **Colours.** `accent_color` and `glow_color` accept Home Assistant colour names (`blue`, `pink`…), hex or rgb. From that one colour the card builds the whole set: the fill, the glow, the icon background and a readable text colour, in light and dark mode.
 

@@ -163,7 +163,7 @@ export class LightsController implements ReactiveController {
   }
 
   /** Gentle ticks while a brightness / white / colour value is dragged. */
-  private ticks = new DragTicks(5);
+  private ticks = new DragTicks(1);
 
   private moreInfo(entityId: string) {
     this.host.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId }, bubbles: true, composed: true }));
@@ -364,7 +364,7 @@ export class LightsController implements ReactiveController {
       if (d.moved) this.dragEnd = performance.now();
       if (d.dragging) {
         this.ticks.end();
-        this.haptic();
+        this.haptic("selection");
         if (d.cur !== undefined) this.setBrightness(item, d.cur);
       } else if (!d.moved && !d.held && !onSwatch(e)) this.tapOrDouble(item);
       this.requestUpdate();
@@ -616,7 +616,7 @@ export class LightsController implements ReactiveController {
         if (this.sliding !== kind) return;
         this.sliding = null;
         this.ticks.end();
-        this.haptic();
+        this.haptic("selection");
         const ov = this.overrides.get(item.entity) ?? {};
         if (kind === "b") this.setBrightness(item, ov.on === false ? 0 : (ov.b ?? 100));
         else if (ov.k) this.setKelvin(item.entity, ov.k);

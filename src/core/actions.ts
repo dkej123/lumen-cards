@@ -21,7 +21,7 @@ export const fireEvent = (node: EventTarget, type: string, detail?: unknown): vo
 export const openMoreInfo = (node: EventTarget, entityId: string): void => fireEvent(node, "hass-more-info", { entityId });
 
 /** Vibration (ms) in a plain mobile browser, where HA's `haptic` event does nothing. */
-const VIBRATE: Record<string, number | number[]> = { selection: 6, light: 10, medium: 18, heavy: 28, success: [12, 40, 12], warning: [20, 60, 20], failure: [30, 60, 30] };
+const VIBRATE: Record<string, number | number[]> = { selection: 3, light: 6, medium: 18, heavy: 28, success: [12, 40, 12], warning: [20, 60, 20], failure: [30, 60, 30] };
 
 /** Running inside the HA companion app (it turns `haptic` events into native haptics). */
 const inApp = () => {
@@ -48,12 +48,14 @@ export const haptic = (node: EventTarget, type: string): void => {
 };
 
 /**
- * Gentle ticks while a value is dragged (brightness, speed, position, volume…): a `selection`
- * tick every `step` units and a firmer `medium` one at either end of the scale.
+ * Gentle ticks while a value is dragged (brightness, speed, position, volume…): the lightest
+ * `selection` tick every `step` units (owner: every 1 %), `light` at either end of the scale, and
+ * at most one tick per 25 ms so a fast drag does not buzz.
  */
 export class DragTicks {
   private last: number | null = null;
-  constructor(private step = 5) {}
+  private at = 0;
+  constructor(private step = 1) {}
 
   /** The drag starts at `value` (no tick). */
   start(value: number): void {
@@ -68,7 +70,11 @@ export class DragTicks {
     }
     if (bucket === this.last) return;
     this.last = bucket;
-    haptic(node, value <= min || value >= max ? "medium" : "selection");
+    const end = value <= min || value >= max;
+    const now = Date.now();
+    if (!end && now - this.at < 25) return;
+    this.at = now;
+    haptic(node, end ? "light" : "selection");
   }
 
   end(): void {

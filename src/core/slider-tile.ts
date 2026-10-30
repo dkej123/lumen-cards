@@ -64,8 +64,8 @@ export class SlideDrag {
     haptic(this.host as unknown as EventTarget, type);
   }
 
-  /** Gentle ticks every 5 % while the value is dragged. */
-  private ticks = new DragTicks(5);
+  /** Gentle ticks every 1 % while the value is dragged. */
+  private ticks = new DragTicks(1);
 
   private finish(f: number) {
     this.pend = { f, from: this.opts.source?.(), until: Date.now() + PENDING_MS };

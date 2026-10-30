@@ -478,7 +478,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
 | `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
-| `haptics` | Delikatne wibracje przy dotknięciu, przytrzymaniu i przeciąganiu (tyknięcie co 5 %, mocniejsze na końcach skali). Działa w aplikacji HA i w przeglądarce na Androidzie. | wł. |
+| `haptics` | Delikatne wibracje przy dotknięciu, przytrzymaniu i przeciąganiu (najlżejsze tyknięcie co 1 %, nieco mocniejsze na końcach skali). Działa w aplikacji HA i w przeglądarce na Androidzie. | wł. |
 
 **Kolory.** `accent_color` i `glow_color` przyjmują nazwy kolorów z Home Assistanta (`blue`, `pink`…), hex albo rgb. Z tego jednego koloru karta buduje cały komplet: wypełnienie, poświatę, tło ikony i czytelny kolor tekstu, w trybie jasnym i ciemnym.
 
