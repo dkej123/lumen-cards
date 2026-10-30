@@ -96,7 +96,9 @@ export function binaryStatus(entity: HassEntity | undefined, icons: { on: string
 export function alarmBarIcon(entity: HassEntity | undefined, customIcon?: string): string {
   const state = isUnavailable(entity) ? "" : entity!.state;
   if (state === "triggered") return "mdi:alarm-light";
-  if (customIcon) return customIcon;
   const armed = ARMED.has(state) || state === "pending" || state === "arming";
+  // A garage / storage alarm (Dom B7): the garage with a padlock or open.
+  if (customIcon && /^mdi:(warehouse|garage(-variant)?)$/.test(customIcon)) return armed ? "mdi:garage-lock" : "mdi:garage-open";
+  if (customIcon) return customIcon;
   return armed ? "mdi:home-lock" : "mdi:home-lock-open";
 }

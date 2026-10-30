@@ -40,6 +40,11 @@ describe("alarmStatus", () => {
   it("custom icon replaces the glyphs except while triggered", () => {
     expect(alarmStatus(ent("a.a", "armed_home"), "mdi:garage").icon).toBe("mdi:garage");
     expect(alarmBarIcon(ent("a.a", "triggered"), "mdi:garage")).toBe("mdi:alarm-light");
+    expect(alarmBarIcon(ent("a.a", "armed_away"), "mdi:shield-car")).toBe("mdi:shield-car");
+  });
+  it("garage / storage icons show a padlock when armed (Dom B7)", () => {
+    expect(alarmBarIcon(ent("a.a", "armed_away"), "mdi:warehouse")).toBe("mdi:garage-lock");
+    expect(alarmBarIcon(ent("a.a", "disarmed"), "mdi:garage")).toBe("mdi:garage-open");
   });
 });
 
