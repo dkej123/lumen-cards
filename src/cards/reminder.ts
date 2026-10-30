@@ -6,6 +6,7 @@ import { icon } from "../core/lumen-icon";
 import { advanced, appearance, firstOf, form, nameIcon, select, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
+import { dialogScrim } from "../core/parts";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
 import { tone } from "../core/styles";
@@ -141,7 +142,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       else callOrToast(this, this._hass, "homeassistant", "turn_off", {}, c.entity);
     };
     const title = c.title || this.label;
-    return html`<div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both;pointer-events:auto"></div>
+    return html`${dialogScrim(close, "pointer-events:auto")}
       ${this.box(title, col, close, done, false)}`;
   }
 

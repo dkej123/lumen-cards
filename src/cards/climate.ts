@@ -7,7 +7,7 @@ import { icon } from "../core/lumen-icon";
 import { appearance, entityStub, fabFields, form, hapticsField, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
-import { WFX } from "../core/parts";
+import { bottomDialog, WFX } from "../core/parts";
 import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
@@ -592,22 +592,21 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const seg = (o: { label: string; ic: string; active: boolean; on: () => void }, color: string) =>
       html`<button aria-pressed=${o.active} @click=${o.on} style="flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:13px;${a.sel(o.active, color)};font:700 11px var(--lumen-font);cursor:pointer;transition:background-color 300ms, color 300ms">${icon(o.ic, "font-size:17px")}${o.label}</button>`;
     const step = "width:56px;height:56px;border-radius:18px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:24px;display:grid;place-items:center;cursor:pointer";
-    return html`
-      <div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both"></div>
-      <div role="dialog" aria-modal="true" aria-label=${this.name} style="position:absolute;left:12px;right:12px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:21;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;padding:18px 14px 14px;border-radius:30px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);animation:lumenSheetIn 460ms var(--lumen-ease-spring) both;max-width:520px;margin:0 auto">
-        <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
-          <button class="press" @click=${a.power} aria-label=${t("card.climate.power")} style="flex:none;width:44px;height:44px;border-radius:14px;border:0;display:grid;place-items:center;font-size:20px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>
-          <div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800">${this.name}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.state}</div></div>
-          <button class="press" @click=${close} aria-label=${t("common.close")} style="flex:none;width:40px;height:40px;border-radius:12px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;display:grid;place-items:center;cursor:pointer">${icon("mdi:close")}</button>
-        </div>
+    return bottomDialog({
+      label: this.name,
+      lead: html`<button class="press" @click=${a.power} aria-label=${t("card.climate.power")} style="flex:none;width:44px;height:44px;border-radius:14px;border:0;display:grid;place-items:center;font-size:20px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>`,
+      title: this.name,
+      sub: a.state,
+      close,
+      body: html`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;opacity:${a.off ? 0.45 : 1};transition:opacity 400ms">
           <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style=${step}>${icon("mdi:minus")}</button>
           <div style="display:flex;flex-direction:column;align-items:center"><div style="line-height:1">${this.setpoint(a, 52, a.c)}</div>${cfg.show_current_temp !== false ? html`<div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);margin-top:6px">${a.roomLine}</div>` : nothing}</div>
           <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style=${step}>${icon("mdi:plus")}</button>
         </div>
         ${cfg.show_modes !== false && a.modes.length ? html`<div role="group" aria-label=${t("card.climate.modes")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.modes.map((o) => seg(o, o.color))}</div>` : nothing}
-        ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style="opacity:${a.off ? 0.45 : 1};transition:opacity 400ms"><div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.fans.map((o) => seg(o, a.c))}</div></div>` : nothing}
-      </div>`;
+        ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style="opacity:${a.off ? 0.45 : 1};transition:opacity 400ms"><div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.fans.map((o) => seg(o, a.c))}</div></div>` : nothing}`,
+    });
   }
 
   protected renderCard() {

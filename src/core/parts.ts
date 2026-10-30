@@ -162,6 +162,29 @@ export const editLabel = (labels: VisibilityLabel[], note: string) => {
   return html`<span style="position:absolute;top:-5px;left:8px;z-index:5;display:flex;align-items:center;gap:3px;max-width:calc(100% - 16px);padding:1px 6px 1px 4px;box-sizing:border-box;border-radius:8px;background:var(--lumen-info);color:#fff;box-shadow:var(--lumen-shadow-1);font:700 10px/14px var(--lumen-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none">${icon(labels.length ? ico : "mdi:note-text-outline", "display:block;flex:none;font-size:12px")}<span style="overflow:hidden;text-overflow:ellipsis">${parts.join(" · ")}</span></span>`;
 };
 
+/** Dimmed, blurred backdrop of a dialog in the layer (lock, AC, code pad, reminder): a tap closes. */
+export const dialogScrim = (close: () => void, extra = "") =>
+  html`<div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both;${extra}"></div>`;
+
+/** ✕ of a dialog header (40 px; `radius` 12 for a rounded square, 20 for a circle). */
+export const closeButton = (close: () => void, radius = 12) =>
+  html`<button class="press" @click=${close} aria-label=${t("common.close")} style="flex:none;width:40px;height:40px;border-radius:${radius}px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;display:grid;place-items:center;cursor:pointer">${icon("mdi:close")}</button>`;
+
+/**
+ * Dialog from the bottom of the screen (lock commands, AC): scrim, a 30 px rounded card at most
+ * 520 px wide, a header with `lead` (44 px icon or button), title, status line and ✕, then `body`.
+ */
+export const bottomDialog = (o: { label: string; lead: unknown; title: string; sub: string; close: () => void; body: unknown }) => html`
+  ${dialogScrim(o.close)}
+  <div role="dialog" aria-modal="true" aria-label=${o.label} style="position:absolute;left:12px;right:12px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:21;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;padding:18px 14px 14px;border-radius:30px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);animation:lumenSheetIn 460ms var(--lumen-ease-spring) both;max-width:520px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
+      ${o.lead}
+      <div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800">${o.title}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.sub}</div></div>
+      ${closeButton(o.close)}
+    </div>
+    ${o.body}
+  </div>`;
+
 /** A choice above the code pad (alarm modes). */
 export interface PadMode {
   icon: string;
@@ -219,13 +242,13 @@ export function codePad(o: PadOptions): TemplateResult {
     ? "position:absolute;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));margin:0 auto;max-width:400px;animation:lumenSheetIn 460ms var(--lumen-ease-spring) both"
     : "position:absolute;left:50%;top:50%;width:340px;transform:translate(-50%,-50%);animation:lumenFadeIn 200ms both";
   return html`
-    <div @click=${o.close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both"></div>
+    ${dialogScrim(o.close)}
     <div role="dialog" aria-modal="true" aria-label=${o.title} @keydown=${keydown}
       style="${pos};z-index:21;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:20px 18px 16px;border-radius:28px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);font-family:var(--lumen-font)">
       <div style="display:flex;align-items:center;gap:12px">
         <span style="flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb, ${o.color} 16%, transparent);color:${o.color}">${icon(o.icon)}</span>
         <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800">${o.title}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.sub}</div></div>
-        <button class="press" @click=${o.close} aria-label=${t("common.close")} style="flex:none;width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;font-size:20px;background:var(--lumen-surface-2);color:var(--lumen-text-2);cursor:pointer">${icon("mdi:close")}</button>
+        ${closeButton(o.close, 20)}
       </div>
       ${o.modes?.length
         ? html`<div role="radiogroup" aria-label=${t("card.alarm.mode")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2)">${o.modes.map(

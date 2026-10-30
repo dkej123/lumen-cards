@@ -9,7 +9,7 @@ import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
-import { codePad, dangerBorder, type Look, rowFrame, rowIcon, rowText, type Seg, segs, toneLook, unavailableLook, unplugged, WFX } from "../core/parts";
+import { bottomDialog, codePad, dangerBorder, type Look, rowFrame, rowIcon, rowText, type Seg, segs, toneLook, unavailableLook, unplugged, WFX } from "../core/parts";
 import { tone } from "../core/styles";
 import { compactCell } from "../core/status-row";
 import { toast } from "../core/toast";
@@ -314,18 +314,16 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
         this.request(cmd);
       }} style="min-height:96px;border-radius:22px;border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font:750 15px var(--lumen-font);cursor:pointer;transition:transform 220ms var(--lumen-ease-spring)">
         <span style="width:44px;height:44px;border-radius:15px;display:grid;place-items:center;font-size:24px;background:color-mix(in srgb, ${col} 16%, transparent);color:${col}">${icon(ic)}</span>${label}</button>`;
-    return html`
-      <div @click=${close} style="position:absolute;inset:0;z-index:20;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:lumenFadeIn 240ms both"></div>
-      <div role="dialog" aria-modal="true" aria-label=${this.name} style="position:absolute;left:12px;right:12px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:21;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;padding:18px 14px 14px;border-radius:30px;background:var(--lumen-surface-solid);color:var(--lumen-text-1);border:1px solid var(--lumen-border);box-shadow:var(--lumen-shadow-2);animation:lumenSheetIn 460ms var(--lumen-ease-spring) both;max-width:520px;margin:0 auto">
-        <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
-          <span style="flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${l.iconBg ?? "var(--lumen-surface-2)"};color:${l.iconFg ?? "var(--lumen-text-2)"}">${icon(l.icon)}</span>
-          <div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800">${this.name}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-2)">${l.sub}</div></div>
-          <button class="press" @click=${close} aria-label=${t("common.close")} style="flex:none;width:40px;height:40px;border-radius:12px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-2);font-size:20px;display:grid;place-items:center;cursor:pointer">${icon("mdi:close")}</button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(${this.canOpen ? 3 : 2}, 1fr);gap:8px">
-          ${act("lock", t("card.lock.lock"), "mdi:lock", "var(--lumen-ok)")}${act("unlock", t("card.lock.unlock"), "mdi:lock-open-variant", "var(--lumen-warning)")}${this.canOpen ? act("open", t("card.lock.open_action"), "mdi:door-open", "var(--lumen-danger)") : nothing}
-        </div>
-      </div>`;
+    return bottomDialog({
+      label: this.name,
+      lead: html`<span style="flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:${l.iconBg ?? "var(--lumen-surface-2)"};color:${l.iconFg ?? "var(--lumen-text-2)"}">${icon(l.icon)}</span>`,
+      title: this.name,
+      sub: l.sub,
+      close,
+      body: html`<div style="display:grid;grid-template-columns:repeat(${this.canOpen ? 3 : 2}, 1fr);gap:8px">
+        ${act("lock", t("card.lock.lock"), "mdi:lock", "var(--lumen-ok)")}${act("unlock", t("card.lock.unlock"), "mdi:lock-open-variant", "var(--lumen-warning)")}${this.canOpen ? act("open", t("card.lock.open_action"), "mdi:door-open", "var(--lumen-danger)") : nothing}
+      </div>`,
+    });
   }
 
   protected renderCard() {
