@@ -295,6 +295,8 @@ describe("lumen stacks", () => {
     const { validateStack } = await import("../src/cards/stack");
     expect(() => validateStack({ cards: "x" as never })).toThrow();
     expect(() => validateStack({ align: "middle" as never })).toThrow();
+    expect(() => validateStack({ card_width: "auto" as never })).toThrow();
+    expect(() => validateStack({ card_width: "content" })).not.toThrow();
     await import("../src/lumen-cards");
     type El = HTMLElement & { setConfig(c: unknown): void; hass: unknown; updateComplete: Promise<boolean> };
     const hass = { states: {}, language: "en", callService: async () => undefined, callWS: async () => undefined };

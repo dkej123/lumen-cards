@@ -105,6 +105,7 @@ const LABELS: Record<string, string> = {
   max_width: "editor.max_width",
   max_width_unit: "editor.max_width_unit",
   align: "editor.align",
+  card_width: "editor.card_width",
   disarmed_color: "editor.disarmed_color",
   height: "editor.height",
   warnings_entity: "editor.warnings_entity",

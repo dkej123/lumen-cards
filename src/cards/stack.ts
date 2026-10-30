@@ -1,4 +1,4 @@
-import { html, nothing } from "lit";
+import { css, html, nothing } from "lit";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { form, maxWidthField, select } from "../core/form";
 import { t } from "../core/i18n";
@@ -13,18 +13,29 @@ export interface StackConfig extends BaseConfig {
   cards?: CardConfig[];
   /** Heading above the cards, as in HA's stacks. */
   title?: string;
-  /** Where a narrower stack (max_width) sits in its place (default centre). */
+  /** Where a narrower stack (max_width) sits in its place (default centre); with `card_width: content` also where the cards sit in the row. */
   align?: "center" | "start" | "end";
+  /** Horizontal stack: cards share the width equally (default) or keep their own width and wrap to the next row. */
+  card_width?: "equal" | "content";
 }
 
 export function validateStack(c: Partial<StackConfig>): void {
   if (c.cards !== undefined && !Array.isArray(c.cards)) throw new Error(t("card.stack.error.cards"));
   if (c.align !== undefined && !["center", "start", "end"].includes(c.align)) throw new Error(t("card.stack.error.align"));
+  if (c.card_width !== undefined && !["equal", "content"].includes(c.card_width)) throw new Error(t("card.stack.error.card_width"));
 }
 
-const fields = () => [
+const fields = (row = false) => [
   maxWidthField(),
-  { name: "align", default: "center", selector: select([["center", "editor.align.center"], ["start", "editor.align.start"], ["end", "editor.align.end"]]) },
+  {
+    name: "",
+    type: "grid",
+    flatten: true,
+    schema: [
+      { name: "align", default: "center", selector: select([["center", "editor.align.center"], ["start", "editor.align.start"], ["end", "editor.align.end"]]) },
+      ...(row ? [{ name: "card_width", default: "equal", selector: select([["equal", "editor.card_width.equal"], ["content", "editor.card_width.content"]]) }] : []),
+    ],
+  },
 ];
 
 /**
@@ -32,6 +43,14 @@ const fields = () => [
  * its position built in – one width for a whole group of cards, no extra wrapper. No frame.
  */
 abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
+  // Lumen cards are size containers (their layout follows their own width), which leaves them
+  // no width of their own: with card_width content they size to their content instead.
+  static styles = [LumenBaseCard.styles, css`
+    .fit > *,
+    .fit > * > * {
+      container-type: normal;
+    }
+  `];
   protected static skeletonHeight = 0;
   protected abstract readonly row: boolean;
   private inner = new InnerCards(this, (c) => c, { wrap: true });
@@ -75,11 +94,14 @@ abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
       : nothing;
     if (!(this._config.cards ?? []).length)
       return html`${title}<div style="display:grid;place-items:center;min-height:56px;border-radius:18px;border:1px dashed var(--lumen-border-strong);font-size:12px;font-weight:650;color:var(--lumen-text-3)">${t("card.stack.empty")}</div>`;
+    // card_width content: each card as wide as its content, wrapping, placed by `align`
+    const fit = this.row && this._config.card_width === "content";
+    const justify = { start: "flex-start", end: "flex-end", center: "center" }[this._config.align ?? "center"];
     return html`<div style="display:flex;flex-direction:column;gap:8px">${title}
-      <div style="display:flex;flex-direction:${this.row ? "row" : "column"};gap:8px">
+      <div class=${fit ? "fit" : ""} style="display:flex;flex-direction:${this.row ? "row" : "column"};gap:8px;${fit ? `flex-wrap:wrap;justify-content:${justify}` : ""}">
         ${this.inner.cards.map((el) => {
           // straight in the flex box: a card hidden by its visibility conditions leaves no gap
-          el.style.flex = this.row ? "1 1 0" : "";
+          el.style.flex = fit ? "0 1 auto" : this.row ? "1 1 0" : "";
           el.style.minWidth = "0";
           return el;
         })}
@@ -99,15 +121,17 @@ abstract class LumenStackCard extends LumenBaseCard<StackConfig> {
     return { cards: [] };
   }
 
+  protected static rowFields = false;
+
   static getConfigForm() {
-    return form([{ name: "title", selector: { text: {} } }, { name: "cards", selector: { object: {} } }, ...fields()]);
+    return form([{ name: "title", selector: { text: {} } }, { name: "cards", selector: { object: {} } }, ...fields(this.rowFields)]);
   }
 
   /** Width and position above HA's own stack editor for the title and the cards (tabs, card picker). */
   static getConfigElement() {
     const el = document.createElement("lumen-stack-editor") as LumenStackEditor;
-    el.form = form(fields());
-    el.fallback = LumenStackCard.getConfigForm();
+    el.form = form(fields(this.rowFields));
+    el.fallback = this.getConfigForm();
     return el;
   }
 }
@@ -118,6 +142,7 @@ export class LumenVerticalStackCard extends LumenStackCard {
 
 export class LumenHorizontalStackCard extends LumenStackCard {
   protected readonly row = true;
+  protected static rowFields = true;
 }
 
 registerCard("lumen-vertical-stack-card", LumenVerticalStackCard, { name: "card.stack.vertical.name", description: "card.stack.vertical.description" });

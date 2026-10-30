@@ -803,7 +803,8 @@ cards:
 | `cards` | The cards inside (any Home Assistant cards, the same editor as HA's stacks); vertical – one under another, horizontal – side by side with equal widths. The cards' own visibility conditions apply. | – |
 | `title` | Heading above the cards | none |
 | `max_width`, `max_width_unit` | Width of the whole stack: pixels or percent of the card's grid place (or `max_width: 80%`) | full width |
-| `align` | Where a narrower stack sits: `center`, `start` (left), `end` (right) | `center` |
+| `align` | Where a narrower stack sits: `center`, `start` (left), `end` (right); with `card_width: content` also where the cards sit in the row | `center` |
+| `card_width` | Horizontal stack only: `equal` – the cards share the width, `content` – each card is as wide as its content and wraps to the next row when needed (e.g. reminder pills) | `equal` |
 
 <a id="lumen-fab-sheet-card"></a>
 

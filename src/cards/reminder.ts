@@ -183,7 +183,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     if (!pill) return sample;
     return html`<div style="display:flex;justify-content:${JUSTIFY[c.alignment ?? "start"] ?? "flex-start"}">
       <div role=${a ? "button" : "status"} tabindex=${a ? 0 : nothing} aria-label="${this.label} ${value}" class=${a ? "press" : ""} @click=${a?.click} @keydown=${a?.key}
-        style="${a ? "cursor:pointer;" : ""}${dim}display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;box-sizing:border-box;padding:6px 14px 6px 6px;border-radius:999px;background:color-mix(in srgb, ${col} 16%, var(--lumen-surface-solid));border:1px solid color-mix(in srgb, ${col} 35%, transparent);font:700 12px var(--lumen-font);white-space:nowrap;animation:lumenRise 600ms var(--lumen-ease-spring) both">
+        style="${a ? "cursor:pointer;" : ""}${dim}display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;box-sizing:border-box;padding:6px 14px 6px 6px;border-radius:999px;background:color-mix(in srgb, ${col} 16%, var(--lumen-surface-solid));border:1px solid color-mix(in srgb, ${col} 35%, transparent);color:var(--lumen-text-1);font:700 12px var(--lumen-font);white-space:nowrap;animation:lumenRise 600ms var(--lumen-ease-spring) both">
         <span style="width:22px;height:22px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:14px;background:${col};color:${ON_TONE[key] ?? "var(--lumen-on-tone, #fff)"}">${icon(c.icon ?? "mdi:bell-ring")}</span>
         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${this.label}</span>${value ? html`<span style="flex:none;color:var(--lumen-text-2);font-weight:600;font-variant-numeric:tabular-nums">${value}</span>` : nothing}
       </div>

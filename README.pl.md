@@ -795,7 +795,8 @@ cards:
 | `cards` | Karty w środku (dowolne karty Home Assistanta, ten sam edytor co we wbudowanych stosach); pionowy – jedna pod drugą, poziomy – obok siebie po równo. Własne warunki widoczności kart działają. | – |
 | `title` | Nagłówek nad kartami | brak |
 | `max_width`, `max_width_unit` | Szerokość całego stosu: piksele albo procent miejsca karty w siatce (lub `max_width: 80%`) | cała szerokość |
-| `align` | Położenie węższego stosu: `center` (na środku), `start` (do lewej), `end` (do prawej) | `center` |
+| `align` | Położenie węższego stosu: `center` (na środku), `start` (do lewej), `end` (do prawej); przy `card_width: content` także położenie kart w wierszu | `center` |
+| `card_width` | Tylko stos poziomy: `equal` – karty dzielą szerokość po równo, `content` – każda karta ma szerokość swojej treści i w razie potrzeby przechodzi do następnego wiersza (np. pigułki przypomnień) | `equal` |
 
 <a id="lumen-fab-sheet-card"></a>
 
