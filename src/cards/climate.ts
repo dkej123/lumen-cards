@@ -5,6 +5,7 @@ import { icon } from "../core/lumen-icon";
 import { appearance, fabFields, firstOf, form, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FAB_SMALL, fabBottom, fabRight, fabSlot, LayerController, releaseFab } from "../core/layer";
+import { Presses, pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
 import { toast } from "../core/toast";
@@ -531,6 +532,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
    * Compact row (under 300 px, and the thermostat row of the floating panel, catalog sections 09
    * and 19): icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
    */
+  /** Compact row icon: tap = power on / off, hold = details. */
+  private presses = new Presses((type) => this.haptic(type));
+
   private compactRow() {
     const a = this.ac();
     const cfg = this._config;
@@ -561,7 +565,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const btn = `flex:none;width:40px;height:40px;border-radius:12px;border:0;padding:0;display:grid;place-items:center;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:20px;opacity:1;cursor:${inert ? "default" : "pointer"}`;
     const title = a.battery ? `${this.name} · ${a.battery}` : this.name;
     return html`<div data-fx title=${title} style="position:relative;display:flex;align-items:center;gap:8px;min-height:56px;padding:8px 8px 8px 10px;box-sizing:border-box;border-radius:20px;background:${a.una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};border:${a.una ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${a.una ? "" : glass};box-shadow:${a.una ? "none" : "var(--lumen-sheet-row-shadow, var(--lumen-shadow-1))"}">${WFX}
-      <button class="press" @click=${() => this.moreInfo(cfg.entity)} aria-label=${title} style="position:relative;flex:none;width:34px;height:34px;border-radius:12px;border:0;padding:0;display:grid;place-items:center;font-size:19px;background:${tintBg};color:${tint};cursor:pointer;transition:background-color 400ms, color 400ms">${icon(glyph, "display:block")}${!named && a.battery
+      <button class="press" ${pressable(this.presses.handlers(`power:${cfg.entity}`, () => a.power(), () => this.moreInfo(cfg.entity)))} aria-label="${title} · ${t(a.off ? "card.climate.tap_on" : "card.climate.tap_off")}" title="${t(a.off ? "card.climate.tap_on" : "card.climate.tap_off")}" aria-pressed=${a.off ? "false" : "true"} style="position:relative;flex:none;width:34px;height:34px;border-radius:12px;border:0;padding:0;display:grid;place-items:center;font-size:19px;background:${tintBg};color:${tint};cursor:pointer;transition:background-color 400ms, color 400ms">${icon(glyph, "display:block")}${!named && a.battery
         ? html`<span aria-hidden="true" style="position:absolute;top:-3px;right:-3px;width:10px;height:10px;box-sizing:content-box;border-radius:50%;background:var(--lumen-warning);border:2px solid var(--lumen-surface-solid)"></span>`
         : nothing}</button>
       ${named

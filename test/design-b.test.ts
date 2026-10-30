@@ -211,7 +211,7 @@ describe("09 climate", () => {
     const text = root(el).textContent!;
     expect(text).toContain("Heat to");
     expect(text).toContain("Cool from");
-    expect(text).toContain("Idle");
+    expect(text).toContain("Holding");
     // heat_cool reads "Auto" when the device has no separate auto mode.
     expect(button(root(el), "Auto")).toBeTruthy();
     root(el).querySelector<HTMLButtonElement>('button[aria-label^="Cool from"]')!.click();
