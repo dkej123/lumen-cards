@@ -9,7 +9,8 @@ import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
 import { tone } from "../core/styles";
-import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, toneLook, type TileLook } from "../core/tile";
+import { ACCENT, NEUTRAL, type TileLook, toneLook, UNAVAILABLE, UNKNOWN } from "../core/parts";
+import { rowTile } from "../core/tile";
 import { requireEntity } from "../core/validate";
 import { isUnavailable, type HassEntity, type HassLike } from "../hass/types";
 import { stateText } from "../logic/format";
@@ -108,7 +109,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     const e = raw && c.device_class ? { ...raw, attributes: { ...raw.attributes, device_class: c.device_class } } : raw;
     const s = entityStatus(e, this._hass, c.icon);
     const look = entityLook(e, s);
-    const col = look.iconFg;
+    const col = look.iconFg ?? "var(--lumen-text-2)";
     const name = entityName(c.name, e, c.entity);
     const h = this.actions(`entity:${c.entity}`, c, c.entity);
     const una = !e || e.state === "unavailable";

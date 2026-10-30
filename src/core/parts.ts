@@ -12,42 +12,74 @@ import { glass, prevent, stop } from "./styles";
 export const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const DASH = "1px dashed var(--lumen-border-strong)";
 
-/** Look of a row / tile: the catalog's `R` / `C` fields. */
-export interface Look {
-  icon: string;
-  /** Status line. */
-  sub: string;
-  /** Status line colour (default text-2). */
-  subC?: string;
-  /** Muted extra after the status ("5 min"). */
-  meta?: string;
+/** Colours of a row / tile (the catalog's look fields); unset = the neutral default. */
+export interface TileLook {
+  /** Icon cell background / glyph colour. */
   iconBg?: string;
   iconFg?: string;
-  iconAnim?: string;
+  /** Status line colour (default text-2). */
+  subC?: string;
   bg?: string;
   fg?: string;
   border?: string;
   shadow?: string;
+  /** Frame animation (pulse). */
   anim?: string;
-  /** Unavailable: dashed frame, plug-off glyph, actions off. */
+  /** Unavailable: dashed frame without glass, plug-off glyph, actions off. */
   una?: boolean;
 }
 
-/** `tone(C)` of the catalog: icon on C 16 %, status line in C. */
-export const toned = (c: string): Pick<Look, "iconBg" | "iconFg" | "subC"> => ({ iconBg: `color-mix(in srgb, ${c} 16%, transparent)`, iconFg: c, subC: c });
+/** A row's look together with its icon and status line (lock, alarm). */
+export interface Look extends TileLook {
+  icon: string;
+  /** Status line. */
+  sub: string;
+  /** Muted extra after the status ("5 min"). */
+  meta?: string;
+  iconAnim?: string;
+}
 
-/** Section 15: unavailable = dashed frame on surface-2, unavailable-coloured icon, "Unavailable". */
-export const unavailableLook = (ic: string): Look => ({
-  icon: ic,
-  sub: t("common.unavailable"),
-  subC: "var(--lumen-text-3)",
-  border: DASH,
-  bg: "var(--lumen-surface-2)",
-  shadow: "none",
-  iconBg: "transparent",
-  iconFg: "var(--lumen-unavailable)",
-  una: true,
-});
+/** Neutral (off, idle). */
+export const NEUTRAL: TileLook = { iconBg: "var(--lumen-surface-2)", iconFg: "var(--lumen-text-2)", subC: "var(--lumen-text-2)" };
+/** On / active: accent glyph on 16 % accent. */
+export const ACCENT: TileLook = { iconBg: "var(--lumen-accent-soft)", iconFg: "var(--lumen-accent)", subC: "var(--lumen-text-2)" };
+/** unknown: "No data", actions stay. */
+export const UNKNOWN: TileLook = { iconBg: "var(--lumen-surface-2)", iconFg: "var(--lumen-text-3)", subC: "var(--lumen-text-3)" };
+/** Section 15: unavailable = dashed frame on surface-2, unavailable-coloured icon, no shadow. */
+export const UNAVAILABLE: TileLook = { iconBg: "transparent", iconFg: "var(--lumen-unavailable)", subC: "var(--lumen-text-3)", border: DASH, bg: "var(--lumen-surface-2)", shadow: "none", una: true };
+
+/** `tone(C)` of the catalog: icon on C 16 %, status line in C; optional frame border. */
+export const toneLook = (c: string, border?: string): TileLook => ({ iconBg: `color-mix(in srgb, ${c} 16%, transparent)`, iconFg: c, subC: c, border });
+
+/** `1px solid` tone mixed into the border (waiting / error frames). */
+export const toneBorder = (c: string, pct: number) => `1px solid color-mix(in srgb, ${c} ${pct}%, var(--lumen-border))`;
+
+/** Unavailable row with its icon and "Unavailable". */
+export const unavailableLook = (ic: string): Look => ({ ...UNAVAILABLE, icon: ic, sub: t("common.unavailable") });
+
+/**
+ * Surface of a row / tile: background, border, shadow, glass (not when unavailable), text colour,
+ * animation, pointer and the pressed / state transitions.
+ */
+export const surfaceStyle = (l: TileLook, pointer: boolean) =>
+  `background:${l.bg ?? "var(--lumen-surface)"};border:${l.border ?? "1px solid var(--lumen-border)"};box-shadow:${l.shadow ?? "var(--lumen-shadow-1)"};${l.una ? "" : glass + ";"}color:${l.fg ?? "var(--lumen-text-1)"};animation:${l.anim ?? "none"};cursor:${pointer ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:background-color 500ms, border-color 500ms, color 500ms, transform 220ms var(--lumen-ease-spring)`;
+
+/** Icon cell of a row (34 px, radius 12, glyph 19) in the look's colours. */
+export const iconBox = (glyph: string, l: TileLook, anim?: string) =>
+  html`<div style="flex:none;width:34px;height:34px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:${l.iconBg ?? "var(--lumen-surface-2)"};color:${l.iconFg ?? "var(--lumen-text-2)"};transition:background-color 500ms, color 500ms">${icon(glyph, `display:block;animation:${anim ?? "none"}`)}</div>`;
+
+/** Title (14/700, optional mono badge) over the status line (13/650 with a muted meta). */
+export const titleSub = (title: string, sub: string | undefined, o: { subC?: string; meta?: string; badge?: string; showTitle?: boolean; showSub?: boolean } = {}) =>
+  html`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+    ${o.showTitle !== false
+      ? html`<div style="display:flex;align-items:center;gap:6px;min-width:0"><span style="font-size:14px;font-weight:700;letter-spacing:-0.01em;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</span>${o.badge
+          ? html`<span style="flex:none;padding:1px 6px;border-radius:6px;background:var(--lumen-surface-2);font:500 10px/14px var(--lumen-mono);color:var(--lumen-text-2)">${o.badge}</span>`
+          : nothing}</div>`
+      : nothing}
+    ${o.showSub !== false
+      ? html`<div style="font-size:13px;line-height:17px;font-weight:650;color:${o.subC ?? "var(--lumen-text-2)"};font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}${o.meta ? html`<span style="margin-left:8px;color:var(--lumen-text-3);font-weight:600">${o.meta}</span>` : nothing}</div>`
+      : nothing}
+  </div>`;
 
 /** Red frame of open / jammed / error states. */
 export const dangerBorder = "1px solid color-mix(in srgb, var(--lumen-danger) 40%, var(--lumen-border))";
@@ -91,19 +123,14 @@ export function countdown(pct: number | null, color: string, label: string, labe
 }
 
 /** Icon box of a row (34 px, radius 12). */
-export const rowIcon = (l: Look) =>
-  html`<div style="flex:none;width:34px;height:34px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:${l.iconBg ?? "var(--lumen-surface-2)"};color:${l.iconFg ?? "var(--lumen-text-2)"};transition:background-color 400ms, color 400ms">${icon(l.icon, `display:block;animation:${l.iconAnim ?? "none"}`)}</div>`;
+export const rowIcon = (l: Look) => iconBox(l.icon, l, l.iconAnim);
 
 /** Title + status line of a row. */
-export const rowText = (title: string, l: Look, showSub = true) =>
-  html`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
-    <span style="font-size:14px;font-weight:700;letter-spacing:-0.01em;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</span>
-    ${showSub ? html`<div style="font-size:13px;line-height:17px;font-weight:650;color:${l.subC ?? "var(--lumen-text-2)"};font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.sub}${l.meta ? html`<span style="margin-left:8px;color:var(--lumen-text-3);font-weight:600">${l.meta}</span>` : nothing}</div>` : nothing}
-  </div>`;
+export const rowText = (title: string, l: Look, showSub = true) => titleSub(title, l.sub, { subC: l.subC, meta: l.meta, showSub });
 
-/** Frame style of the row card (`R`). */
+/** Frame style of the row card (`R`): a column (the row, then e.g. its buttons). */
 export const rowFrame = (l: Look, pointer: boolean) =>
-  `position:relative;display:flex;flex-direction:column;gap:10px;padding:11px 12px;box-sizing:border-box;border-radius:20px;background:${l.bg ?? "var(--lumen-surface)"};border:${l.border ?? "1px solid var(--lumen-border)"};box-shadow:${l.shadow ?? "var(--lumen-shadow-1)"};${l.una ? "" : glass + ";"}color:${l.fg ?? "var(--lumen-text-1)"};animation:${l.anim ?? "none"};cursor:${pointer ? "pointer" : "default"};user-select:none;touch-action:pan-y;transition:background-color 500ms, border-color 500ms, color 500ms, transform 220ms var(--lumen-ease-spring)`;
+  `position:relative;display:flex;flex-direction:column;gap:10px;padding:11px 12px;box-sizing:border-box;border-radius:20px;${surfaceStyle(l, pointer)}`;
 
 /** Plug-off glyph at the right of an unavailable row. */
 export const unplugged = () => icon("mdi:power-plug-off-outline", "flex:none;font-size:18px;color:var(--lumen-text-3)");

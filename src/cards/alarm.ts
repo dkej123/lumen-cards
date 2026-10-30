@@ -13,7 +13,7 @@ import { registerCard } from "../core/register";
 import { alarmBanner, alarmRing, compactCell } from "../core/status-row";
 import { icon } from "../core/lumen-icon";
 import { cssColor, tone } from "../core/styles";
-import { codePad, countdown, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type PadMode, type Seg } from "../core/parts";
+import { codePad, countdown, type Look, type PadMode, rowFrame, rowIcon, rowText, type Seg, segs, toneLook, unavailableLook, unplugged, WFX } from "../core/parts";
 import { requireEntity } from "../core/validate";
 import type { HassEntity } from "../hass/types";
 import { ARMED_ICON, alarmBarIcon, alarmStatus, armModes, isArmed, modeLabel, type Status } from "../logic/status";
@@ -268,20 +268,20 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       const who = e?.attributes.changed_by;
       return { icon: s.icon, sub: who ? (short ? who : `${s.label} · ${who}`) : s.label, subC: "rgba(255,255,255,.9)", bg: "var(--lumen-danger)", fg: WHITE, border: "1px solid transparent", iconBg: "rgba(255,255,255,.2)", iconFg: WHITE, anim: "lumenAlarmBg 1.2s ease-in-out infinite" };
     }
-    if (s.tone === "ok") return { icon: s.icon, sub: short && st ? modeLabel(st) : s.label, ...toned("var(--lumen-ok)"), ...(short ? { subC: "var(--lumen-text-2)" } : {}) };
+    if (s.tone === "ok") return { icon: s.icon, sub: short && st ? modeLabel(st) : s.label, ...toneLook("var(--lumen-ok)"), ...(short ? { subC: "var(--lumen-text-2)" } : {}) };
     if (st === "pending") {
       const sub = short ? (cd ? t("card.alarm.code_left", { s: cd.left }) : t("pad.code")) : s.label;
-      return { icon: s.icon, sub, ...toned("var(--lumen-orange)"), anim: "lumenPendingPulse 1.4s ease-in-out infinite", border: "1px solid color-mix(in srgb, var(--lumen-orange) 45%, var(--lumen-border))" };
+      return { icon: s.icon, sub, ...toneLook("var(--lumen-orange)"), anim: "lumenPendingPulse 1.4s ease-in-out infinite", border: "1px solid color-mix(in srgb, var(--lumen-orange) 45%, var(--lumen-border))" };
     }
     if (st === "arming") {
       const sub = short && cd ? `${t("card.alarm.arming_short")} · ${cd.left} s` : s.label;
-      return { icon: s.icon, sub, ...toned("var(--lumen-warning)") };
+      return { icon: s.icon, sub, ...toneLook("var(--lumen-warning)") };
     }
-    if (s.tone === "warning") return { icon: s.icon, sub: s.label, ...toned("var(--lumen-warning)"), subC: "var(--lumen-text-2)", iconAnim: "lumenBreath 2400ms ease-in-out infinite" };
+    if (s.tone === "warning") return { icon: s.icon, sub: s.label, ...toneLook("var(--lumen-warning)"), subC: "var(--lumen-text-2)", iconAnim: "lumenBreath 2400ms ease-in-out infinite" };
     if (st === "unknown") return { icon: s.icon, sub: s.label, iconFg: "var(--lumen-text-3)", subC: "var(--lumen-text-3)" };
     const off = st === "disarmed" ? cssColor(this._config.disarmed_color) : undefined;
-    if (off) return { icon: s.icon, sub: s.label, ...toned(off), subC: "var(--lumen-text-2)" };
-    return { icon: s.icon, sub: s.label, ...(s.tone === "info" ? toned(tone("info")) : {}) };
+    if (off) return { icon: s.icon, sub: s.label, ...toneLook(off), subC: "var(--lumen-text-2)" };
+    return { icon: s.icon, sub: s.label, ...(s.tone === "info" ? toneLook(tone("info")) : {}) };
   }
 
   /** Buttons of the state (catalog B): Arm / Disarm / Cancel / Code. */

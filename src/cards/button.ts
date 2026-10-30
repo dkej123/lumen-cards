@@ -9,7 +9,8 @@ import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
-import { ACCENT, NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile, toneBorder, toneLook, type TileLook } from "../core/tile";
+import { ACCENT, NEUTRAL, type TileLook, toneBorder, toneLook, UNAVAILABLE, UNKNOWN } from "../core/parts";
+import { rowTile } from "../core/tile";
 import { requireEntity } from "../core/validate";
 import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
@@ -261,7 +262,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     const out = this.outcome(tiny);
     const sub = una ? t("common.unavailable") : out ?? (c.show_state === false ? "" : this.sub(e));
     if (tiny) {
-      return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: look.iconFg, handlers: h, disabled: una, unavailable: una, extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(busy ? "mdi:loading" : ic, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`) });
+      return compactCell({ title: `${this.name}${sub ? ` · ${sub}` : ""}`, color: look.iconFg ?? "var(--lumen-text-2)", handlers: h, disabled: una, unavailable: una, extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(busy ? "mdi:loading" : ic, `display:block;animation:${busy ? "lumenSpin 900ms linear infinite" : "none"}`) });
     }
     const opts = {
       title: this.name,

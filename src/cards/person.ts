@@ -8,8 +8,8 @@ import { entityName } from "../core/call";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { colorOr, glass } from "../core/styles";
-import { WFX } from "../core/parts";
-import { NEUTRAL, UNAVAILABLE, UNKNOWN, rowTile } from "../core/tile";
+import { NEUTRAL, UNAVAILABLE, UNKNOWN, WFX } from "../core/parts";
+import { rowTile } from "../core/tile";
 import type { HassEntity } from "../hass/types";
 import { avatarColor, presence, type Presence } from "../logic/presence";
 

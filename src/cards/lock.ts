@@ -9,7 +9,7 @@ import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
-import { codePad, dangerBorder, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type Seg } from "../core/parts";
+import { codePad, dangerBorder, type Look, rowFrame, rowIcon, rowText, type Seg, segs, toneLook, unavailableLook, unplugged, WFX } from "../core/parts";
 import { tone } from "../core/styles";
 import { compactCell } from "../core/status-row";
 import { toast } from "../core/toast";
@@ -213,11 +213,11 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     const sending = busy && st !== "locking" && st !== "unlocking" && st !== "opening";
     if (sending) {
       const label = busy === "lock" ? t("card.lock.locking") : busy === "busy" ? t("common.sending_command") : busy === "open" ? t("card.lock.opening") : t("card.lock.unlocking");
-      return { icon: busy === "lock" ? "mdi:lock" : "mdi:lock-open-variant", sub: label, ...toned("var(--lumen-warning)"), subC: "var(--lumen-text-2)", iconAnim: "lumenBreath 2400ms ease-in-out infinite" };
+      return { icon: busy === "lock" ? "mdi:lock" : "mdi:lock-open-variant", sub: label, ...toneLook("var(--lumen-warning)"), subC: "var(--lumen-text-2)", iconAnim: "lumenBreath 2400ms ease-in-out infinite" };
     }
     const sub = l.tone === "text-3" || l.tone === "info" ? l.label : stateText(this._hass, this.lock, l.label);
     if (l.tone === "text-3") return { icon: l.icon, sub, iconFg: "var(--lumen-text-3)", subC: "var(--lumen-text-3)" };
-    const look: Look = { icon: l.icon, sub, meta: l.meta, ...toned(tone(l.tone)), ...(l.alarm ? { border: dangerBorder } : {}) };
+    const look: Look = { icon: l.icon, sub, meta: l.meta, ...toneLook(tone(l.tone)), ...(l.alarm ? { border: dangerBorder } : {}) };
     // Locking / unlocking: the caption stays neutral, the button spins.
     if (st === "locking" || st === "unlocking" || st === "opening") look.subC = "var(--lumen-text-2)";
     return look;

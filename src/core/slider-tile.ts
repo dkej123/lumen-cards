@@ -173,7 +173,7 @@ export class SlideDrag implements ReactiveController {
   };
 }
 
-export interface TileLook {
+export interface SliderLook {
   title: string;
   sub: string;
   /** Second, quieter part of the value line (design `meta`). */
@@ -206,7 +206,7 @@ export interface TileLook {
 }
 
 /** Row tile of the catalog (design `R()`), wide or compact. */
-export function sliderTile(look: TileLook, drag: SlideDrag | undefined, interactive = true) {
+export function sliderTile(look: SliderLook, drag: SlideDrag | undefined, interactive = true) {
   const h = drag?.handlers;
   const c = look.compact;
   const fill = look.fill === null ? 0 : Math.max(0, Math.min(100, look.fill));
