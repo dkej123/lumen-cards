@@ -252,9 +252,9 @@ A window with any cards you like, Lumen or not, opened by a link like `#living-r
 
 The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWeatherMap…): a slim 44 px line, just an icon with the temperature (to stand next to the greeting), or a card with the next hours. Tap it for the details sheet: now (feels like, wind, humidity, pressure, UV, visibility, sunrise and sunset), today hourly with a chart of the temperature and the feels-like temperature, the next days (tap a day to see its hours) and weather warnings, e.g. from IMGW-PIB Monitor. Every tile shows only when your weather entity has that value.
 
-### Scale
+### Stacks
 
-A wrapper for any cards, Lumen or not: lays them out in a grid like a section and gives the whole group one max. width, as a percent of its place or in pixels, centred or at one side. The cards inside keep their text size, only the width changes.
+Vertical and horizontal stacks like Home Assistant's own (cards one under another or side by side with equal widths), with the same card editor, plus one max. width for the whole group – as a percent of its place or in pixels, centred or at one side. The cards inside can have their own visibility conditions, as in HA's stacks.
 
 ### Floating panel
 
@@ -781,28 +781,29 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | `show_trigger` | Show a row on the dashboard that opens the pop-up (otherwise the card is invisible) | off |
 | `auto_close` | Close by itself after this many seconds (0 = never) | 0 |
 
-### Scale (`lumen-scale-card`)
+### Stacks (`lumen-vertical-stack-card`, `lumen-horizontal-stack-card`)
 
 ```yaml
-type: custom:lumen-scale-card
+type: custom:lumen-vertical-stack-card
 max_width: 80
 max_width_unit: "%"
 cards:
   - type: custom:lumen-light-card
     entity: light.living_room
-  - type: tile
-    entity: sun.sun
-    grid_options:
-      columns: 6
+  - type: custom:lumen-horizontal-stack-card
+    cards:
+      - type: tile
+        entity: sun.sun
+      - type: custom:lumen-weather-card
+        entity: weather.home
 ```
 
 | Option | What it does | Default |
 |---|---|---|
-| `cards` | The cards inside (any Home Assistant cards, edited in YAML), in a 12-column grid like a section – each spans its `grid_options.columns` | – |
-| `max_width`, `max_width_unit` | Width of the whole group: pixels or percent of the card's grid place (or `max_width: 80%`) | full width |
-| `align` | Where a narrower group sits: `center`, `start` (left), `end` (right) | `center` |
-
-Set visibility conditions on the scale card itself; conditions of the cards inside are not applied.
+| `cards` | The cards inside (any Home Assistant cards, the same editor as HA's stacks); vertical – one under another, horizontal – side by side with equal widths. The cards' own visibility conditions apply. | – |
+| `title` | Heading above the cards | none |
+| `max_width`, `max_width_unit` | Width of the whole stack: pixels or percent of the card's grid place (or `max_width: 80%`) | full width |
+| `align` | Where a narrower stack sits: `center`, `start` (left), `end` (right) | `center` |
 
 <a id="lumen-fab-sheet-card"></a>
 

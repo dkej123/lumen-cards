@@ -29,8 +29,8 @@ import "./cards/fab-sheet";
 import "./cards/weather";
 // Dom panel access bar (B7).
 import "./cards/bar";
-// One width (px / %) for a group of cards.
-import "./cards/scale";
+// Stacks with one width (px / %) for a group of cards.
+import "./cards/stack";
 
 declare const __LUMEN_VERSION__: string;
 

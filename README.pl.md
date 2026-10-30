@@ -248,9 +248,9 @@ Pasek z przyciskami do widoków dashboardu (albo pop-upów). Może przykleić si
 
 Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` (np. z paska nawigacji albo przycisku). Zamykasz je ×, klawiszem Esc, dotknięciem obok albo przesunięciem w dół. Sama karta jest na dashboardzie niewidoczna, chyba że chcesz wiersz, który ją otwiera.
 
-### Skalowanie
+### Stosy
 
-Opakowanie na dowolne karty, Lumen albo inne: układa je w siatce jak w sekcji i ustawia całej grupie jedną maksymalną szerokość, w procentach miejsca albo w pikselach, wyśrodkowaną albo przy brzegu. Karty w środku nie zmieniają rozmiaru czcionek, tylko szerokość.
+Stos pionowy i poziomy jak wbudowane w Home Assistant (karty jedna pod drugą albo obok siebie po równo), z tym samym edytorem kart, ale z jedną maksymalną szerokością dla całej grupy – w procentach miejsca albo w pikselach, wyśrodkowaną albo przy brzegu. Karty w środku mogą mieć własne warunki widoczności, tak jak we wbudowanych stosach.
 
 ### Pływający panel
 
@@ -773,28 +773,29 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | `show_trigger` | Pokazuj na dashboardzie wiersz, który otwiera pop-up (inaczej karta jest niewidoczna) | wył. |
 | `auto_close` | Zamknij samo po tylu sekundach (0 = nigdy) | 0 |
 
-### Skalowanie (`lumen-scale-card`)
+### Stosy (`lumen-vertical-stack-card`, `lumen-horizontal-stack-card`)
 
 ```yaml
-type: custom:lumen-scale-card
+type: custom:lumen-vertical-stack-card
 max_width: 80
 max_width_unit: "%"
 cards:
   - type: custom:lumen-light-card
     entity: light.salon
-  - type: tile
-    entity: sun.sun
-    grid_options:
-      columns: 6
+  - type: custom:lumen-horizontal-stack-card
+    cards:
+      - type: tile
+        entity: sun.sun
+      - type: custom:lumen-weather-card
+        entity: weather.dom
 ```
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
-| `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML), w siatce 12 kolumn jak w sekcji – każda zajmuje swoje `grid_options.columns` | – |
-| `max_width`, `max_width_unit` | Szerokość całej grupy: piksele albo procent miejsca karty w siatce (lub `max_width: 80%`) | cała szerokość |
-| `align` | Położenie węższej grupy: `center` (na środku), `start` (do lewej), `end` (do prawej) | `center` |
-
-Warunki widoczności ustawiaj na samej karcie skalowania; warunki kart w środku nie są brane pod uwagę.
+| `cards` | Karty w środku (dowolne karty Home Assistanta, ten sam edytor co we wbudowanych stosach); pionowy – jedna pod drugą, poziomy – obok siebie po równo. Własne warunki widoczności kart działają. | – |
+| `title` | Nagłówek nad kartami | brak |
+| `max_width`, `max_width_unit` | Szerokość całego stosu: piksele albo procent miejsca karty w siatce (lub `max_width: 80%`) | cała szerokość |
+| `align` | Położenie węższego stosu: `center` (na środku), `start` (do lewej), `end` (do prawej) | `center` |
 
 <a id="lumen-fab-sheet-card"></a>
 

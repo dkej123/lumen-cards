@@ -290,20 +290,24 @@ describe("climate mode order", () => {
   });
 });
 
-describe("lumen-scale-card", () => {
-  it("validates cards / align and caps the whole group at 80 % aligned left", async () => {
-    const { validateScale } = await import("../src/cards/scale");
-    expect(() => validateScale({ cards: "x" as never })).toThrow();
-    expect(() => validateScale({ align: "middle" as never })).toThrow();
+describe("lumen stacks", () => {
+  it("validate cards / align; the whole stack capped at 80 % aligned left; horizontal = a row", async () => {
+    const { validateStack } = await import("../src/cards/stack");
+    expect(() => validateStack({ cards: "x" as never })).toThrow();
+    expect(() => validateStack({ align: "middle" as never })).toThrow();
     await import("../src/lumen-cards");
-    const el = document.createElement("lumen-scale-card") as HTMLElement & { setConfig(c: unknown): void; hass: unknown; updateComplete: Promise<boolean> };
-    el.setConfig({ type: "custom:lumen-scale-card", cards: [], max_width: 80, max_width_unit: "%", align: "start" });
-    el.hass = { states: {}, language: "en", callService: async () => undefined, callWS: async () => undefined };
-    document.body.append(el);
-    await el.updateComplete;
-    expect(el.style.maxWidth).toBe("80%");
-    expect(el.style.marginLeft).toBe("0px");
-    expect(el.shadowRoot!.textContent).toContain("Add cards");
-    el.remove();
+    type El = HTMLElement & { setConfig(c: unknown): void; hass: unknown; updateComplete: Promise<boolean> };
+    const hass = { states: {}, language: "en", callService: async () => undefined, callWS: async () => undefined };
+    const v = document.createElement("lumen-vertical-stack-card") as El;
+    v.setConfig({ type: "custom:lumen-vertical-stack-card", cards: [], title: "Group", max_width: 80, max_width_unit: "%", align: "start" });
+    v.hass = hass;
+    document.body.append(v);
+    await v.updateComplete;
+    expect(v.style.maxWidth).toBe("80%");
+    expect(v.style.marginLeft).toBe("0px");
+    expect(v.shadowRoot!.textContent).toContain("Group");
+    expect(v.shadowRoot!.textContent).toContain("Add cards");
+    v.remove();
+    expect(customElements.get("lumen-horizontal-stack-card")).toBeTruthy();
   });
 });

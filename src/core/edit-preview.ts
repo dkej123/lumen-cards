@@ -35,7 +35,8 @@ function viewOf(el: Element): Element | undefined {
 function wrappers(root: Element | ShadowRoot, out: HTMLElement[] = []): HTMLElement[] {
   for (const el of root.querySelectorAll<HTMLElement>("*")) {
     if (el.localName === "hui-section" || el.localName === "hui-card") out.push(el);
-    if (el.shadowRoot && el.localName.startsWith("hui-")) wrappers(el.shadowRoot, out);
+    // HA's elements and Lumen stacks (their cards sit in hui-card wrappers too)
+    if (el.shadowRoot && (el.localName.startsWith("hui-") || /^lumen-.*-stack-card$/.test(el.localName))) wrappers(el.shadowRoot, out);
   }
   return out;
 }

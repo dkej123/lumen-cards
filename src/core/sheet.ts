@@ -45,10 +45,26 @@ export class InnerCards {
   private building = false;
   private hass?: HassLike;
 
+  /**
+   * `wrap`: each card in HA's own hui-card wrapper, as HA's stacks do – its visibility
+   * conditions apply and the dashboard edit mode treats it like any card (not in sheets / bar).
+   */
   constructor(
-    private host: ReactiveControllerHost,
+    private host: ReactiveControllerHost & { preview?: boolean },
     private prepare: (c: CardConfig) => CardConfig,
+    private opts: { wrap?: boolean } = {},
   ) {}
+
+  private create(cfg: CardConfig): Promise<CardEl> {
+    const Wrapper = this.opts.wrap ? customElements.get("hui-card") : undefined;
+    if (!Wrapper) return createCard(cfg);
+    const el = new Wrapper() as CardEl & { config?: CardConfig; load(): void };
+    if (this.hass) el.hass = this.hass;
+    el.preview = !!this.host.preview;
+    el.config = cfg;
+    el.load();
+    return Promise.resolve(el);
+  }
 
   setHass(hass: HassLike): void {
     this.hass = hass;
@@ -67,12 +83,12 @@ export class InnerCards {
     if (this.builtFor === cfgs || this.building) return;
     this.building = true;
     try {
-      const els = await Promise.all(cfgs.map((c) => createCard(this.prepare(c ?? {}))));
+      const els = await Promise.all(cfgs.map((c) => this.create(this.prepare(c ?? {}))));
       els.forEach((el, i) => {
         if (this.hass) el.hass = this.hass;
         el.addEventListener("ll-rebuild", (ev) => {
           ev.stopPropagation();
-          createCard(this.prepare(cfgs[i] ?? {})).then((fresh) => {
+          this.create(this.prepare(cfgs[i] ?? {})).then((fresh) => {
             if (this.hass) fresh.hass = this.hass;
             this.cards = this.cards.map((x) => (x === el ? fresh : x));
             this.host.requestUpdate();
