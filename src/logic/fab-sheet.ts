@@ -101,6 +101,8 @@ const nameOf = (e: HassEntity | undefined, id: string) => String(e?.attributes.f
 export function panelWarning(cards: unknown, cardIds: string[], states: HassEntities): PanelWarning | null {
   const cfgs = Array.isArray(cards) ? (cards as CardCfg[]) : [];
   const cfgFor = (id: string) => cfgs.find((c) => c && c.entity === id);
+  // The card's own `name` (as shown in the sheet), else the entity's friendly name.
+  const label = (id: string) => (typeof cfgFor(id)?.name === "string" && cfgFor(id)!.name ? String(cfgFor(id)!.name) : nameOf(states[id], id));
   let low: { pct: number | null; id: string } | null = null;
   for (const id of thermostatIds(cardIds)) {
     const cfg = cfgFor(id);
@@ -110,10 +112,10 @@ export function panelWarning(cards: unknown, cardIds: string[], states: HassEnti
   }
   if (low) {
     const what = low.pct === null ? t("card.climate.battery_low") : t("card.climate.battery_pct", { pct: Math.round(low.pct) });
-    return { kind: "battery", icon: "mdi:battery-alert-variant-outline", text: `${what} · ${nameOf(states[low.id], low.id)}` };
+    return { kind: "battery", icon: "mdi:battery-alert-variant-outline", text: `${what} · ${label(low.id)}` };
   }
   const gone = cardIds.filter((id) => !states[id] || states[id].state === "unavailable");
-  if (gone.length) return { kind: "unavailable", icon: "mdi:alert-circle-outline", text: `${t("common.unavailable")} · ${gone.map((id) => nameOf(states[id], id)).join(", ")}` };
+  if (gone.length) return { kind: "unavailable", icon: "mdi:alert-circle-outline", text: `${t("common.unavailable")} · ${gone.map(label).join(", ")}` };
   return null;
 }
 
