@@ -32,16 +32,6 @@ export const formatClock = (iso: string | number | undefined): string => {
 export const weekday = (day: number): string =>
   new Intl.DateTimeFormat(locale(), { weekday: "short" }).format(new Date(Date.UTC(2023, 0, 1 + day, 12)));
 
-/**
- * Since when: under an hour as a duration ("since 25 min"), from an hour on as a clock time –
- * "since 13:20", "since yesterday 13:20", "since Mon 13:20" (within a week), else "since 28/09".
- */
-export function formatSince(iso: string | undefined, now: number = Date.now()): string {
-  const ms = ageMs(iso, now);
-  if (!Number.isFinite(ms)) return "—";
-  return t("time.since", { x: ms < 3_600_000 ? formatDuration(ms) : formatWhen(Date.parse(iso!), now) });
-}
-
 /** Point in time: "13:20", "yesterday 23:10", "Fri 13:20" (within a week), else "28/09". */
 export function formatWhen(ms: number, now: number = Date.now()): string {
   const at = new Date(ms);

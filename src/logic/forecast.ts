@@ -246,9 +246,6 @@ const ICO: Record<string, string> = {
 };
 const NIGHT: Record<string, string> = { sunny: "mdi:weather-night", partlycloudy: "mdi:weather-night-partly-cloudy" };
 
-/** The 15 HA weather states (labels `card.forecast.cond.<state>`). */
-export const CONDITIONS = Object.keys(ICO);
-
 /** Icon for a condition; `night` swaps sunny / partly cloudy for their night variants (and clear-night by day back to sunny). */
 export function conditionIcon(cond: string, night = false): string {
   if (night && NIGHT[cond]) return NIGHT[cond];

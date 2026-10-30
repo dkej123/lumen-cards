@@ -624,7 +624,6 @@
   "time.just_now": "przed chwilą",
   "time.now": "teraz",
   "time.one_day": "1 dzień",
-  "time.since": "od {x}",
   "time.yesterday": "wczoraj {clock}",
   "tone.danger": "Alarm",
   "tone.info": "Informacja",
