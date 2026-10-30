@@ -132,6 +132,9 @@ describe("colours from the config", () => {
     expect(cssColor([1, 2, 3])).toBe("rgb(1,2,3)");
     expect(cssColor("red;position:fixed")).toBeUndefined();
     expect(cssColor("url(x)")).toBeUndefined();
+    expect(cssColor("var(--lumen-danger)")).toBe("var(--lumen-danger)");
+    expect(cssColor("var(--lumen-x);color:red")).toBeUndefined();
+    expect(cssColor("var(--other)")).toBeUndefined();
     expect(tone("x);background:url(y")).toBe("var(--lumen-accent)");
   });
 });

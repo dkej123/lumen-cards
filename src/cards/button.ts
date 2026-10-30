@@ -2,6 +2,7 @@ import { nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { icon } from "../core/lumen-icon";
+import { cssColor } from "../core/styles";
 import { actions, advanced, appearance, firstOf, form, stub } from "../core/form";
 import { SubButtons, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
@@ -44,6 +45,8 @@ export interface ButtonConfig extends BaseConfig {
   show_name?: boolean;
   show_icon?: boolean;
   show_state?: boolean;
+  /** Colour of the icon / access-bar cell at rest (Dom: gate and barrier in info blue). */
+  color?: string | [number, number, number];
 }
 
 /** How long the success line stays before the last use comes back (catalog: 6 s). */
@@ -206,7 +209,9 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
         return toneLook("var(--lumen-danger)", toneBorder("var(--lumen-danger)", 40));
     }
     if (e.state === "unknown") return UNKNOWN;
-    return e.state === "on" ? ACCENT : NEUTRAL;
+    if (e.state === "on") return ACCENT;
+    const col = cssColor(this._config.color);
+    return col ? { ...NEUTRAL, iconBg: `color-mix(in srgb, ${col} 16%, transparent)`, iconFg: col } : NEUTRAL;
   }
 
   private when(iso: string | undefined): string | undefined {
@@ -298,6 +303,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
       [
         { name: "entity", required: true, selector: { entity: {} } },
         { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }] },
+        { name: "color", selector: { ui_color: {} } },
         {
           name: "secondary_info",
           selector: {

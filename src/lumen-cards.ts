@@ -27,6 +27,8 @@ import "./cards/popup";
 import "./cards/fab-sheet";
 // Catalog section 20.
 import "./cards/weather";
+// Dom panel access bar (B7).
+import "./cards/bar";
 
 declare const __LUMEN_VERSION__: string;
 

@@ -81,6 +81,8 @@ export function cssColor(c: unknown): string | undefined {
   if (c === "none" || c === "state") return undefined;
   if (HA_COLORS.has(c)) return `var(--${c}-color, ${HA_COLORS.get(c)})`;
   if (/^#[0-9a-f]{3,8}$/i.test(c) || /^(rgb|hsl|oklch)a?\([\d\s.,%/-]+\)$/i.test(c)) return c;
+  // Lumen's own tokens (exact Dom tones: var(--lumen-danger), var(--lumen-info)…).
+  if (/^var\(--lumen-[a-z0-9-]+\)$/.test(c)) return c;
   return undefined;
 }
 

@@ -260,3 +260,11 @@ describe("hiddenByHa", () => {
     view.remove();
   });
 });
+
+describe("lumen-bar-card", () => {
+  it("inner Lumen cards are compact cells without their own weather effects", async () => {
+    const { barInner } = await import("../src/cards/bar");
+    expect(barInner({ type: "custom:lumen-entity-card", entity: "binary_sensor.d", layout: "wide" })).toEqual({ type: "custom:lumen-entity-card", entity: "binary_sensor.d", layout: "compact", weather_effects: false });
+    expect(barInner({ type: "tile", entity: "light.x" })).toEqual({ type: "tile", entity: "light.x" });
+  });
+});

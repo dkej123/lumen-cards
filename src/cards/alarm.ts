@@ -9,7 +9,7 @@ import { Presses, pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { alarmBanner, alarmRing, compactCell } from "../core/status-row";
 import { icon } from "../core/lumen-icon";
-import { tone } from "../core/styles";
+import { cssColor, tone } from "../core/styles";
 import { codePad, countdown, rowFrame, rowIcon, rowText, segs, toned, unavailableLook, unplugged, WFX, type Look, type PadMode, type Seg } from "../core/parts";
 import type { HassEntity, HassLike } from "../hass/types";
 import { ARMED_ICON, alarmBarIcon, alarmStatus, armModes, isArmed, modeLabel, type Status } from "../logic/status";
@@ -35,6 +35,8 @@ export interface AlarmConfig extends BaseConfig {
   show_state?: boolean;
   /** Arm / Disarm / Cancel / Code buttons on the card. */
   show_buttons?: boolean;
+  /** Colour of the disarmed state (Dom: danger red). Default neutral. */
+  disarmed_color?: string | [number, number, number];
   /** Arm modes offered by the pad (of those the entity supports). Default: all supported. */
   arm_modes?: string[];
   /** Exit delay in seconds for the arming bar when the entity does not report it. */
@@ -313,6 +315,8 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     }
     if (s.tone === "warning") return { icon: s.icon, sub: s.label, ...toned("var(--lumen-warning)"), subC: "var(--lumen-text-2)", iconAnim: "lumenBreath 2400ms ease-in-out infinite" };
     if (st === "unknown") return { icon: s.icon, sub: s.label, iconFg: "var(--lumen-text-3)", subC: "var(--lumen-text-3)" };
+    const off = st === "disarmed" ? cssColor(this._config.disarmed_color) : undefined;
+    if (off) return { icon: s.icon, sub: s.label, ...toned(off), subC: "var(--lumen-text-2)" };
     return { icon: s.icon, sub: s.label, ...(s.tone === "info" ? toned(tone("info")) : {}) };
   }
 
@@ -352,7 +356,8 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
         c.double_tap_action ? () => handleAction(this, c.double_tap_action, c.entity, "double_tap") : undefined,
       );
       const anim = s.alert ? "lumenShake 900ms ease-in-out infinite" : s.busy ? "lumenBreath 2400ms ease-in-out infinite" : "none";
-      return compactCell({ title: `${this.name} · ${s.label}`, color: tone(s.tone), handlers: cell, alert: s.alert, unavailable: s.tone === "unavailable", extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
+      const off = e?.state === "disarmed" ? cssColor(c.disarmed_color) : undefined;
+      return compactCell({ title: `${this.name} · ${s.label}`, color: off ?? tone(s.tone), handlers: cell, alert: s.alert, unavailable: s.tone === "unavailable", extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
     }
     const l = this.look(s, e, false);
     const cd = alarmCountdown(e, c);
@@ -396,7 +401,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
         ],
       },
       { name: "", type: "grid", flatten: true, schema: [{ name: "banner", default: true, selector: { boolean: {} } }, { name: "screen_ring", default: true, selector: { boolean: {} } }] },
-      { name: "banner_text", selector: { text: {} } },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "banner_text", selector: { text: {} } }, { name: "disarmed_color", selector: { ui_color: {} } }] },
       actions(),
       advanced([["show_state"], ["show_buttons"]], { subButtons: true }),
       appearance({ layout: "width" }),

@@ -93,6 +93,7 @@ const LABELS: Record<string, string> = {
   sub_buttons: "editor.sub_buttons",
   styles: "editor.styles",
   max_width: "editor.max_width",
+  disarmed_color: "editor.disarmed_color",
   warnings_entity: "editor.warnings_entity",
   show_feels: "editor.show_feels",
   show_minmax: "editor.show_minmax",
@@ -133,6 +134,7 @@ const HELPERS: Record<string, string> = {
   device_class: "editor.help.device_class",
   sub_buttons: "editor.help.sub_buttons",
   weather_hours: "editor.help.weather_hours",
+  disarmed_color: "editor.help.disarmed_color",
   warnings_entity: "editor.help.warnings_entity",
 };
 
