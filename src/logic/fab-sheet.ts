@@ -2,10 +2,10 @@
 // sheet header say about the cards inside – how many heat, the average room temperature, a
 // battery / availability warning and whether the "All" preset segment makes sense.
 
-import { language, t } from "../core/i18n";
+import { plural, t } from "../core/i18n";
 import type { HassEntities, HassEntity } from "../hass/types";
 import { BATTERY_LOW, batteryLevel } from "./battery";
-import { formatNumber } from "./time";
+import { formatTemp } from "./format";
 
 type CardCfg = Record<string, unknown>;
 
@@ -55,17 +55,7 @@ export function badgeCount(badge: string[] | undefined, cardIds: string[], state
 }
 
 /** Plural form for counted labels: one / few (Polish 2–4, not 12–14) / many. */
-export function plural(n: number): "one" | "few" | "many" {
-  if (n === 1) return "one";
-  if (language() === "pl") {
-    const d = n % 10, h = n % 100;
-    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return "few";
-  }
-  return "many";
-}
 
-/** "20,6°" (one decimal, locale separator; whole numbers without it). */
-const deg = (v: number) => `${Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : formatNumber(Math.round(v * 10) / 10)}°`;
 
 /**
  * Sheet subtitle / trigger row text: "2 of 3 heating · avg 20.6°", 1 → "1 of 3 heating", 0 →
@@ -82,7 +72,7 @@ export function panelSummary(cardIds: string[], states: HassEntities, cardCount:
     .filter((e) => !unavailable(e) && typeof e!.attributes.current_temperature === "number")
     .map((e) => e!.attributes.current_temperature as number);
   if (!withAverage || !temps.length) return head;
-  return `${head} · ${t("card.fab_sheet.average", { t: deg(temps.reduce((a, b) => a + b, 0) / temps.length) })}`;
+  return `${head} · ${t("card.fab_sheet.average", { t: formatTemp(temps.reduce((a, b) => a + b, 0) / temps.length) })}`;
 }
 
 export interface PanelWarning {

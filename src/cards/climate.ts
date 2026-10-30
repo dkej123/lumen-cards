@@ -17,6 +17,7 @@ import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { formatNumber } from "../logic/time";
 import { BATTERY_LOW, batteryLevel } from "../logic/battery";
+import { formatTemp } from "../logic/format";
 
 /** Low-battery pill next to the hvac_action badge (full card, catalog section 19). */
 const batteryBadge = (text: string) =>
@@ -122,12 +123,6 @@ const MODE_LABEL: Record<string, string> = { heat: "card.climate.mode.heat", coo
 const SECTION = "font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3);margin-bottom:-8px";
 const STEP_BTN = "border:1px solid var(--lumen-border);background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:22px;cursor:pointer;display:grid;place-items:center;border-radius:16px;height:48px";
 
-/** "22°", "22,5°", "72 °F": whole numbers without decimals, °F spelled out. */
-export function formatTemp(v: number | undefined | null, fahrenheit = false): string {
-  if (v === undefined || v === null || !Number.isFinite(v)) return "—";
-  const n = Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : formatNumber(v);
-  return fahrenheit ? `${n} °F` : `${n}°`;
-}
 const FANS: Record<string, [string, string]> = {
   auto: ["common.auto", "mdi:fan-auto"],
   low: ["card.climate.fan.low", "mdi:fan-speed-1"],

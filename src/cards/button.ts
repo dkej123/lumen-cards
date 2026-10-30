@@ -16,6 +16,7 @@ import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
 import { waitForResponse, type EntitySource } from "../logic/response";
+import { RUN } from "../logic/run";
 import { formatWhen } from "../logic/time";
 
 export interface ButtonFeedback {
@@ -54,14 +55,6 @@ export interface ButtonConfig extends BaseConfig {
 /** How long the success line stays before the last use comes back (catalog: 6 s). */
 export const SUCCESS_MS = 6000;
 
-/** Default tap by domain (HA button card / Mushroom entity card behaviour). */
-const RUN: Record<string, [string, string]> = {
-  script: ["script", "turn_on"],
-  scene: ["scene", "turn_on"],
-  button: ["button", "press"],
-  input_button: ["input_button", "press"],
-  automation: ["automation", "trigger"],
-};
 const TOGGLE = new Set(["switch", "input_boolean", "light", "fan", "cover", "siren", "humidifier", "valve", "media_player", "climate", "lock", "group"]);
 const ICONS: Record<string, string> = { script: "mdi:script-text-play", scene: "mdi:palette", button: "mdi:gesture-tap-button", input_button: "mdi:gesture-tap-button", automation: "mdi:robot" };
 

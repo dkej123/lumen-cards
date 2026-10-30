@@ -69,3 +69,13 @@ export function t(key: string, vars?: Record<string, string | number>): string {
   if (vars) for (const [k, v] of Object.entries(vars)) out = out.replaceAll(`{${k}}`, String(v));
   return out;
 }
+
+/** Plural form of a count for `*_one` / `*_few` / `*_many` keys (Polish has "few": 2–4, 22–24…). */
+export function plural(n: number): "one" | "few" | "many" {
+  if (n === 1) return "one";
+  if (lang === "pl") {
+    const d = n % 10, h = n % 100;
+    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return "few";
+  }
+  return "many";
+}

@@ -14,6 +14,7 @@ import { toast } from "../core/toast";
 import type { HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { LightsController, type LightItem } from "../lights/controller";
+import { RUN } from "../logic/run";
 
 /** Runs something: scenes, scripts, buttons (default by domain) or any configured action. */
 export interface ActionChip {
@@ -47,14 +48,6 @@ export interface ChipsConfig extends BaseConfig {
 }
 
 const TYPES = ["action", "light"];
-/** Default tap of an action chip by domain. */
-const RUN: Record<string, [string, string]> = {
-  scene: ["scene", "turn_on"],
-  script: ["script", "turn_on"],
-  button: ["button", "press"],
-  input_button: ["input_button", "press"],
-  automation: ["automation", "trigger"],
-};
 const JUSTIFY = { start: "flex-start", center: "center", end: "flex-end", justify: "space-between" };
 
 /** Structure the editor cannot show (it falls back to YAML); an empty list is fine while editing. */

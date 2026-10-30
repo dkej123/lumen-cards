@@ -2,11 +2,11 @@
 // Catalog 2026-10-30: floating panel (section 19), compact heights (sections 01–06, 17), battery.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ent, layer, mockHass, mount as mountCard, type Card } from "./helpers";
-import { setLanguage } from "../src/core/i18n";
+import { plural, setLanguage } from "../src/core/i18n";
 import { FAB_ORDER } from "../src/core/layer";
 import type { HassLike } from "../src/hass/types";
 import { batteryLevel } from "../src/logic/battery";
-import { badgeCount, bulkSegment, cardEntities, panelSummary, panelWarning, plural } from "../src/logic/fab-sheet";
+import { badgeCount, bulkSegment, cardEntities, panelSummary, panelWarning } from "../src/logic/fab-sheet";
 
 const TH = { hvac_modes: ["heat", "off"], preset_modes: ["comfort", "eco", "away"], min_temp: 5, max_temp: 30, target_temp_step: 0.5 };
 const STATES = [
