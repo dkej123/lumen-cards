@@ -38,7 +38,7 @@ export const SECTIONS: Section[] = [
       { label: "Kolorowa", config: { entity: "light.strip", icon: "mdi:led-strip-variant" }, span: 6, hint: "Ikona otwiera koło barw." },
       { label: "Wyłączona", config: { entity: "light.ceiling", icon: "mdi:ceiling-light" }, span: 6 },
       { label: "Grupa", config: { entity: "light.kitchen_all", icon: "mdi:lightbulb-group" }, span: 6 },
-      { label: "Kompakt", config: { entity: "light.sofa", icon: "mdi:sofa", layout: "compact" }, span: 4 },
+      { label: "Mała", config: { entity: "light.sofa", icon: "mdi:sofa", layout: "compact" }, span: 4 },
       { label: "Niedostępna", config: { entity: "light.bedroom" }, span: 6 },
     ],
   },
@@ -64,7 +64,7 @@ export const SECTIONS: Section[] = [
       { label: "W domu", config: { entity: "person.alex", avatar_color: "light-blue" }, span: 6 },
       { label: "Poza domem", config: { entity: "person.sam", avatar_color: "amber" }, span: 6 },
       { label: "Z obecnością BLE", config: { entity: "person.zoe", presence_entity: "binary_sensor.zoe_ble" }, span: 6 },
-      { label: "Kompakt", config: { entity: "person.alex", avatar_color: "light-blue", layout: "compact" }, span: 6 },
+      { label: "Mała", config: { entity: "person.alex", avatar_color: "light-blue", layout: "compact" }, span: 6 },
     ],
   },
   {
@@ -77,7 +77,7 @@ export const SECTIONS: Section[] = [
       { label: "Rozbrojony", config: { entity: "alarm_control_panel.demo" }, hint: "Uzbrój, kod 1234. Po 10 s alarm przechodzi z uzbrajania w uzbrojony." },
       { label: "Uzbrajanie", config: { entity: "alarm_control_panel.arming", screen_ring: false, banner: false } },
       { label: "Wzbudzony", config: { entity: "alarm_control_panel.triggered", screen_ring: false, banner: false } },
-      { label: "Kompakt", config: { entity: "alarm_control_panel.home_mode", layout: "compact" }, span: 4 },
+      { label: "Mała", config: { entity: "alarm_control_panel.home_mode", layout: "compact" }, span: 4 },
     ],
   },
   {
@@ -90,7 +90,7 @@ export const SECTIONS: Section[] = [
       { label: "Z kodem", config: { entity: "lock.demo" }, hint: "Odblokuj i wpisz 1234." },
       { label: "Odblokowany", config: { entity: "lock.unlocked" } },
       { label: "Zacięty", config: { entity: "lock.jammed" } },
-      { label: "Kompakt", config: { entity: "lock.car", icon: "mdi:car", layout: "compact" }, span: 4, hint: "Dotknij: okno z poleceniami." },
+      { label: "Mała", config: { entity: "lock.car", icon: "mdi:car", layout: "compact" }, span: 4, hint: "Dotknij: okno z poleceniami." },
     ],
   },
   {
@@ -103,7 +103,7 @@ export const SECTIONS: Section[] = [
       { label: "Drzwi", config: { entity: "binary_sensor.back_door" }, span: 6 },
       { label: "Gniazdko", config: { entity: "switch.coffee" }, span: 6, hint: "Dotknij, żeby przełączyć." },
       { label: "Z przyciskami", config: { entity: "fan.purifier", sub_buttons: [{ entity: "input_boolean.purifier_night" }, { entity: "fan.purifier", icon: "mdi:power" }] } },
-      { label: "Kompakt", config: { entity: "binary_sensor.front_door", layout: "compact" }, span: 3 },
+      { label: "Mała", config: { entity: "binary_sensor.front_door", layout: "compact" }, span: 3 },
     ],
   },
   {
@@ -115,7 +115,7 @@ export const SECTIONS: Section[] = [
     variants: [
       { label: "Z odpowiedzią", config: { entity: "script.gate", icon: "mdi:gate", feedback: { status_entity: "sensor.gate_status", message_entity: "sensor.gate_message", success_text: "Otwarta" } }, hint: "Naciśnij kilka razy: trzecie naciśnięcie kończy się błędem." },
       { label: "Kolor", config: { entity: "script.barrier", color: "var(--lumen-info)" }, span: 6 },
-      { label: "Kompakt", config: { entity: "script.gate", icon: "mdi:gate", layout: "compact" }, span: 3 },
+      { label: "Mała", config: { entity: "script.gate", icon: "mdi:gate", layout: "compact" }, span: 3 },
     ],
   },
   {
@@ -139,7 +139,7 @@ export const SECTIONS: Section[] = [
     lead: "Sześć poziomów PM2.5 / PM10 / AQI z paskiem; dotknięcie otwiera wykresy z całej doby.",
     variants: [
       { label: "PM2.5 + PM10", config: { pm25: "sensor.pm25", pm10: "sensor.pm10" }, hint: "Dotknij karty: wykresy 24 h." },
-      { label: "Kompakt", config: { pm25: "sensor.pm25", pm10: "sensor.pm10", layout: "compact" } },
+      { label: "Mała", config: { pm25: "sensor.pm25", pm10: "sensor.pm10", layout: "compact" } },
       { label: "AQI", config: { aqi_entity: "sensor.aqi" } },
     ],
   },
@@ -201,7 +201,7 @@ export const SECTIONS: Section[] = [
     variants: [
       { label: "Gra", config: { entity: "media_player.living_room" }, hint: "Pauza, następny utwór, głośność." },
       { label: "Wyłączony", config: { entity: "media_player.kitchen" } },
-      { label: "Kompakt", config: { entity: "media_player.living_room", layout: "compact" } },
+      { label: "Mała", config: { entity: "media_player.living_room", layout: "compact" } },
     ],
   },
   {
@@ -259,7 +259,7 @@ export const SECTIONS: Section[] = [
     lead: "Powitanie według pory dnia z imieniem i datą.",
     variants: [
       { label: "Pełne", config: {} },
-      { label: "Kompakt", config: { layout: "compact" } },
+      { label: "Mała", config: { layout: "compact" } },
     ],
   },
   {
@@ -303,7 +303,7 @@ export const SECTIONS: Section[] = [
     card: "fab-sheet",
     group: "Układ",
     lead: "Na telefonie pływający przycisk, szerzej wiersz; oba otwierają arkusz z kartami, np. wszystkimi termostatami.",
-    variants: [{ label: "Ogrzewanie", config: { title: "Ogrzewanie", icon: "mdi:radiator", cards: thermostats }, hint: "Dotknij: arkusz z termostatami i Komfort / Eco dla wszystkich." }],
+    variants: [{ label: "Ogrzewanie", config: { title: "Ogrzewanie", icon: "mdi:radiator", cards: thermostats }, hint: "Na tej stronie widać podgląd. Na Twoim telefonie to okrągły przycisk w rogu ekranu, na komputerze wiersz, który otwiera arkusz." }],
   },
   {
     id: "pasek-nawigacji",
