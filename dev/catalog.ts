@@ -125,7 +125,8 @@ function makeCard(card: string, cfg: Record<string, unknown>): Card {
   const c = document.createElement(`lumen-${card}-card`) as Card;
   c.setConfig({ ...cfg, type: tagOf(card) });
   // The floating panel's button would float over the whole page on a phone: show its row instead.
-  if (card === "fab-sheet") (c as Card & { preview: boolean }).preview = true;
+  // The spacer shows nothing on a dashboard: show its outline from edit mode.
+  if (card === "fab-sheet" || card === "spacer") (c as Card & { preview: boolean }).preview = true;
   c.hass = home.hass();
   cards.add(c);
   return c;
@@ -234,7 +235,7 @@ function howToAdd(s: Section): HTMLElement {
   step("Otwórz dashboard i kliknij <b>ołówek</b> w prawym górnym rogu.");
   step("Kliknij <b>+ Dodaj kartę</b>.");
   step(`Wpisz w wyszukiwarkę <b>Lumen</b> i wybierz ${names.map((n) => `<span class="pill">${n}</span>`).join(" albo ")}.`);
-  step(s.card === "title" || s.card === "greeting" ? "Wpisz tekst albo zostaw domyślny i kliknij <b>Zapisz</b>." : "W pierwszym polu wybierz swoje urządzenie. Podgląd zmieni się od razu. Kliknij <b>Zapisz</b>.");
+  step(s.card === "spacer" ? "Zostaw wysokość pustą, żeby karta dopasowała się do pływających przycisków, albo wpisz liczbę pikseli. Kliknij <b>Zapisz</b>." : s.card === "title" || s.card === "greeting" ? "Wpisz tekst albo zostaw domyślny i kliknij <b>Zapisz</b>." : "W pierwszym polu wybierz swoje urządzenie. Podgląd zmieni się od razu. Kliknij <b>Zapisz</b>.");
   return ol;
 }
 

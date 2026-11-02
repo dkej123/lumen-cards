@@ -187,6 +187,12 @@ export const GUIDE: Record<string, Guide> = {
       ["tap", "W arkuszu „Wszystkie: Komfort / Eco” zmienia wszystkie naraz."],
     ],
   },
+  odstep: {
+    tagline: "Miejsce, żeby przewinąć ponad pływające przyciski.",
+    about: "Niewidoczna karta z pustym miejscem. Dodana na końcu dashboardu sama dopasowuje się do wysokości pływających przycisków, żeby nie zasłaniały ostatniej karty. Możesz też ustawić stałą wysokość w pikselach.",
+    need: "Nic",
+    controls: [["see", "Nic nie pokazuje. Jej obrys widać tylko podczas edycji dashboardu."]],
+  },
   "pasek-nawigacji": {
     tagline: "Przyciski do widoków dashboardu.",
     about: "Pasek z przyciskami do widoków dashboardu albo okien pop-up. Może przykleić się do dołu ekranu jak w aplikacji.",

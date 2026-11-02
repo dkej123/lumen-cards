@@ -239,6 +239,22 @@ export const FAB_MAIN = 64;
 export const FAB_SMALL = 48;
 const FAB_GAP = 12;
 
+/** Elements that follow the height of the stacks (the spacer card). */
+const watchers = new Set<FabOwner>();
+const stackChanged = () => watchers.forEach((w) => w.requestUpdate());
+
+/** `owner` updates whenever a FAB comes or goes; returns the function that stops it. */
+export function watchFabs(owner: FabOwner): () => void {
+  watchers.add(owner);
+  return () => watchers.delete(owner);
+}
+
+/** How far the taller stack reaches from the bottom of the screen, as a CSS length; null without FABs. */
+export function fabStackHeight(): string | null {
+  const n = Math.max(...(["right", "left"] as const).map((side) => fabs.filter((f) => f.side === side).length));
+  return n ? `calc(var(--lumen-cards-fab-bottom, 24px) + ${FAB_MAIN + (n - 1) * (FAB_SMALL + FAB_GAP)}px + env(safe-area-inset-bottom, 0px))` : null;
+}
+
 const refreshFrom = (i: number, side: FabSide) => fabs.slice(i).forEach((f) => f.side === side && f.owner.requestUpdate());
 
 /** Slot (0 = lowest) of a FAB owner in the stack of its side; registers it on first use. */
@@ -255,6 +271,7 @@ export function fabSlot(owner: FabOwner, order: number = FAB_ORDER.climate, side
     fabs.splice(at, 0, { owner, order, side });
     // The ones above moved up a slot.
     refreshFrom(at + 1, side);
+    stackChanged();
     i = at;
   }
   return fabs.slice(0, i).filter((f) => f.side === side).length;
@@ -266,6 +283,7 @@ export function releaseFab(owner: FabOwner): void {
   if (i === -1) return;
   const [gone] = fabs.splice(i, 1);
   refreshFrom(i, gone.side);
+  stackChanged();
 }
 
 /** Size (px) of the FAB in `slot`. */

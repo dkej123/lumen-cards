@@ -307,6 +307,17 @@ export const SECTIONS: Section[] = [
     variants: [{ label: "Ogrzewanie", config: { title: "Ogrzewanie", icon: "mdi:radiator", cards: thermostats }, hint: "Na tej stronie widać podgląd. Na Twoim telefonie to okrągły przycisk w rogu ekranu, na komputerze wiersz, który otwiera arkusz." }],
   },
   {
+    id: "odstep",
+    name: "Odstęp",
+    card: "spacer",
+    group: "Układ",
+    lead: "Puste miejsce pod ostatnią kartą, żeby dało się ją przewinąć ponad pływające przyciski.",
+    variants: [
+      { label: "Nad przyciski", config: {}, hint: "Sam dopasowuje wysokość do pływających przycisków na ekranie. Bez przycisków nie zajmuje miejsca." },
+      { label: "Własna wysokość", config: { height: 100 } },
+    ],
+  },
+  {
     id: "pasek-nawigacji",
     name: "Pasek nawigacji",
     card: "nav",

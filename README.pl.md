@@ -280,6 +280,10 @@ Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` 
 
 Stos pionowy i poziomy jak wbudowane w Home Assistant (karty jedna pod drugą albo obok siebie po równo), z tym samym edytorem kart, ale z jedną maksymalną szerokością dla całej grupy – w procentach miejsca albo w pikselach, wyśrodkowaną albo przy brzegu. Karty w środku mogą mieć własne warunki widoczności, tak jak we wbudowanych stosach.
 
+### Odstęp
+
+Niewidoczna karta z pustym miejscem. Dodaj ją na końcu dashboardu, a pływające przyciski nie zasłonią ostatniej karty: odstęp sam dopasowuje się do ich wysokości na ekranie, a gdy ich nie ma, np. na komputerze, nie zajmuje miejsca. Możesz też ustawić stałą wysokość. Podczas edycji dashboardu widać jej obrys.
+
 ### Pływający panel
 
 Jeden pływający okrągły przycisk, który otwiera arkusz z dowolnymi kartami – najczęściej wszystkimi termostatami w jednym miejscu zamiast osobnego przycisku dla każdego. Przycisk pokazuje, ile z nich grzeje, przy grzaniu robi się pomarańczowy i delikatnie pulsuje, a o słabej baterii głowicy albo niedostępnym urządzeniu ostrzega znaczkiem w rogu. W arkuszu każdy termostat to jeden wiersz (−/+ zmienia temperaturę), a gdy termostaty mają te same presety, na górze jest **Wszystkie: Komfort / Eco / Wył.** dla wszystkich naraz. Na komputerze karta jest wierszem w siatce, który otwiera ten sam arkusz.
@@ -827,6 +831,18 @@ cards:
 | `max_width`, `max_width_unit` | Szerokość całego stosu: piksele albo procent miejsca karty w siatce (lub `max_width: 80%`) | cała szerokość |
 | `align` | Położenie węższego stosu: `center` (na środku), `start` (do lewej), `end` (do prawej); przy `card_width: content` także położenie kart w wierszu | `center` |
 | `card_width` | Tylko stos poziomy: `equal` – karty dzielą szerokość po równo, `content` – każda karta ma szerokość swojej treści i w razie potrzeby przechodzi do następnego wiersza (np. pigułki przypomnień) | `equal` |
+
+<a id="lumen-spacer-card"></a>
+
+### Odstęp (`lumen-spacer-card`)
+
+```yaml
+type: custom:lumen-spacer-card
+```
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `height` | Stała wysokość w pikselach | na wysokość pływających przycisków na ekranie plus 16 px; bez przycisków 0 |
 
 <a id="lumen-fab-sheet-card"></a>
 

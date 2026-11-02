@@ -284,6 +284,10 @@ The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWea
 
 Vertical and horizontal stacks like Home Assistant's own (cards one under another or side by side with equal widths), with the same card editor, plus one max. width for the whole group – as a percent of its place or in pixels, centred or at one side. The cards inside can have their own visibility conditions, as in HA's stacks.
 
+### Spacer
+
+An invisible card with empty space. Add it at the end of your dashboard and the floating buttons will not cover the last card: it follows their height on screen and takes no space without them, for example on a computer. You can also set a fixed height. While you edit the dashboard you can see its outline.
+
 ### Floating panel
 
 One floating round button that opens a sheet with any cards – typically all your thermostats in one place instead of a floating button for each. The button shows how many of them are heating, turns orange with a soft pulse while something heats, and warns about a weak valve battery or a device that is offline. In the sheet you get one row per thermostat (−/+ to change the temperature) and, when the thermostats share their presets, **All: Comfort / Eco / Off** for all of them at once. On a computer it is a row in the grid that opens the same sheet.
@@ -835,6 +839,18 @@ cards:
 | `max_width`, `max_width_unit` | Width of the whole stack: pixels or percent of the card's grid place (or `max_width: 80%`) | full width |
 | `align` | Where a narrower stack sits: `center`, `start` (left), `end` (right); with `card_width: content` also where the cards sit in the row | `center` |
 | `card_width` | Horizontal stack only: `equal` – the cards share the width, `content` – each card is as wide as its content and wraps to the next row when needed (e.g. reminder pills) | `equal` |
+
+<a id="lumen-spacer-card"></a>
+
+### Spacer (`lumen-spacer-card`)
+
+```yaml
+type: custom:lumen-spacer-card
+```
+
+| Setting | What it does | Default |
+|---|---|---|
+| `height` | A fixed height in pixels | as tall as the floating buttons on screen plus 16 px; 0 without them |
 
 <a id="lumen-fab-sheet-card"></a>
 

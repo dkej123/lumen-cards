@@ -31,6 +31,7 @@ import "./cards/weather";
 import "./cards/bar";
 // Stacks with one width (px / %) for a group of cards.
 import "./cards/stack";
+import "./cards/spacer";
 
 declare const __LUMEN_VERSION__: string;
 

@@ -180,6 +180,7 @@ const HELPERS: Record<string, string> = {
   auto_close: "editor.help.auto_close",
   badge_entities: "editor.help.badge_entities",
   narrow_only_fab: "editor.help.narrow_only_fab",
+  spacer_height: "editor.help.spacer_height",
   fab_sheet_cards: "editor.help.fab_sheet_cards",
 };
 

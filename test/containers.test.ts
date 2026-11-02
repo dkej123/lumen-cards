@@ -290,3 +290,45 @@ describe("a card off the page", () => {
     document.querySelectorAll("lumen-cards-layer").forEach((l) => l.remove());
   });
 });
+
+describe("spacer card", () => {
+  const heightOf = (el: HTMLElement) => el.shadowRoot!.querySelector<HTMLElement>("div")?.style.height ?? null;
+  const fab = () => mount("chips", { fab: true, fab_narrow_only: false, chips: [{ type: "action", entity: "scene.movie" }] }, mockHass({ "scene.movie": ent("scene.movie", "2026-10-30T08:00:00+00:00") }));
+
+  it("takes no space without floating buttons", async () => {
+    const el = await mount("spacer", {}, mockHass());
+    await settle(el);
+    expect(el.shadowRoot!.querySelector("div")).toBeNull();
+    el.remove();
+  });
+
+  it("follows the floating buttons as they come and go", async () => {
+    const el = await mount("spacer", {}, mockHass());
+    const button = await fab();
+    await settle(button);
+    await settle(el);
+    expect(heightOf(el)).toContain("64px");
+    button.remove();
+    await settle(button);
+    await settle(el);
+    expect(el.shadowRoot!.querySelector("div")).toBeNull();
+    el.remove();
+  });
+
+  it("a fixed height ignores them", async () => {
+    const el = await mount("spacer", { height: 100 }, mockHass());
+    const button = await fab();
+    await settle(button);
+    await settle(el);
+    expect(heightOf(el)).toBe("100px");
+    button.remove();
+    await settle(button);
+    el.remove();
+  });
+
+  it("shows an error for a wrong height", async () => {
+    const el = await mount("spacer", { height: "x" }, mockHass());
+    expect(el.shadowRoot!.textContent).toContain("≥ 0");
+    el.remove();
+  });
+});
