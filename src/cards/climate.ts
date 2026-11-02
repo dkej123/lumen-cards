@@ -8,7 +8,8 @@ import { icon } from "../core/lumen-icon";
 import { appearance, entityStub, fabFields, form, hapticsField, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
-import { bottomDialog, WFX } from "../core/parts";
+import { WFX } from "../core/parts";
+import { Sheet } from "../core/sheet";
 import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass, ink, prevent } from "../core/styles";
@@ -145,8 +146,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   protected static cardSize = 5;
   protected static compactBelow = 300;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "cool", attributes: { friendly_name: t("card.climate.name"), hvac_modes: ["off", "heat", "cool", "dry"], hvac_action: "cooling", fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 24.1, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
-  static properties = { ...LumenBaseCard.properties, _dlg: { state: true }, _side: { state: true } };
-  private _dlg = false;
+  static properties = { ...LumenBaseCard.properties, _side: { state: true } };
+  private sheet = new Sheet(this, () => this.sheet.hide());
   /** heat_cool with a range: which end the ± buttons move. */
   private _side: "low" | "high" = "low";
   /** A mode / fan / power command sent: spinner until the entity answers (or 10 s). */
@@ -168,8 +169,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
 
   protected layer = new LayerController(
     this,
-    () => (this.useFab ? html`${this.fab()}${this._dlg ? this.dialog() : nothing}` : nothing),
-    () => (this._dlg = false),
+    () => (this.useFab ? html`${this.fab()}${this.sheet.open ? this.dialog() : nothing}` : nothing),
+    () => this.sheet.hide(),
   );
 
   protected entityIds() {
@@ -204,7 +205,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     super.disconnectedCallback();
     // A pending setpoint is still sent (acTimer): the user chose it.
     window.clearTimeout(this.acHold);
-    this._dlg = false;
   }
 
   protected willUpdate(changed: Map<string, unknown>): void {
@@ -560,7 +560,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         return;
       }
       this.haptic();
-      this._dlg = true;
+      this.sheet.show();
     };
     return html`<button class="press acfab" @pointerdown=${down} @pointerup=${cancel} @pointerleave=${cancel} @click=${tap} @pointercancel=${cancel} @contextmenu=${prevent}
       aria-label="${this.name} · ${t("card.climate.fab_hint")}" aria-haspopup="dialog" title="${this.name} · ${a.off ? t("card.climate.hold_on") : t("card.climate.hold_off")}"
@@ -574,18 +574,13 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   /** Mobile AC dialog (B9): power, setpoint, mode and fan. */
   private dialog() {
     const a = this.ac();
-    const close = () => (this._dlg = false);
     const cfg = this._config;
     const seg = (o: { label: string; ic: string; active: boolean; on: () => void }, color: string) =>
       html`<button aria-pressed=${o.active} @click=${o.on} style="flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:13px;${a.sel(o.active, color)};font:700 11px var(--lumen-font);cursor:pointer;transition:background-color 300ms, color 300ms">${icon(o.ic, "font-size:17px")}${o.label}</button>`;
     const step = "width:56px;height:56px;border-radius:18px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:24px;display:grid;place-items:center;cursor:pointer";
-    return bottomDialog({
-      label: this.name,
-      lead: html`<button class="press" @click=${a.power} aria-label=${t("card.climate.power")} style="flex:none;width:44px;height:44px;border-radius:14px;border:0;display:grid;place-items:center;font-size:20px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>`,
-      title: this.name,
-      sub: a.state,
-      close,
-      body: html`
+    return this.sheet.render(
+      { title: this.name, sub: a.state, lead: html`<button class="press" @click=${a.power} aria-label=${t("card.climate.power")} style="flex:none;width:44px;height:44px;border-radius:14px;border:0;display:grid;place-items:center;font-size:20px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>` },
+      html`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;opacity:${a.off ? 0.45 : 1};transition:opacity 400ms">
           <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style=${step}>${icon("mdi:minus")}</button>
           <div style="display:flex;flex-direction:column;align-items:center"><div style="line-height:1">${this.setpoint(a, 52, a.c)}</div>${cfg.show_current_temp !== false ? html`<div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);margin-top:6px">${a.roomLine}</div>` : nothing}</div>
@@ -593,7 +588,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         </div>
         ${cfg.show_modes !== false && a.modes.length ? html`<div role="group" aria-label=${t("card.climate.modes")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.modes.map((o) => seg(o, o.color))}</div>` : nothing}
         ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style="opacity:${a.off ? 0.45 : 1};transition:opacity 400ms"><div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.fans.map((o) => seg(o, a.c))}</div></div>` : nothing}`,
-    });
+      nothing,
+      { body: "gap:12px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))" },
+    );
   }
 
   protected renderCard() {

@@ -332,3 +332,34 @@ describe("spacer card", () => {
     el.remove();
   });
 });
+
+describe("air conditioner window", () => {
+  const ac = () => mockHass({ "climate.ac": ent("climate.ac", "cool", { hvac_modes: ["cool", "heat", "off"], temperature: 22, current_temperature: 23, friendly_name: "AC" }) });
+
+  it("opens as the shared sheet: handle and a round close button; the first button is still the power", async () => {
+    const h = ac();
+    const el = await mount("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, h);
+    await settle(el);
+    layer()!.querySelector<HTMLElement>(".acfab")!.click();
+    await settle(el);
+    const dlg = layer()!.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dlg.textContent).toContain("AC");
+    expect(dlg.style.left).toBe("0px");
+    const buttons = [...dlg.querySelectorAll("button")];
+    expect(buttons[0].getAttribute("style")).toContain("44px");
+    const close = buttons.find((b) => b.getAttribute("aria-label") === "Close")!;
+    expect(close.getAttribute("style")).toContain("50%");
+    el.remove();
+  });
+});
+
+describe("light chip", () => {
+  it("off, it has the glass surface of the other cards", async () => {
+    const el = await mount("chips", { chips: [{ type: "light", entity: "light.a" }] }, mockHass({ "light.a": ent("light.a", "off") }));
+    const style = el.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!.getAttribute("style") ?? "";
+    expect(style).toContain("--lumen-surface");
+    expect(style).not.toContain("--lumen-surface-2");
+    expect(style).toContain("blur(22px)");
+    el.remove();
+  });
+});

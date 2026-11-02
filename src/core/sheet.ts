@@ -121,6 +121,8 @@ export class InnerCards {
 
 export interface SheetHead {
   title: string;
+  /** Replaces the icon box (e.g. a power button). */
+  lead?: unknown;
   icon?: string;
   iconBg?: string;
   iconFg?: string;
@@ -217,7 +219,8 @@ export class Sheet implements ReactiveController {
   /** The header row (also used by the static editor previews). */
   static header(h: SheetHead, close?: () => void) {
     return html`<div style="display:flex;align-items:center;gap:12px;min-width:0">
-      ${h.icon
+      ${h.lead ?? nothing}
+      ${h.icon && !h.lead
         ? html`<span style="flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:${h.iconBg ?? "var(--lumen-surface-2)"};color:${h.iconFg ?? "var(--lumen-text-2)"};transition:background-color 400ms, color 400ms">${icon(h.icon, "display:block")}</span>`
         : nothing}
       <div style="flex:1;min-width:0">
