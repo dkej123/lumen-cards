@@ -98,7 +98,7 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
 
   protected updated(changed: Map<string, unknown>): void {
     super.updated(changed);
-    if (this.preview || !this._config || !this._hass) return;
+    if (!this.isConnected || this.preview || !this._config || !this._hass) return;
     const cond = weatherCondition(this.weatherEntity);
     const phase = phaseFromSun(this.entity(this._config.sun_entity ?? "sun.sun"));
     const fx = this._settings;

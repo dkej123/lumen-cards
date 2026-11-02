@@ -92,7 +92,8 @@ export class LayerController implements ReactiveController {
    * dialogs (in a body-level layer) would show over the next dashboard.
    */
   private onScreen(): boolean {
-    if (hiddenByHa(this.host)) return false;
+    // An update can still run after the card left the page: its layer would stay behind for good.
+    if (!this.host.isConnected || hiddenByHa(this.host)) return false;
     const seg = location.pathname.split("/")[1] ?? "";
     const view = this.view?.isConnected ? this.view : viewOf(this.host);
     if (view) {

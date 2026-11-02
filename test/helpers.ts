@@ -42,6 +42,7 @@ export const mockHass = (
 };
 
 export type Card = HTMLElement & {
+  requestUpdate(): void;
   setConfig(c: unknown): void;
   hass: HassLike;
   updateComplete: Promise<boolean>;

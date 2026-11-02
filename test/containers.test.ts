@@ -252,3 +252,41 @@ describe("light card editor", () => {
     expect(form.schema.some((f) => f.name === "sub_buttons")).toBe(true);
   });
 });
+
+describe("a card off the page", () => {
+  const chips = () => mockHass({ "scene.movie": ent("scene.movie", "2026-10-30T08:00:00+00:00") });
+  const cfg = { fab: true, fab_narrow_only: false, chips: [{ type: "action", entity: "scene.movie" }] };
+
+  it("an update queued before leaving the page leaves no floating button behind", async () => {
+    const el = await mount("chips", cfg, chips());
+    await settle(el);
+    el.requestUpdate();
+    el.remove();
+    await settle(el);
+    expect(document.querySelectorAll("lumen-cards-layer").length).toBe(0);
+  });
+
+  it("an update after leaving the page shows no floating button", async () => {
+    const el = await mount("chips", cfg, chips());
+    await settle(el);
+    el.remove();
+    await settle(el);
+    el.requestUpdate();
+    await settle(el);
+    expect(document.querySelectorAll("lumen-cards-layer").length).toBe(0);
+  });
+
+  it("HA rebuilding a view leaves one floating button, not two", async () => {
+    const old = await mount("chips", cfg, chips());
+    await settle(old);
+    old.remove();
+    old.requestUpdate();
+    await settle(old);
+    const fresh = await mount("chips", cfg, chips());
+    await settle(fresh);
+    expect(document.querySelectorAll("lumen-cards-layer").length).toBe(1);
+    fresh.remove();
+    await settle(fresh);
+    document.querySelectorAll("lumen-cards-layer").forEach((l) => l.remove());
+  });
+});
