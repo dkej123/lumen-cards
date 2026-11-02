@@ -53,9 +53,9 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
     // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 44 px tile,
     // without the colour swatch under 120 px (catalog correction 2026-10-30).
     const wide = !this._width || this._width >= 170;
-    // Several relays: one numbered button each, unless the card lists its own.
+    // Several relays: one button each (the relay's own icon), unless the card lists its own.
     const relays = relaysOf(c);
-    const buttons = c.sub_buttons ?? (relays.length > 1 ? relays.map((entity, i) => ({ entity, icon: `mdi:numeric-${i + 1}` })) : undefined);
+    const buttons = c.sub_buttons ?? (relays.length > 1 ? relays.map((entity) => ({ entity, icon: this.entity(entity)?.attributes.icon ?? "mdi:lightbulb-outline" })) : undefined);
     const extra = this.subs.render(buttons, { tint: this.lights.light(c).col, compact: this.compact, max: this.compact ? (wide ? 2 : 1) : subButtonLimit(false, this._width) });
     return this.compact ? this.lights.tile(c, 0, c.height ?? COMPACT_H, true, !buttons?.length && (!this._width || this._width >= 120), extra) : this.lights.tile(c, 0, c.height ?? 64, false, true, extra);
   }

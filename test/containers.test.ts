@@ -210,7 +210,7 @@ describe("light behind several relays", () => {
     el.remove();
   });
 
-  it("has one numbered button per relay, and it switches only that relay", async () => {
+  it("has one button per relay, and it switches only that relay", async () => {
     const h = bath();
     const { el, tile } = await card(h);
     const buttons = [...tile.querySelectorAll<HTMLElement>(".subbtns > div")];

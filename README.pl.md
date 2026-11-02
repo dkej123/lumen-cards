@@ -99,7 +99,7 @@ Grupa świateł pokazuje, ile z nich świeci („2 z 3 włączone”). W małym 
 
 **Kilka żarówek za osobnymi włącznikami** (np. dwa kinkiety, każdy na swoim kanale włącznika). Wybierz grupę żarówek jako światło, a włączniki w polu **Zasilanie (kilka przekaźników)**. Powstaje jedna karta:
 
-- **Przyciski 1 i 2** włączają i wyłączają każdy włącznik osobno. Tylko one sterują prądem.
+- **Małe przyciski na karcie**, po jednym na włącznik, włączają i wyłączają każdy z nich osobno. Tylko one sterują prądem.
 - **Dotknięcie karty** nic nie robi.
 - **Gdy świeci choć jeden kinkiet**, przesunięcie palcem ustawia jasność, a kółko i ikona barwę całej grupy. Karta pisze wtedy np. „1 z 2 włączone”.
 - **Gdy oba są wyłączone**, karta jest wyłączona, a jasności i barwy nie da się zmienić. Żarówka bez prądu nie odbierze polecenia.
@@ -114,9 +114,16 @@ icon: mdi:wall-sconce-flat
 power_entities:
   - light.kinkiet_1_wlacznik
   - light.kinkiet_2_wlacznik
+sub_buttons:
+  - entity: light.kinkiet_1_wlacznik
+    name: Kinkiet 1
+    icon: mdi:wall-sconce-flat
+  - entity: light.kinkiet_2_wlacznik
+    name: Kinkiet 2
+    icon: mdi:wall-sconce-flat
 ```
 
-Własne ikony albo nazwy przycisków ustawisz w `sub_buttons`.
+Bez `sub_buttons` każdy przycisk bierze ikonę swojego włącznika albo żarówkę.
 
 ### Chipy
 
@@ -524,7 +531,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `name`, `icon` | Nazwa i ikona na kaflu | z urządzenia |
 | `power_entity` | Włącznik albo przekaźnik, który zasila żarówkę. Gdy jest wyłączony, żarówka jest „wyłączona”, a nie „niedostępna”, a dotknięcie przełącza przekaźnik. | brak |
 | `power_entities` | Kilka włączników zasilających to światło, zwykle grupę żarówek (zobacz niżej). Zastępuje `power_entity`. | brak |
-| `sub_buttons` | Małe dodatkowe przyciski na kaflu. Przy `power_entities` domyślnie po jednym numerowanym na włącznik. | brak |
+| `sub_buttons` | Małe dodatkowe przyciski na kaflu. Przy `power_entities` domyślnie po jednym na włącznik. | brak |
 | `show_state` | Pokazuj linię z jasnością | wł. |
 | `show_color_button` | Pokazuj kółko barwy | wł. |
 

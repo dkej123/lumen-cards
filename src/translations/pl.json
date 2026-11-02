@@ -509,7 +509,7 @@
   "editor.help.pm": "Wystarczy jeden z czujników: PM2.5, PM10 lub AQI",
   "editor.help.power_action": "Domyślnie włącza ostatni tryb lub wyłącza urządzenie",
   "editor.help.power_entity": "Przekaźnik albo gniazdko, które odcina prąd żarówce. Gdy jest wyłączony, żarówka pokazuje „Wyłączone” zamiast „Niedostępne”, a dotknięcie włącza przekaźnik. Puste = żarówka ma stałe zasilanie",
-  "editor.help.power_entities": "Kilka przekaźników albo gniazdek zasilających to światło, zwykle grupę żarówek. Karta dostaje po jednym numerowanym przycisku na przekaźnik i tylko one go przełączają: dotknięcie karty nic nie robi. Gdy działa choć jeden, karta ustawia jasność i barwę całego światła. Zastępuje pole wyżej",
+  "editor.help.power_entities": "Kilka przekaźników albo gniazdek zasilających to światło, zwykle grupę żarówek. Karta dostaje po jednym przycisku na przekaźnik i tylko one go przełączają: dotknięcie karty nic nie robi. Gdy działa choć jeden, karta ustawia jasność i barwę całego światła. Zastępuje pole wyżej",
   "editor.help.presence_badge": "Widoczny przy imieniu, gdy obecność pochodzi z czujnika obecności (domyślnie BLE; puste ukrywa)",
   "editor.help.presence_entity": "Np. czujnik BLE; bez niego liczy się strefa osoby",
   "editor.help.secondary_entity": "Jej stan jest drugą linią (np. stan odkurzacza)",

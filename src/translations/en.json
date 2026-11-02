@@ -509,7 +509,7 @@
   "editor.help.pm": "One of PM2.5, PM10 or AQI is enough",
   "editor.help.power_action": "Default: turns on the last mode or turns the device off",
   "editor.help.power_entity": "A relay or plug that cuts the bulb's power. While it is off the bulb shows “Off” instead of “Unavailable”, and a tap turns the relay on. Empty = the bulb is always powered",
-  "editor.help.power_entities": "Several relays or plugs feeding this light, usually a group of bulbs. The card gets one numbered button per relay and only they switch the relays: a tap on the card does nothing. While any relay is on, the card sets the brightness and colour of the whole light. Replaces the field above",
+  "editor.help.power_entities": "Several relays or plugs feeding this light, usually a group of bulbs. The card gets one button per relay and only they switch the relays: a tap on the card does nothing. While any relay is on, the card sets the brightness and colour of the whole light. Replaces the field above",
   "editor.help.presence_badge": "Shown next to the name while presence comes from the presence sensor (default BLE; empty hides it)",
   "editor.help.presence_entity": "E.g. a BLE sensor; without it the person's zone counts",
   "editor.help.secondary_entity": "Its state is the second line (e.g. the vacuum status)",

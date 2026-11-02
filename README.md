@@ -99,7 +99,7 @@ A light group shows how many lights are on ("2 of 3 on"). In a small space (unde
 
 **Several bulbs behind separate switches** (for example two wall lamps, each on its own switch channel). Pick the group of bulbs as the light and the switches in the **Power (several relays)** field. You get one card:
 
-- **Buttons 1 and 2** switch each one on and off. Only they control the power.
+- **The small buttons on the card**, one per switch, switch each one on and off. Only they control the power.
 - **A tap on the card** does nothing.
 - **While at least one lamp is on**, sliding sets the brightness, and the circle and the icon set the colour, of the whole group. The card then says, for example, "1 of 2 on".
 - **While both are off**, the card is off and brightness and colour cannot be changed. A bulb without power cannot receive a command.
@@ -114,9 +114,16 @@ icon: mdi:wall-sconce-flat
 power_entities:
   - light.wall_lamp_1_switch
   - light.wall_lamp_2_switch
+sub_buttons:
+  - entity: light.wall_lamp_1_switch
+    name: Wall lamp 1
+    icon: mdi:wall-sconce-flat
+  - entity: light.wall_lamp_2_switch
+    name: Wall lamp 2
+    icon: mdi:wall-sconce-flat
 ```
 
-Set your own button icons or names in `sub_buttons`.
+Without `sub_buttons`, each button takes its switch's icon, or a light bulb.
 
 ### Chips
 
@@ -528,7 +535,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `name`, `icon` | Name and icon on the tile | from the device |
 | `power_entity` | The wall switch or relay that powers the bulb. When it is off the bulb is "off", not "unavailable", and a tap switches the relay. | none |
 | `power_entities` | Several switches feeding this light, usually a group of bulbs (see [Light](#light)). Replaces `power_entity`. | none |
-| `sub_buttons` | Small extra buttons on the tile. With `power_entities`, one numbered button per switch by default. | none |
+| `sub_buttons` | Small extra buttons on the tile. With `power_entities`, one button per switch by default. | none |
 | `show_state` | Show the brightness line | on |
 | `show_color_button` | Show the small white-tone circle | on |
 
