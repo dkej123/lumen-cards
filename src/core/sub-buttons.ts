@@ -35,6 +35,8 @@ export interface SubButtonsOptions {
   compact?: boolean;
   /** At most this many are rendered (default 4); the editor preview flags the rest. */
   max?: number;
+  /** Colour of a button that is on: a soft tint of it instead of the solid accent (light tiles). */
+  tint?: string;
 }
 
 /** Renders the sub-buttons of a card; owns its own press state. */
@@ -81,7 +83,7 @@ export class SubButtons {
               () => (b.hold_action ? handleAction(this.host, b.hold_action, b.entity, "hold") : b.entity && handleAction(this.host, { action: "more-info" }, b.entity, "hold")),
             );
         return html`<div ${pressable(h)} class=${off ? "" : "press"} aria-disabled=${off} aria-label="${label}${state ? ` · ${state}` : ""}" title=${label}
-          style="display:flex;align-items:center;justify-content:center;gap:4px;height:${size}px;min-width:${size}px;padding:0 ${state ? 10 : 0}px 0 ${state ? 8 : 0}px;box-sizing:border-box;border-radius:999px;background:${on ? "var(--lumen-accent)" : "var(--lumen-surface-2)"};color:${on ? "var(--lumen-on-accent)" : "var(--lumen-text-2)"};opacity:${off ? 0.38 : 1};cursor:${off ? "default" : "pointer"};user-select:none;touch-action:pan-y;font:700 12px var(--lumen-font);white-space:nowrap;transition:background-color 300ms, color 300ms">
+          style="display:flex;align-items:center;justify-content:center;gap:4px;height:${size}px;min-width:${size}px;padding:0 ${state ? 10 : 0}px 0 ${state ? 8 : 0}px;box-sizing:border-box;border-radius:999px;${opts.tint ? `background:${on ? `color-mix(in srgb, ${opts.tint} 32%, transparent)` : "transparent"};box-shadow:inset 0 0 0 1px ${on ? `color-mix(in srgb, ${opts.tint} 60%, transparent)` : "var(--lumen-border-strong)"};color:${on ? "var(--lumen-text-1)" : "var(--lumen-text-3)"}` : `background:${on ? "var(--lumen-accent)" : "var(--lumen-surface-2)"};color:${on ? "var(--lumen-on-accent)" : "var(--lumen-text-2)"}`};opacity:${off ? 0.38 : 1};cursor:${off ? "default" : "pointer"};user-select:none;touch-action:pan-y;font:700 12px var(--lumen-font);white-space:nowrap;transition:background-color 300ms, color 300ms, box-shadow 300ms">
           ${icon(b.icon || e?.attributes.icon || "mdi:gesture-tap", `font-size:${opts.compact ? 16 : 18}px`)}${state ? html`<span>${state}</span>` : nothing}
         </div>`;
       })}

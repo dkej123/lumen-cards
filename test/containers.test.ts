@@ -227,6 +227,15 @@ describe("light behind several relays", () => {
     el.remove();
   });
 
+  it("its buttons take a soft tint of the light, not the solid accent", async () => {
+    const { el, tile } = await card(bath());
+    const [on, off] = [...tile.querySelectorAll<HTMLElement>(".subbtns > div")].map((b) => b.getAttribute("style") ?? "");
+    expect(on).toContain("color-mix");
+    expect(on).not.toContain("--lumen-on-accent");
+    expect(off).toContain("transparent");
+    el.remove();
+  });
+
   it("shows how many relays are on", async () => {
     const h = bath();
     const { el, tile } = await card(h);
