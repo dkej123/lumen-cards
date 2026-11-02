@@ -475,7 +475,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 |---|---|---|
 | `layout` | **Auto** sam wybiera wygląd: kompaktowy, gdy karta jest mała. **Pełny** albo **Kompaktowy** wymusza jeden wygląd. | Auto |
 | `color_scheme` | Karta jasna albo ciemna, albo **Auto**, czyli jak w Home Assistant | Auto |
-| `accent_color` | Kolor przycisków i wyróżnień (włączone urządzenia, dodatkowe przyciski, suwaki, aktywny chip i pływający przycisk, pigułka przypomnienia – ma pierwszeństwo przed jej polem `color`). Nie ma go w kartach bez niczego do pokolorowania (powitanie, tytuł, jakość powietrza, kalendarz, pop-up). | z motywu |
+| `accent_color` | Kolor przycisków i wyróżnień (włączone urządzenia, dodatkowe przyciski, suwaki, pływający przycisk, pigułka przypomnienia – ma pierwszeństwo przed jej polem `color`). Nie ma go w kartach bez niczego do pokolorowania (powitanie, tytuł, jakość powietrza, kalendarz, pop-up). | z motywu |
 | `glow_color` | Kolor poświaty włączonych świateł (karty światła i chipów) | kolor światła |
 | `weather_effects` | Krople, śnieg itp. na tej karcie. Wymaga karty tła pogodowego w tym samym widoku. | wł. |
 | `max_width` | Karta nie będzie szersza niż ta wartość i zostanie wyśrodkowana w swoim miejscu: piksele albo procent miejsca w siatce z `max_width_unit: "%"` (lub `max_width: 80%`). Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |

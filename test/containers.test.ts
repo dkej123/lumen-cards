@@ -83,7 +83,7 @@ describe("Lumen stack editor", () => {
   });
 });
 
-describe("floating scene list", () => {
+describe("scene chips", () => {
   it("highlights no scene: a scene has no on state, only the time it last ran", async () => {
     const h = mockHass({ "scene.movie": ent("scene.movie", "2026-10-30T08:00:00+00:00"), "scene.bed": ent("scene.bed", "2026-11-01T23:00:00+00:00") });
     const el = await mount("chips", { fab: true, fab_narrow_only: false, chips: [{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.bed" }] }, h);
@@ -94,6 +94,16 @@ describe("floating scene list", () => {
       expect(b.style.background).toBe("transparent");
       expect(b.hasAttribute("aria-pressed")).toBe(false);
     }
+    el.remove();
+  });
+
+  it("the row of chips highlights no scene either", async () => {
+    const h = mockHass({ "scene.movie": ent("scene.movie", "2026-10-30T08:00:00+00:00"), "scene.bed": ent("scene.bed", "2026-11-01T23:00:00+00:00") });
+    const el = await mount("chips", { chips: [{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.bed" }] }, h);
+    const row = [...el.shadowRoot!.querySelectorAll("[data-fx]")] as HTMLElement[];
+    expect(row.length).toBe(2);
+    expect(new Set(row.map((c) => c.getAttribute("style"))).size).toBe(1);
+    for (const c of row) expect(c.hasAttribute("aria-pressed")).toBe(false);
     el.remove();
   });
 });

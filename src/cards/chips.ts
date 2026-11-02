@@ -55,24 +55,6 @@ export function assertChips(c: Partial<ChipsConfig>): void {
   if (c.chips !== undefined && !Array.isArray(c.chips)) throw new Error(t("card.chips.error.list"));
 }
 
-/**
- * The active action chip: the scene activated last (a scene's state is the time of its last
- * activation), only when it is the newest of the chips' scenes. Not for scripts or buttons.
- */
-export function activeScene(chips: Chip[], states: Record<string, { state: string } | undefined>): string | null {
-  let best: string | null = null;
-  let at = 0;
-  for (const x of chips) {
-    if (x.type !== "action" || !x.entity.startsWith("scene.")) continue;
-    const ms = Date.parse(states[x.entity]?.state ?? "");
-    if (Number.isFinite(ms) && ms > at) {
-      at = ms;
-      best = x.entity;
-    }
-  }
-  return best;
-}
-
 export function validateChips(c: Partial<ChipsConfig>): void {
   assertChips(c);
   (c.chips ?? []).forEach((x, i) => {
@@ -158,21 +140,16 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     return this.actions(`chip:${s.entity}`, s, s.entity, { tap: () => this.run(s) });
   }
 
-  private get active(): string | null {
-    return this._hass ? activeScene(this._config.chips ?? [], this._hass.states) : null;
-  }
-
-  /** Strong fill of the active chip and the FAB: inverted by default, the accent when accent_color is set. */
+  /** Strong fill of the FAB: inverted by default, the accent when accent_color is set. */
   private get strong() {
     return this._config.accent_color ? { bg: "var(--lumen-accent)", fg: "var(--lumen-on-accent)" } : { bg: "var(--lumen-text-1)", fg: "var(--lumen-bg)" };
   }
 
-  /** Catalog chip: 44 px pill, glyph 18 + name; the active scene is inverted (text-1 background). */
-  private actionChip(s: ActionChip, active: boolean) {
+  /** Catalog chip: 44 px pill, glyph 18 + name. A scene has no on state, so no chip stays highlighted. */
+  private actionChip(s: ActionChip) {
     const off = isUnavailable(this.entity(s.entity));
-    const strong = this.strong;
-    return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-pressed=${active} aria-label=${this.chipName(s)}
-      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:${active ? "1px solid transparent" : "1px solid var(--lumen-border)"};background:${active ? strong.bg : "var(--lumen-surface)"};color:${active ? strong.fg : "var(--lumen-text-1)"};box-shadow:${active ? "var(--lumen-shadow-1)" : "none"};font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${active ? "" : glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
+    return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-label=${this.chipName(s)}
+      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:1px solid var(--lumen-border);background:var(--lumen-surface);color:var(--lumen-text-1);box-shadow:none;font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
       ${icon(this.chipIcon(s), "font-size:18px")}${this.chipName(s)}
     </div>`;
   }
@@ -235,8 +212,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
         : nothing;
     }
     const onlyActions = shown.every((x) => x.type === "action");
-    const active = this.active;
-    const items = shown.map((x) => (x.type === "action" ? this.actionChip(x, x.entity === active) : this.lights.pill(x, compact)));
+    const items = shown.map((x) => (x.type === "action" ? this.actionChip(x) : this.lights.pill(x, compact)));
     // Colour presets of a light pill cover the whole row: one pill is too narrow for four.
     const ct = this.of("light").find((i) => i.entity === this.lights.ctOpen && this.lights.light(i).on && this.lights.light(i).ct);
     const gap = onlyActions ? 8 : compact ? 6 : 8;

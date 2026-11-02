@@ -312,12 +312,6 @@ describe("sub-buttons on every card that offers them", () => {
 });
 
 describe("chips and floating buttons", () => {
-  it("the scene activated last is the active chip", async () => {
-    const { activeScene } = await import("../src/cards/chips");
-    const h = hass();
-    expect(activeScene([{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.evening" }], h.states)).toBe("scene.evening");
-  });
-
   it("stack from the bottom: scenes 64, then 48 px every 12 px, one outer edge; each side its own stack", () => {
     const climate = { requestUpdate: vi.fn() };
     const scenes = { requestUpdate: vi.fn() };
