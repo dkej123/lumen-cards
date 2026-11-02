@@ -181,24 +181,22 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   private renderFab() {
     const open = this._fab;
     const items = this.of("action");
-    const active = this.active;
     const { side, bottom, edge } = this.floating.place();
     const title = this._config.title || t("card.chips.scenes");
     return html`
       <div @click=${() => (this._fab = false)} style="position:absolute;inset:0;z-index:6;background:var(--lumen-scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};transition:opacity 320ms var(--lumen-ease-out)"></div>
       <div role=${open ? "dialog" : nothing} aria-label=${title} style="position:absolute;${side}:calc(${fabInset(side)} - 4px);bottom:calc(${bottom} + ${FAB_MAIN + 12}px);z-index:7;width:200px;max-height:calc(100% - ${FAB_MAIN + 60}px);overflow:auto;padding:10px;box-sizing:border-box;border-radius:22px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2);display:flex;flex-direction:column;gap:2px;transform-origin:bottom ${side};transform:${open ? "none" : "translateY(16px) scale(.92)"};opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};visibility:${open ? "visible" : "hidden"};transition:transform 460ms var(--lumen-ease-spring), opacity 220ms var(--lumen-ease-out), visibility 0s ${open ? "0s" : "460ms"}">
         <div style="padding:4px 8px 6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3)">${title}</div>
-        ${items.map((s) => {
-          const on = s.entity === active;
-          return html`<button @click=${() => {
+        ${items.map(
+          (s) => html`<button @click=${() => {
             this.haptic();
             this.run(s);
             window.clearTimeout(this.fabTimer);
             this.fabTimer = window.setTimeout(() => (this._fab = false), 450);
-          }} aria-pressed=${on} style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:14px;background:${on ? "var(--lumen-accent-soft)" : "transparent"};color:${on ? "var(--lumen-accent)" : "var(--lumen-text-1)"};font:700 13px var(--lumen-font);text-align:left;cursor:pointer;transition:background-color 300ms">
+          }} style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:14px;background:transparent;color:var(--lumen-text-1);font:700 13px var(--lumen-font);text-align:left;cursor:pointer">
             ${icon(this.chipIcon(s), `font-size:18px;flex:none;animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}`)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this.chipName(s)}</span>
-          </button>`;
-        })}
+          </button>`,
+        )}
       </div>
       <button class="acfab" @click=${() => {
         this.haptic();

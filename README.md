@@ -106,7 +106,7 @@ A row of small round buttons. They come in two kinds:
 - **Action:** runs a scene, script or button with one tap, for example "Movie" or "Evening".
 - **Light:** a small pill for a light, which works like the light card.
 
-On a phone you can turn the action chips into a **floating button** in the corner of the screen. Tap it for the list of scenes; the one you used last is highlighted:
+On a phone you can turn the action chips into a **floating button** in the corner of the screen. Tap it for the list of scenes:
 
 <img src="docs/images/fab-list.png" alt="Floating button with the list of scenes" width="260">
 

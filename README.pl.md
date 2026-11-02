@@ -106,7 +106,7 @@ Rząd małych okrągłych przycisków. Są dwa rodzaje:
 - **Akcja:** jednym dotknięciem uruchamia scenę, skrypt albo przycisk, np. „Film” czy „Wieczór”.
 - **Światło:** mała pigułka światła, działa tak samo jak karta światła.
 
-Na telefonie akcje mogą zamienić się w **pływający przycisk** w rogu ekranu. Dotknięcie pokazuje listę scen; ostatnio użyta jest wyróżniona:
+Na telefonie akcje mogą zamienić się w **pływający przycisk** w rogu ekranu. Dotknięcie pokazuje listę scen:
 
 <img src="docs/images/fab-list.png" alt="Pływający przycisk z listą scen" width="260">
 
