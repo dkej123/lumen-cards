@@ -107,3 +107,60 @@ describe("scene chips", () => {
     el.remove();
   });
 });
+
+describe("switching dashboard tabs", () => {
+  it("a card put back on the page shows its floating button again without any state change", async () => {
+    const h = mockHass({ "scene.movie": ent("scene.movie", "2026-10-30T08:00:00+00:00") });
+    const el = await mount("chips", { fab: true, fab_narrow_only: false, chips: [{ type: "action", entity: "scene.movie" }] }, h);
+    await settle(el);
+    expect(layer()?.querySelector(".acfab")).toBeTruthy();
+    const parent = el.parentElement!;
+    el.remove();
+    await settle(el);
+    expect(document.querySelector("lumen-cards-layer")).toBeNull();
+    parent.append(el);
+    await settle(el);
+    expect(layer()?.querySelector(".acfab")).toBeTruthy();
+    el.remove();
+  });
+});
+
+describe("light behind a relay", () => {
+  const hallway = () =>
+    mockHass({
+      "light.group": ent("light.group", "on", { brightness: 171, supported_color_modes: ["brightness"] }),
+      "light.relay": ent("light.relay", "off", { supported_color_modes: ["onoff"] }),
+    });
+  const slide = async (h: ReturnType<typeof mockHass>) => {
+    const el = await mount("light", { entity: "light.group", power_entity: "light.relay", layout: "wide" }, h);
+    const tile = el.shadowRoot!.querySelector<HTMLElement>(".tile")!;
+    tile.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 64, right: 200, bottom: 64, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    const ev = (type: string, x: number) => tile.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: 20, button: 0, bubbles: true, pointerId: 1 }));
+    ev("pointerdown", 20);
+    ev("pointermove", 120);
+    ev("pointerup", 120);
+    return el;
+  };
+
+  it("a slide with the relay off switches the relay on, then sets the brightness", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = hallway();
+      const el = await slide(h);
+      expect(h.calls).toEqual([["homeassistant", "turn_on", {}, { entity_id: "light.relay" }]]);
+      vi.advanceTimersByTime(6000);
+      expect(h.calls.at(-1)).toEqual(["light", "turn_on", { brightness_pct: 60 }, { entity_id: "light.group" }]);
+      el.remove();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a slide with the relay on only sets the brightness", async () => {
+    const h = hallway();
+    h.states["light.relay"] = ent("light.relay", "on", { supported_color_modes: ["onoff"] });
+    const el = await slide(h);
+    expect(h.calls).toEqual([["light", "turn_on", { brightness_pct: 60 }, { entity_id: "light.group" }]]);
+    el.remove();
+  });
+});

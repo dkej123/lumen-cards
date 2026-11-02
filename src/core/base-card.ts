@@ -332,6 +332,9 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
 
   connectedCallback(): void {
     super.connectedCallback();
+    // Back on the page (HA keeps a view's cards when you switch tabs): what lives outside the card
+    // (floating buttons, dialogs, the weather background) was removed on leaving, render it again.
+    this.requestUpdate();
     // Fonts live next to the bundle (served at /hacsfiles/lumen-cards/); injected once.
     injectFonts(import.meta.url.replace(/[^/]*$/, ""));
     wideQuery?.addEventListener("change", this.onWide);

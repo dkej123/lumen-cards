@@ -61,6 +61,9 @@ const ring = (on: boolean) => (on ? "0 0 0 2px var(--lumen-surface-solid), 0 0 0
 export const lightName = (item: LightItem, e?: HassEntity) => item.name || e?.attributes.friendly_name || item.entity;
 export const lightIcon = (item: LightItem, e?: HassEntity) => item.icon || e?.attributes.icon || "mdi:lightbulb";
 
+// After a relay switches on: when to send the brightness (a bulb still booting misses the first one).
+const POWER_UP_MS = [2000, 5000];
+
 export class LightsController implements ReactiveController {
   private overrides = new Map<string, LightOverride>();
   private pending = new Map<string, Pending>();
@@ -70,6 +73,8 @@ export class LightsController implements ReactiveController {
   private closeTimer?: number;
   private lastTap?: { entity: string; t: number };
   private dragEnd = 0;
+  /** Brightness commands waiting for a bulb whose relay was just switched on. */
+  private powerUp = new Map<string, number[]>();
   private sliding: "b" | "k" | null = null;
   private slideRect?: DOMRect;
   private grabY: number | null = null;
@@ -109,6 +114,7 @@ export class LightsController implements ReactiveController {
     window.clearTimeout(this.closeTimer);
     if (this.lastTap) window.clearTimeout(this.lastTap.t);
     this.lastTap = undefined;
+    [...this.powerUp.keys()].forEach((id) => this.clearPowerUp(id));
     this.drag = null;
     this.sheet = null;
     this.ctOpen = null;
@@ -247,10 +253,16 @@ export class LightsController implements ReactiveController {
     };
   }
 
+  private clearPowerUp(entity: string) {
+    this.powerUp.get(entity)?.forEach((t) => window.clearTimeout(t));
+    this.powerUp.delete(entity);
+  }
+
   toggleLight(item: LightItem) {
     const l = this.light(item);
     if (l.una) return;
     this.haptic();
+    this.clearPowerUp(item.entity);
     this.overrides.set(item.entity, { ...this.overrides.get(item.entity), on: !l.on });
     this.setPending(item.entity);
     if (item.power_entity && (l.on || !l.powerOn)) {
@@ -261,8 +273,16 @@ export class LightsController implements ReactiveController {
   }
 
   private setBrightness(item: LightItem, pct: number) {
+    const unpowered = pct >= 1 && !!item.power_entity && !this.light(item).powerOn;
     this.overrides.set(item.entity, pct < 1 ? { on: false } : { on: true, b: pct });
     this.setPending(item.entity);
+    this.clearPowerUp(item.entity);
+    if (unpowered) {
+      // A bulb without power hears nothing: switch its relay on, then set the brightness once it boots.
+      this.call("homeassistant", "turn_on", {}, item.power_entity);
+      this.powerUp.set(item.entity, POWER_UP_MS.map((ms) => window.setTimeout(() => this.call("light", "turn_on", { brightness_pct: pct }, item.entity), ms)));
+      return;
+    }
     this.call("light", pct < 1 ? "turn_off" : "turn_on", pct < 1 ? {} : { brightness_pct: pct }, item.entity);
   }
 
