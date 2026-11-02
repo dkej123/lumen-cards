@@ -20,9 +20,12 @@ import {
   mdiLightbulbGroup,
   mdiLockOutline,
   mdiMovieOpenOutline,
+  mdiNumeric1,
+  mdiNumeric2,
   mdiPowerSocketEu,
   mdiRobotVacuum,
   mdiSofa,
+  mdiWallSconceFlat,
   mdiWashingMachine,
   mdiWeatherNight,
   mdiWhiteBalanceSunny,
@@ -53,9 +56,12 @@ const EXTRA: Record<string, string> = {
   "mdi:lightbulb-group": mdiLightbulbGroup,
   "mdi:lock-outline": mdiLockOutline,
   "mdi:movie-open-outline": mdiMovieOpenOutline,
+  "mdi:numeric-1": mdiNumeric1,
+  "mdi:numeric-2": mdiNumeric2,
   "mdi:power-socket-eu": mdiPowerSocketEu,
   "mdi:robot-vacuum": mdiRobotVacuum,
   "mdi:sofa": mdiSofa,
+  "mdi:wall-sconce-flat": mdiWallSconceFlat,
   "mdi:washing-machine": mdiWashingMachine,
   "mdi:window-open-variant": mdiWindowOpenVariant,
 };
@@ -93,6 +99,14 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme)
 new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 themeBtn.addEventListener("click", () => (root.dataset.theme = isDark() ? "light" : "dark"));
 syncTheme();
+
+// HA turns a card's toggle action into a service call; here the demo home does.
+document.addEventListener("hass-action", (ev) => {
+  const { config, action } = (ev as CustomEvent<{ config: Record<string, { action?: string } | string | undefined>; action: string }>).detail;
+  const id = config.entity as string | undefined;
+  if (!id || (config[`${action}_action`] as { action?: string } | undefined)?.action !== "toggle") return;
+  home.hass().callService("homeassistant", home.hass().states[id]?.state === "on" ? "turn_off" : "turn_on", {}, { entity_id: id });
+});
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text = ""): HTMLElementTagNameMap[K] => {
   const n = document.createElement(tag);

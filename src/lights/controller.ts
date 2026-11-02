@@ -13,7 +13,7 @@ import { WFX } from "../core/parts";
 import { adaptiveSheet } from "../core/sheet";
 import { isUnavailable } from "../hass/types";
 import {
-  HUE_PRESETS, brightnessPct, ctPresets, hsOf, hsToRgb, hueName, isDimmable, kelvinRange, lightPower, miredPresets, mixedGroup,
+  HUE_PRESETS, brightnessPct, ctPresets, hsOf, hsToRgb, hueName, isDimmable, kelvinRange, leadPower, lightPower, miredPresets, mixedGroup,
   supportsColor, supportsColorTemp, swatchIndex, whiteColor, whiteGradient,
 } from "../logic/light";
 import { warm } from "../weather/fx";
@@ -29,6 +29,11 @@ export interface LightItem {
   icon?: string;
   /** Wall relay feeding the bulb; the bulb is `unavailable` while it is off. Both act as one tile. */
   power_entity?: string;
+  /**
+   * Several relays feeding the entity (usually a group of bulbs): on while any of them is on. Only
+   * the card's own buttons switch them: a tap does nothing, and the tile sets values while it is on.
+   */
+  power_entities?: string[];
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
@@ -60,6 +65,10 @@ const ring = (on: boolean) => (on ? "0 0 0 2px var(--lumen-surface-solid), 0 0 0
 
 export const lightName = (item: LightItem, e?: HassEntity) => item.name || e?.attributes.friendly_name || item.entity;
 export const lightIcon = (item: LightItem, e?: HassEntity) => item.icon || e?.attributes.icon || "mdi:lightbulb";
+
+/** Relays feeding a light item. */
+export const relaysOf = (item: LightItem): string[] => item.power_entities?.length ? item.power_entities : item.power_entity ? [item.power_entity] : [];
+const severalRelays = (item: LightItem) => relaysOf(item).length > 1;
 
 // After a relay switches on: when to send the brightness (a bulb still booting misses the first one).
 const POWER_UP_MS = [2000, 5000];
@@ -152,11 +161,11 @@ export class LightsController implements ReactiveController {
     if (changed) this.requestUpdate();
   }
 
-  private call(domain: string, service: string, data: Record<string, unknown>, entity?: string) {
+  private call(domain: string, service: string, data: Record<string, unknown>, entity?: string | string[]) {
     return this.hass
       ?.callService(domain, service, data, entity ? { entity_id: entity } : undefined)
       .catch((err: Error) => {
-        if (entity) {
+        if (typeof entity === "string") {
           this.pending.delete(entity);
           this.overrides.delete(entity);
         }
@@ -180,17 +189,21 @@ export class LightsController implements ReactiveController {
   light(item: LightItem) {
     const e = this.entity(item.entity);
     const ov = this.overrides.get(item.entity);
-    const p = lightPower(e, item.power_entity ? this.entity(item.power_entity) : undefined, !!item.power_entity, this.now);
+    const relays = relaysOf(item);
+    const p = lightPower(e, leadPower(relays.map((id) => this.entity(id))), relays.length > 0, this.now);
     // `unknown` is "no data", not an outage: the tile keeps its frame and its tap.
-    const unknown = !item.power_entity && e?.state === "unknown";
+    const unknown = !relays.length && e?.state === "unknown";
     const una = p.unavailable && !unknown;
     const reachable = !una && !unknown && !p.booting && !isUnavailable(e);
     const dim = reachable && isDimmable(e);
     const ct = reachable && supportsColorTemp(e);
     const color = reachable && supportsColor(e);
-    const on = !una && !unknown && (ov?.on ?? p.on);
+    const several = relays.length > 1;
+    const on = !una && !unknown && (ov?.on ?? (several ? p.powerOn : p.on));
     // Light group with only some members on: fill by their average brightness, softer glow.
-    const group = reachable && !ov && this.hass ? mixedGroup(e, this.hass.states) : null;
+    // Behind several relays the members' own states go stale: the relays say how many are on.
+    const group = reachable && !ov && this.hass && !several ? mixedGroup(e, this.hass.states) : null;
+    const relaysOn = relays.filter((id) => this.entity(id)?.state === "on").length;
     const b = ov?.b ?? (group?.avg ?? (brightnessPct(e) || 100));
     const [kMin, kMax] = kelvinRange(e);
     const k = Math.round(ov?.k ?? e?.attributes.color_temp_kelvin ?? Math.min(kMax, Math.max(kMin, 2700)));
@@ -210,7 +223,9 @@ export class LightsController implements ReactiveController {
           ? t("card.light.booting")
           : group && on
             ? t("card.light.group_on", { on: group.on, total: group.total })
-            : on
+            : on && several && relaysOn < relays.length
+              ? t("card.light.group_on", { on: relaysOn, total: relays.length })
+              : on
               ? dim ? `${bb}%` : t("common.on")
               : t("card.light.off");
     const meta = !on ? "" : group ? (group.avg !== null ? `${group.avg}%` : "") : hs ? t(hueName(hs)) : ct ? `${k} K` : "";
@@ -221,6 +236,7 @@ export class LightsController implements ReactiveController {
   /** Tap: the configured action, else toggle (bulb, or its relay when that is what is off). */
   private tap(item: LightItem) {
     const a = item.tap_action;
+    if (!a && severalRelays(item)) return;
     if (a && a.action !== "toggle") {
       this.haptic();
       handleAction(this.host, a, item.entity, "tap");
@@ -265,31 +281,40 @@ export class LightsController implements ReactiveController {
     this.clearPowerUp(item.entity);
     this.overrides.set(item.entity, { ...this.overrides.get(item.entity), on: !l.on });
     this.setPending(item.entity);
-    if (item.power_entity && (l.on || !l.powerOn)) {
-      this.call("homeassistant", l.on ? "turn_off" : "turn_on", {}, item.power_entity);
+    if (item.power_entity && !severalRelays(item) && (l.on || !l.powerOn)) {
+      this.call("homeassistant", l.on ? "turn_off" : "turn_on", {}, relaysOf(item)[0]);
       return;
     }
     this.call("light", l.on ? "turn_off" : "turn_on", {}, item.entity);
   }
 
-  private setBrightness(item: LightItem, pct: number) {
-    const unpowered = pct >= 1 && !!item.power_entity && !this.light(item).powerOn;
-    this.overrides.set(item.entity, pct < 1 ? { on: false } : { on: true, b: pct });
-    this.setPending(item.entity);
-    this.clearPowerUp(item.entity);
-    if (unpowered) {
-      // A bulb without power hears nothing: switch its relay on, then set the brightness once it boots.
+  /** Sets a value on the bulb(s). A bulb without power hears nothing: switch its one relay on, then send it once it boots. */
+  private command(entity: string, data: Record<string, unknown>) {
+    this.clearPowerUp(entity);
+    const item = this.host.lightItems().find((i) => i.entity === entity);
+    if (item?.power_entity && !severalRelays(item) && !this.light(item).powerOn) {
       this.call("homeassistant", "turn_on", {}, item.power_entity);
-      this.powerUp.set(item.entity, POWER_UP_MS.map((ms) => window.setTimeout(() => this.call("light", "turn_on", { brightness_pct: pct }, item.entity), ms)));
+      this.powerUp.set(entity, POWER_UP_MS.map((ms) => window.setTimeout(() => this.call("light", "turn_on", data, entity), ms)));
       return;
     }
-    this.call("light", pct < 1 ? "turn_off" : "turn_on", pct < 1 ? {} : { brightness_pct: pct }, item.entity);
+    this.call("light", "turn_on", data, entity);
+  }
+
+  private setBrightness(item: LightItem, pct: number) {
+    // Behind several relays only the buttons switch off: the slider's bottom is 1 %, not off.
+    if (severalRelays(item)) pct = Math.max(1, pct);
+    this.overrides.set(item.entity, pct < 1 ? { on: false } : { on: true, b: pct });
+    this.setPending(item.entity);
+    if (pct < 1) {
+      this.clearPowerUp(item.entity);
+      this.call("light", "turn_off", {}, item.entity);
+    } else this.command(item.entity, { brightness_pct: pct });
   }
 
   private setHue(entity: string, hs: [number, number]) {
     this.overrides.set(entity, { ...this.overrides.get(entity), on: true, hs, k: undefined });
     this.setPending(entity);
-    this.call("light", "turn_on", { hs_color: hs }, entity);
+    this.command(entity, { hs_color: hs });
   }
 
   private hold(item: LightItem) {
@@ -299,6 +324,7 @@ export class LightsController implements ReactiveController {
 
   /** The light sheet (any reachable light; on/off-only ones get it without sliders), else more-info. */
   private sheetOrInfo(item: LightItem) {
+    if (severalRelays(item) && !this.light(item).on) return;
     if (this.light(item).reachable && !this.host.preview) this.openSheet(item);
     else this.moreInfo(item.entity);
   }
@@ -319,7 +345,7 @@ export class LightsController implements ReactiveController {
   private setKelvin(entity: string, k: number) {
     this.overrides.set(entity, { ...this.overrides.get(entity), on: true, k, hs: undefined });
     this.setPending(entity);
-    this.call("light", "turn_on", { color_temp_kelvin: k }, entity);
+    this.command(entity, { color_temp_kelvin: k });
   }
 
   /**
@@ -361,7 +387,7 @@ export class LightsController implements ReactiveController {
         d.moved = true;
         window.clearTimeout(this.holdTimer);
         const l = this.light(item);
-        if (!l.dim || l.una) return;
+        if (!l.dim || l.una || (severalRelays(item) && !l.on)) return;
         d.dragging = true;
         this.ticks.start(l.on ? l.b : 0);
         try {
@@ -406,7 +432,7 @@ export class LightsController implements ReactiveController {
         this.tap(item);
       } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         const l = this.light(item);
-        if (!l.dim || l.una) return;
+        if (!l.dim || l.una || (severalRelays(item) && !l.on)) return;
         e.preventDefault();
         const b = Math.max(0, Math.min(100, (l.on ? l.b : 0) + (e.key === "ArrowRight" ? 10 : -10)));
         this.setBrightness(item, b);
@@ -443,7 +469,7 @@ export class LightsController implements ReactiveController {
   }
 
   /** Large tile (design `tile`). */
-  tile(item: LightItem, i: number, minH: number, mobile: boolean, swatch = true): TemplateResult {
+  tile(item: LightItem, i: number, minH: number, mobile: boolean, swatch = true, extra: unknown = nothing): TemplateResult {
     const l = this.light(item);
     const h = this.handlers(item);
     const dragging = this.drag?.entity === item.entity && this.drag.dragging;
@@ -465,6 +491,7 @@ export class LightsController implements ReactiveController {
       </div>
       <div role="button" tabindex="-1" aria-label=${t("card.light.settings")} title=${t("card.light.settings")} @pointerdown=${ih.down} @click=${ih.click} style="position:relative;flex:none;order:-2;width:${iconSize}px;height:${iconSize}px;border-radius:${mobile ? 9 : 12}px;display:grid;place-items:center;font-size:${mobile ? 16 : 19}px;cursor:pointer;background:${l.on ? l.col : "var(--lumen-surface-2)"};color:${l.on ? "#3B2709" : l.unknown ? "var(--lumen-text-3)" : "var(--lumen-text-2)"};box-shadow:${l.on ? `0 0 18px color-mix(in srgb, ${l.col} 70%, transparent)` : "none"};transition:background-color 500ms, color 500ms, box-shadow 700ms">${icon(lightIcon(item, l.e))}</div>
       ${l.una ? icon("mdi:power-plug-off-outline", "font-size:18px;color:var(--lumen-text-3)") : nothing}
+      ${extra}
       ${l.on && l.ct && !l.hs && !l.group && item.show_color_button !== false && swatch
         ? this.swatch(item, l.col, mobile ? 18 : 22, `position:relative;width:${mobile ? 30 : 40}px;height:44px;margin:${mobile ? "-8px -4px -8px -2px" : "0 -6px 0 0"};padding:0;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer;touch-action:pan-y`)
         : nothing}
@@ -781,8 +808,8 @@ export class LightsController implements ReactiveController {
               }} style="width:100%;height:36px;padding:0;border:0;background:transparent;display:grid;place-items:center;cursor:pointer"><span style="width:28px;height:28px;border-radius:50%;background:${css};box-shadow:${ring(i === sel)};transition:box-shadow 250ms"></span></button>`,
             )}<button class="ct" aria-label=${t("card.light.wheel")} title=${t("card.light.wheel")} @click=${() => this.sheetView("wheel")} style="width:100%;height:36px;padding:0;border:0;background:transparent;display:grid;place-items:center;cursor:pointer"><span style="width:28px;height:28px;border-radius:50%;background:${RAINBOW};box-shadow:${ring(false)};display:grid;place-items:center;color:#fff;font-size:16px">${icon("mdi:plus")}</span></button></div>`
         : nothing}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:4px">
-        <button class="press" @click=${() => this.toggleLight(item)} style="min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer">${l.on ? t("card.light.turn_off") : t("card.light.turn_on")}</button>
+      <div style="display:grid;grid-template-columns:${severalRelays(item) ? "1fr" : "1fr 1fr"};gap:10px;padding-top:4px">
+        ${severalRelays(item) ? nothing : html`<button class="press" @click=${() => this.toggleLight(item)} style="min-height:48px;border-radius:16px;border:0;background:var(--lumen-text-1);color:var(--lumen-bg);font:750 14px var(--lumen-font);cursor:pointer">${l.on ? t("card.light.turn_off") : t("card.light.turn_on")}</button>`}
         <button class="press" @click=${() => this.moreInfo(item.entity)} style="min-height:48px;border-radius:16px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 14px var(--lumen-font);cursor:pointer">${t("card.light.more")}</button>
       </div>
     </div>`;

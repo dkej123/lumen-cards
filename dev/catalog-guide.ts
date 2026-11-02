@@ -17,7 +17,7 @@ export interface Guide {
 export const GUIDE: Record<string, Guide> = {
   swiatlo: {
     tagline: "Duży kafel lampy, który świeci jej kolorem.",
-    about: "Jedna lampa albo grupa lamp na dużym kaflu. Kafel świeci kolorem żarówki, a grupa pokazuje, ile lamp świeci („2 z 3 włączone”).",
+    about: "Jedna lampa albo grupa lamp na dużym kaflu. Kafel świeci kolorem żarówki, a grupa pokazuje, ile lamp świeci („2 z 3 włączone”). Żarówki za osobnymi włącznikami, np. dwa kinkiety, też zmieszczą się na jednej karcie: przyciski włączają każdy z nich, a karta ustawia jasność i barwę obu.",
     need: "Lampa albo grupa świateł",
     controls: [
       ["tap", "Dotknij, żeby włączyć albo wyłączyć."],

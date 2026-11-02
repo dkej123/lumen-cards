@@ -118,6 +118,9 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       e("sensor.pm10_old", "23", { friendly_name: "PM10", unit_of_measurement: "µg/m³", device_class: "pm10" }, 180),
       // Catalog states (sections 01–08).
       e("light.desk_strip", "on", { friendly_name: "Desk strip", brightness: 153, supported_color_modes: ["color_temp", "hs"], color_mode: "hs", hs_color: [324, 75], rgb_color: [255, 64, 182], min_color_temp_kelvin: 2200, max_color_temp_kelvin: 6500, color_temp_kelvin: 3950 }),
+      e("light.sconces", "on", { friendly_name: "Kinkiety", brightness: 128, color_temp_kelvin: 2700, ...CT }),
+      e("switch.sconce_1", "on", { friendly_name: "Kinkiet 1" }),
+      e("switch.sconce_2", "off", { friendly_name: "Kinkiet 2" }),
       e("light.sconce", "on", { friendly_name: "Sconce", supported_color_modes: ["onoff"], color_mode: "onoff" }),
       e("light.kitchen_all", "on", { friendly_name: "Kitchen · all", brightness: 204, entity_id: ["light.kitchen", "light.sofa", "light.ceiling"], ...CT }),
       e("light.bedroom", "unavailable", { friendly_name: "Bedroom" }),

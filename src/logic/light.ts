@@ -181,6 +181,10 @@ export interface LightPower {
   on: boolean;
 }
 
+/** The relay that decides the tile's power with several relays: one that is on, else one that answers. */
+export const leadPower = (relays: (HassEntity | undefined)[]): HassEntity | undefined =>
+  relays.find((r) => r?.state === "on") ?? relays.find((r) => r && !isUnavailable(r)) ?? relays[0];
+
 /**
  * State of a bulb fed by a wall relay, shown as one tile. The bulb is `unavailable`
  * whenever the relay is off, so that is plain "off", not an error.

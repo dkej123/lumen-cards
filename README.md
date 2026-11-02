@@ -97,6 +97,27 @@ A light group shows how many lights are on ("2 of 3 on"). In a small space (unde
 
 <img src="docs/images/light-sheet.png" alt="Brightness, white tones and colours panel" width="260">
 
+**Several bulbs behind separate switches** (for example two wall lamps, each on its own switch channel). Pick the group of bulbs as the light and the switches in the **Power (several relays)** field. You get one card:
+
+- **Buttons 1 and 2** switch each one on and off. Only they control the power.
+- **A tap on the card** does nothing.
+- **While at least one lamp is on**, sliding sets the brightness, and the circle and the icon set the colour, of the whole group. The card then says, for example, "1 of 2 on".
+- **While both are off**, the card is off and brightness and colour cannot be changed. A bulb without power cannot receive a command.
+
+A bulb that had no power during a change may come back with its previous brightness and colour.
+
+```yaml
+type: custom:lumen-light-card
+entity: light.wall_lamps
+name: Wall lamps
+icon: mdi:wall-sconce-flat
+power_entities:
+  - light.wall_lamp_1_switch
+  - light.wall_lamp_2_switch
+```
+
+Set your own button icons or names in `sub_buttons`.
+
 ### Chips
 
 <img src="docs/images/chips.png" alt="Scene chips and light pills" width="480">
@@ -485,7 +506,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `max_width` | The card is never wider than this and stays centred in its place: pixels, or percent of its grid place with `max_width_unit: "%"` (or `max_width: 80%`). Handy in a Panel view or very wide sections; in a normal sections view the columns already keep cards narrow. | full width |
 | `max_width_unit` | `px` or `%` for a numeric `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | What happens when you tap, hold or double-tap: switch, show details, open another page, run a script… | depends on the card |
-| `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
+| `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on light, entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
 | — | **Layout preview while editing:** a switch at the bottom of the view (All / Phone / Computer) hides the cards and sections of the other screen size, so each layout can be edited on its own. It evaluates HA screen conditions (min / max width), is remembered on the device and disappears when you leave edit mode. Appears when the view has at least one Lumen card. | – |
 | `edit_note` | A note shown on the card only while the dashboard is being edited. Cards hidden by a screen condition (their own or their section's) also get a "Phone" / "Computer" label there automatically ("· section" when the condition is on the section, not the card): HA shows them all in edit mode without telling them apart. | none |
 | `styles` | For tinkerers: your own CSS inside the card | none |
@@ -506,6 +527,8 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `entity` | The light | – |
 | `name`, `icon` | Name and icon on the tile | from the device |
 | `power_entity` | The wall switch or relay that powers the bulb. When it is off the bulb is "off", not "unavailable", and a tap switches the relay. | none |
+| `power_entities` | Several switches feeding this light, usually a group of bulbs (see [Light](#light)). Replaces `power_entity`. | none |
+| `sub_buttons` | Small extra buttons on the tile. With `power_entities`, one numbered button per switch by default. | none |
 | `show_state` | Show the brightness line | on |
 | `show_color_button` | Show the small white-tone circle | on |
 

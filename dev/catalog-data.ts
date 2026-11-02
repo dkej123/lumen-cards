@@ -38,6 +38,7 @@ export const SECTIONS: Section[] = [
       { label: "Kolorowa", config: { entity: "light.strip", icon: "mdi:led-strip-variant" }, span: 6, hint: "Ikona otwiera koło barw." },
       { label: "Wyłączona", config: { entity: "light.ceiling", icon: "mdi:ceiling-light" }, span: 6 },
       { label: "Grupa", config: { entity: "light.kitchen_all", icon: "mdi:lightbulb-group" }, span: 6 },
+      { label: "Dwa kinkiety", config: { entity: "light.sconces", name: "Kinkiety", icon: "mdi:wall-sconce-flat", power_entities: ["switch.sconce_1", "switch.sconce_2"] }, hint: "Przyciski 1 i 2 włączają każdy kinkiet osobno. Gdy świeci choć jeden, przesuń po karcie, żeby zmienić jasność obu. Dotknięcie karty nic nie robi." },
       { label: "Mała", config: { entity: "light.sofa", icon: "mdi:sofa", layout: "compact" }, span: 4 },
       { label: "Niedostępna", config: { entity: "light.bedroom" }, span: 6 },
     ],

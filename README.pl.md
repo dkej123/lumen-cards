@@ -97,6 +97,27 @@ Grupa świateł pokazuje, ile z nich świeci („2 z 3 włączone”). W małym 
 
 <img src="docs/images/light-sheet.png" alt="Panel jasności, odcieni bieli i kolorów" width="260">
 
+**Kilka żarówek za osobnymi włącznikami** (np. dwa kinkiety, każdy na swoim kanale włącznika). Wybierz grupę żarówek jako światło, a włączniki w polu **Zasilanie (kilka przekaźników)**. Powstaje jedna karta:
+
+- **Przyciski 1 i 2** włączają i wyłączają każdy włącznik osobno. Tylko one sterują prądem.
+- **Dotknięcie karty** nic nie robi.
+- **Gdy świeci choć jeden kinkiet**, przesunięcie palcem ustawia jasność, a kółko i ikona barwę całej grupy. Karta pisze wtedy np. „1 z 2 włączone”.
+- **Gdy oba są wyłączone**, karta jest wyłączona, a jasności i barwy nie da się zmienić. Żarówka bez prądu nie odbierze polecenia.
+
+Żarówka, która w chwili zmiany była bez prądu, po włączeniu może mieć poprzednią jasność i barwę.
+
+```yaml
+type: custom:lumen-light-card
+entity: light.kinkiety
+name: Kinkiety
+icon: mdi:wall-sconce-flat
+power_entities:
+  - light.kinkiet_1_wlacznik
+  - light.kinkiet_2_wlacznik
+```
+
+Własne ikony albo nazwy przycisków ustawisz w `sub_buttons`.
+
 ### Chipy
 
 <img src="docs/images/chips.png" alt="Chipy scen i pigułki świateł" width="480">
@@ -481,7 +502,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `max_width` | Karta nie będzie szersza niż ta wartość i zostanie wyśrodkowana w swoim miejscu: piksele albo procent miejsca w siatce z `max_width_unit: "%"` (lub `max_width: 80%`). Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |
 | `max_width_unit` | `px` albo `%` dla liczbowego `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
-| `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
+| `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach światła, encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
 | — | **Podgląd układu w edycji:** przełącznik na dole widoku (Wszystko / Telefon / Komputer) ukrywa karty i sekcje drugiego rozmiaru ekranu, więc każdy układ edytujesz osobno. Sprawdza warunki ekranu HA (min. / maks. szerokość), zapamiętuje wybór na urządzeniu i znika po wyjściu z edycji. Pojawia się, gdy w widoku jest choć jedna karta Lumen. | – |
 | `edit_note` | Opis widoczny na karcie tylko podczas edycji dashboardu. Karty z warunkiem ekranu (swoim albo sekcji) dostają tam też automatycznie etykietę „Telefon” / „Komputer” (z dopiskiem „sekcja”, gdy warunek jest na sekcji, a nie na karcie): HA w trybie edycji pokazuje wszystkie, nie odróżniając ich. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
@@ -502,6 +523,8 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `entity` | Światło | – |
 | `name`, `icon` | Nazwa i ikona na kaflu | z urządzenia |
 | `power_entity` | Włącznik albo przekaźnik, który zasila żarówkę. Gdy jest wyłączony, żarówka jest „wyłączona”, a nie „niedostępna”, a dotknięcie przełącza przekaźnik. | brak |
+| `power_entities` | Kilka włączników zasilających to światło, zwykle grupę żarówek (zobacz niżej). Zastępuje `power_entity`. | brak |
+| `sub_buttons` | Małe dodatkowe przyciski na kaflu. Przy `power_entities` domyślnie po jednym numerowanym na włącznik. | brak |
 | `show_state` | Pokazuj linię z jasnością | wł. |
 | `show_color_button` | Pokazuj kółko barwy | wł. |
 

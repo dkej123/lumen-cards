@@ -164,3 +164,82 @@ describe("light behind a relay", () => {
     el.remove();
   });
 });
+
+describe("light behind several relays", () => {
+  const bath = (a = "on", b = "off") =>
+    mockHass({
+      "light.group": ent("light.group", "on", { brightness: 128, color_temp_kelvin: 2700, min_color_temp_kelvin: 2200, max_color_temp_kelvin: 4000, supported_color_modes: ["color_temp"], color_mode: "color_temp" }),
+      "light.relay1": ent("light.relay1", a, { supported_color_modes: ["onoff"] }),
+      "light.relay2": ent("light.relay2", b, { supported_color_modes: ["onoff"] }),
+    });
+  const card = async (h: ReturnType<typeof mockHass>) => {
+    const el = await mount("light", { entity: "light.group", power_entities: ["light.relay1", "light.relay2"], layout: "wide" }, h);
+    const tile = el.shadowRoot!.querySelector<HTMLElement>(".tile")!;
+    tile.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 64, right: 200, bottom: 64, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    const ev = (type: string, x: number) => tile.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: 20, button: 0, bubbles: true, pointerId: 1 }));
+    return { el, tile, ev };
+  };
+
+  it("a tap on the card does nothing", async () => {
+    const h = bath();
+    const { el, ev } = await card(h);
+    ev("pointerdown", 20);
+    ev("pointerup", 20);
+    expect(h.calls).toEqual([]);
+    el.remove();
+  });
+
+  it("with any relay on a slide sets the brightness of the group, and no relay changes", async () => {
+    const h = bath();
+    const { el, ev } = await card(h);
+    ev("pointerdown", 20);
+    ev("pointermove", 120);
+    ev("pointerup", 120);
+    expect(h.calls).toEqual([["light", "turn_on", { brightness_pct: 60 }, { entity_id: "light.group" }]]);
+    el.remove();
+  });
+
+  it("with all relays off a slide does nothing, whatever the bulbs still report", async () => {
+    const h = bath("off", "off");
+    const { el, tile, ev } = await card(h);
+    expect(tile.getAttribute("aria-pressed")).toBe("false");
+    ev("pointerdown", 20);
+    ev("pointermove", 120);
+    ev("pointerup", 120);
+    expect(h.calls).toEqual([]);
+    el.remove();
+  });
+
+  it("has one numbered button per relay, and it switches only that relay", async () => {
+    const h = bath();
+    const { el, tile } = await card(h);
+    const buttons = [...tile.querySelectorAll<HTMLElement>(".subbtns > div")];
+    expect(buttons.length).toBe(2);
+    const fired: string[] = [];
+    el.addEventListener("hass-action", (e) => fired.push(JSON.stringify((e as CustomEvent).detail)));
+    const b = buttons[1];
+    b.dispatchEvent(new PointerEvent("pointerdown", { clientX: 1, clientY: 1, button: 0, bubbles: true, composed: true }));
+    b.dispatchEvent(new PointerEvent("pointerup", { clientX: 1, clientY: 1, button: 0, bubbles: true, composed: true }));
+    expect(fired.length).toBe(1);
+    expect(fired[0]).toContain("light.relay2");
+    expect(fired[0]).toContain("toggle");
+    expect(h.calls).toEqual([]);
+    el.remove();
+  });
+
+  it("shows how many relays are on", async () => {
+    const h = bath();
+    const { el, tile } = await card(h);
+    expect(tile.getAttribute("aria-label")).toMatch(/1 .*2/);
+    el.remove();
+  });
+});
+
+describe("light card editor", () => {
+  it("offers the relays and the extra buttons", async () => {
+    const form = (customElements.get("lumen-light-card") as unknown as { getConfigForm(): { schema: { name?: string; selector?: Record<string, Record<string, unknown>> }[] } }).getConfigForm();
+    const relays = form.schema.find((f) => f.name === "power_entities");
+    expect(relays?.selector?.entity.multiple).toBe(true);
+    expect(form.schema.some((f) => f.name === "sub_buttons")).toBe(true);
+  });
+});
