@@ -929,6 +929,8 @@ Yes. Tab moves between cards. Enter or Space taps. Shift+Enter holds (for exampl
 
 ## For developers
 
+AI agents: see [AGENTS.md](AGENTS.md).
+
 ```sh
 npm install
 npm run dev     # demo with made-up devices: http://localhost:5174/dev/index.html

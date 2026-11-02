@@ -899,6 +899,8 @@ Tak. Tab przechodzi między kartami, Enter albo spacja to dotknięcie, Shift+Ent
 
 ## Dla programistów
 
+Agenci AI: zobacz [AGENTS.md](AGENTS.md).
+
 ```sh
 npm install
 npm run dev     # demo na zmyślonych urządzeniach: http://localhost:5174/dev/index.html

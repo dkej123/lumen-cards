@@ -9,7 +9,8 @@
     "dev": "vite",
     "build": "node scripts/gen-icons.mjs && tsc --noEmit && vite build",
     "test": "vitest run",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "docs:agents": "WRITE_AGENT_DOCS=1 vitest run test/agent-docs.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
