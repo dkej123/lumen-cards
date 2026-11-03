@@ -929,7 +929,7 @@ cards:
 | Setting | What it does | Default |
 |---|---|---|
 | `icon`, `title` | Icon of the floating button and heading of the sheet | `mdi:dock-bottom`, "Floating panel" |
-| `cards` | The cards inside (any Home Assistant cards, edited as YAML). Climate cards show as compact thermostat rows here. | – |
+| `cards` | The cards inside (any Home Assistant cards), added and edited in the same visual editor as Home Assistant's stacks. Climate cards show as compact thermostat rows here. The sheet opens as tall as its cards need, up to the top of the screen. | – |
 | `narrow_only` | The floating button only on phones and narrow screens (under 1024 px); wider, the card is a row in the grid that opens the same sheet. Off = the button on every screen. | on |
 | `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
 | `badge_entities` | What the number on the button counts. Empty = the cards' thermostats that are heating; otherwise these entities when heating / on. | empty |
