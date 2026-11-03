@@ -550,13 +550,13 @@ describe("purifier card", () => {
     el.remove();
   });
 
-  it("the footer names the worst filter and keeps its value apart", async () => {
+  it("one footer tile opens the details and names the worst filter", async () => {
     const el = await mount("purifier", { entity: "fan.air", send_delay: 0, filters: [{ name: "Pre", attribute: "pre", unit: "h" }, { name: "HEPA", attribute: "hepa", unit: "h" }] }, mockHass({ "fan.air": fan({ pre: 318, hepa: 1941 }) }));
     const buttons = [...el.shadowRoot!.querySelectorAll("button")];
-    const tile = buttons.at(-2)!;
+    const tile = buttons.at(-1)!;
+    expect(tile.textContent).toContain("More options");
     expect(tile.textContent).toContain("Pre");
     expect(tile.textContent).toContain("318 h");
-    expect(buttons.at(-1)!.textContent).toContain("More options");
     buttons.at(-1)!.click();
     await settle(el);
     expect(layer()!.querySelector('[role="dialog"]')).toBeTruthy();
