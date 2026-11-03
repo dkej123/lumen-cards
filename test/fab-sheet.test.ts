@@ -164,6 +164,16 @@ describe("floating panel card", () => {
     expect(JSON.stringify(el.fallback.schema)).toContain('"cards"');
   });
 
+  it("the open panel may grow to the top of the screen", async () => {
+    const el = await mount("fab-sheet", { title: "Heating", cards: THREE }, hass(), (x) => (x.editMode = true));
+    (el as unknown as { open(): void }).open();
+    await el.updateComplete;
+    const style = layer()!.querySelector('[role="dialog"]')!.getAttribute("style")!;
+    const norm = style.replace(/\s+/g, "");
+    expect(norm).toContain("max-height:calc(100%-env(safe-area-inset-top)-12px)");
+    expect(norm).not.toContain("max-height:85%");
+  });
+
   it("editor preview: the real cards in a static sheet, and no taps reach them", async () => {
     const el = await mount("fab-sheet", { title: "Heating", cards: THREE }, hass(), (x) => (x.preview = true));
     await vi.waitFor(() => expect(el.shadowRoot!.querySelectorAll("lumen-climate-card").length).toBe(3));

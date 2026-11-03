@@ -220,7 +220,8 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
     const s = this.status();
     const b = this.bulk();
     const body = this.hasCards ? this.inner.grid(this._config.cards) : emptySheet(t("card.fab_sheet.empty_title"), t("card.fab_sheet.empty_text"));
-    return this.sheet.render(this.head(s), body, b ? this.bulkRow(b) : nothing);
+    // As tall as its cards need (owner, not the design's 85 %); only a phone-filling panel scrolls.
+    return this.sheet.render(this.head(s), body, b ? this.bulkRow(b) : nothing, { maxHeight: "calc(100% - env(safe-area-inset-top) - 12px)" });
   }
 
   /** 52 px row in the grid (wide screens with narrow_only, edit mode): opens the same sheet. */
