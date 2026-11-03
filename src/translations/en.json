@@ -578,7 +578,6 @@
   "card.purifier.label.water_value": "Water {v}%",
   "card.purifier.label.temperature": "Temperature",
   "card.purifier.label.timer": "Timer",
-  "card.purifier.label.filter": "Filter",
   "card.purifier.label.filters": "Filters",
   "card.purifier.label.off": "off",
   "card.purifier.label.state_off": "Off",

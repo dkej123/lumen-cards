@@ -578,7 +578,6 @@
   "card.purifier.label.water_value": "Woda {v}%",
   "card.purifier.label.temperature": "Temperatura",
   "card.purifier.label.timer": "Wyłącznik",
-  "card.purifier.label.filter": "Filtr",
   "card.purifier.label.filters": "Filtry",
   "card.purifier.label.off": "wył.",
   "card.purifier.label.state_off": "Wyłączony",

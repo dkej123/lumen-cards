@@ -421,7 +421,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     if (!pm) return nothing;
     const level = pm25Level(pm.value);
     const color = staleNow ? "var(--lumen-unavailable)" : aq(level);
-    const spark = pm.entity ? this.history.spark(pm.entity, Number(this._config.hours ?? 24), 300, 90) : { line: "", area: "" };
+    const spark = pm.entity ? this.history.spark(pm.entity, this.history.span(pm.entity, Number(this._config.hours ?? 24)), 300, 90) : { line: "", area: "" };
     const idx = this.indexReading;
     const cfg = this._config.index;
     const age = this.entity(pm.entity) ?? this.fan;
@@ -520,14 +520,14 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
   private footer(narrow: boolean) {
     const tiles: unknown[] = [];
     const tile = (ic: string, c: string, label: string, value: string) =>
-      html`<button class="press" aria-haspopup="dialog" @click=${this.openDetails} style="min-width:0;display:flex;align-items:center;gap:8px;min-height:48px;padding:6px 10px;box-sizing:border-box;border:0;border-radius:14px;background:var(--lumen-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer">${icon(ic, `flex:none;font-size:18px;color:${c}`)}<span style="min-width:0"><span style="display:block;font-size:11px;font-weight:650;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</span><span style="display:block;font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${value}</span></span></button>`;
+      html`<button class="press" aria-haspopup="dialog" @click=${this.openDetails} style="min-width:0;display:flex;align-items:center;gap:5px;min-height:48px;padding:6px;box-sizing:border-box;border:0;border-radius:14px;background:var(--lumen-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer">${icon(ic, `flex:none;font-size:18px;color:${c}`)}<span style="min-width:0"><span style="display:block;font-size:11px;font-weight:650;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</span><span style="display:block;font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${value}</span></span></button>`;
     const temp = this.temperature?.value;
     if (temp !== undefined) tiles.push(tile("mdi:thermometer", "var(--lumen-orange)", t("card.purifier.label.temperature"), formatTemp(temp)));
     const raw = this.fan?.attributes.timer_remaining_minutes;
     if (raw !== undefined && raw !== null) tiles.push(tile("mdi:timer-outline", "var(--lumen-text-2)", t("card.purifier.label.timer"), Number(raw) > 0 ? formatDuration(Number(raw) * 60_000) : t("card.purifier.label.off")));
     const worst = worstFilter(this.filters);
-    if (worst) tiles.push(tile("mdi:air-filter", TONE_VAR[worst.tone], t("card.purifier.label.filter"), `${worst.name === t("card.purifier.filter.default") ? "" : `${worst.name} `}${worst.value} ${worst.unit}`));
-    return tiles.length ? html`<div style="display:grid;grid-template-columns:repeat(${narrow ? 1 : tiles.length}, minmax(0, 1fr));gap:8px">${tiles}</div>` : nothing;
+    if (worst) tiles.push(tile("mdi:air-filter", TONE_VAR[worst.tone], worst.name, `${worst.value} ${worst.unit}`));
+    return tiles.length ? html`<div style="display:grid;grid-template-columns:repeat(${narrow ? 1 : tiles.length}, minmax(0, 1fr));gap:6px">${tiles}</div>` : nothing;
   }
 
   private headIcon(size: number, radius: number, gone: boolean, on: boolean, dot?: string) {

@@ -129,6 +129,13 @@ export class History implements ReactiveController {
     if (keep > 1) points.set(entity, list.slice(keep - 1));
   }
 
+  /** Hours of data there are, at most `hours`: a young sensor fills the sparkline instead of its right edge. */
+  span(entity: string, hours: number): number {
+    const first = points.get(entity)?.[0]?.t;
+    if (first === undefined) return hours;
+    return Math.max(0.25, Math.min(hours, (Date.now() - first) / 3_600_000));
+  }
+
   /** Lowest and highest value of the last `hours`. */
   range(entity: string, hours: number): [number, number] | undefined {
     const from = Date.now() - hours * 3_600_000;

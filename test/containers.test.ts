@@ -507,6 +507,14 @@ describe("purifier card", () => {
     el.remove();
   });
 
+  it("the footer names the worst filter and keeps its value apart", async () => {
+    const el = await mount("purifier", { entity: "fan.air", filters: [{ name: "Pre", attribute: "pre", unit: "h" }, { name: "HEPA", attribute: "hepa", unit: "h" }] }, mockHass({ "fan.air": fan({ pre: 318, hepa: 1941 }) }));
+    const tile = [...el.shadowRoot!.querySelectorAll("button")].at(-1)!;
+    expect(tile.textContent).toContain("Pre");
+    expect(tile.textContent).toContain("318 h");
+    el.remove();
+  });
+
   it("unavailable: only the header", async () => {
     const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": ent("fan.air", "unavailable", { friendly_name: "Air" }) }));
     expect(el.shadowRoot!.querySelector('[aria-label="Power"]')).toBeNull();
