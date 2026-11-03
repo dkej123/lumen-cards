@@ -328,7 +328,9 @@ describe("section 14 cards", () => {
   });
 
   it("calendar: asks HA's calendar API and lists the events", async () => {
+    // Tomorrow: an event earlier today is hidden once it has ended, so "today" fails late in the evening.
     const today = new Date();
+    today.setDate(today.getDate() + 1);
     today.setHours(23, 30, 0, 0);
     const h = mkHass(() => [{ summary: "Boiler service", start: { dateTime: today.toISOString() }, end: { dateTime: new Date(today.getTime() + 600_000).toISOString() } }]);
     const { el, root } = await mount("calendar", { entity: "calendar.c" }, h);
