@@ -921,7 +921,7 @@ cards:
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `icon`, `title` | Ikona pływającego przycisku i nagłówek arkusza | `mdi:dock-bottom`, „Pływający panel” |
-| `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML). Karty klimatyzacji są tu kompaktowymi wierszami termostatów. | – |
+| `cards` | Karty w środku (dowolne karty Home Assistanta), dodawane i edytowane w tym samym edytorze wizualnym co stosy Home Assistanta. Karty klimatyzacji są tu kompaktowymi wierszami termostatów. Arkusz otwiera się tak wysoko, jak potrzebują karty, aż do góry ekranu. | – |
 | `narrow_only` | Pływający przycisk tylko na telefonie i wąskim ekranie (poniżej 1024 px); szerzej karta jest wierszem w siatce, który otwiera ten sam arkusz. Wył. = przycisk na każdym ekranie. | wł. |
 | `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
 | `badge_entities` | Co liczy liczba na przycisku. Puste = termostaty z kart, które grzeją; inaczej te encje, gdy grzeją / są włączone. | puste |
