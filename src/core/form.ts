@@ -28,6 +28,7 @@ const LABELS: Record<string, string> = {
   filters: "card.purifier.editor.filters",
   controls: "card.purifier.editor.controls",
   confirm_timeout: "card.purifier.editor.confirm_timeout",
+  send_delay: "card.purifier.editor.send_delay",
   pm25_entity: "card.purifier.editor.pm25_entity",
   temperature_entity: "card.purifier.editor.temperature_entity",
   humidity_entity: "card.purifier.editor.humidity_entity",
@@ -207,6 +208,7 @@ const HELPERS: Record<string, string> = {
   purifier_filters: "card.purifier.help.filters",
   purifier_controls: "card.purifier.help.controls",
   purifier_confirm_timeout: "card.purifier.help.confirm_timeout",
+  purifier_send_delay: "card.purifier.help.send_delay",
   purifier_index: "card.purifier.help.index",
   fab_sheet_cards: "editor.help.fab_sheet_cards",
 };

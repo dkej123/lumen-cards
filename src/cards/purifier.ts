@@ -1,7 +1,7 @@
 import { css, html, nothing, svg, type TemplateResult } from "lit";
 import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { Optimistic, CONFIRM_MS } from "../core/controllers/optimistic";
+import { Optimistic, CONFIRM_MS, SEND_DELAY_MS } from "../core/controllers/optimistic";
 import { actions, appearance, form, select, type Schema } from "../core/form";
 import { History } from "../core/history";
 import { t } from "../core/i18n";
@@ -52,6 +52,8 @@ export interface PurifierConfig extends BaseConfig {
   stale_hours?: number;
   /** Seconds a change waits for HA before it is undone. */
   confirm_timeout?: number;
+  /** Seconds of quiet after the last tap before a change goes to the device. */
+  send_delay?: number;
   show_humidifier?: boolean;
   show_filters?: boolean;
   preset_modes?: string[];
@@ -133,6 +135,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     this,
     (path) => this.live(path),
     () => (Number(this._config?.confirm_timeout) > 0 ? Number(this._config.confirm_timeout) * 1000 : CONFIRM_MS),
+    () => (this._config?.send_delay !== undefined && Number.isFinite(Number(this._config.send_delay)) ? Number(this._config.send_delay) * 1000 : SEND_DELAY_MS),
   );
   private history = new History(this, () => [this.pm?.entity, this.indexReading?.entity, this.humidity?.entity], undefined, 48);
 
@@ -523,11 +526,10 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
       html`<button class="press" aria-haspopup="dialog" @click=${this.openDetails} style="min-width:0;display:flex;align-items:center;gap:5px;min-height:48px;padding:6px;box-sizing:border-box;border:0;border-radius:14px;background:var(--lumen-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer">${icon(ic, `flex:none;font-size:18px;color:${c}`)}<span style="min-width:0"><span style="display:block;font-size:11px;font-weight:650;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</span><span style="display:block;font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${value}</span></span></button>`;
     const temp = this.temperature?.value;
     if (temp !== undefined) tiles.push(tile("mdi:thermometer", "var(--lumen-orange)", t("card.purifier.label.temperature"), formatTemp(temp)));
-    const raw = this.fan?.attributes.timer_remaining_minutes;
-    if (raw !== undefined && raw !== null) tiles.push(tile("mdi:timer-outline", "var(--lumen-text-2)", t("card.purifier.label.timer"), Number(raw) > 0 ? formatDuration(Number(raw) * 60_000) : t("card.purifier.label.off")));
     const worst = worstFilter(this.filters);
     if (worst) tiles.push(tile("mdi:air-filter", TONE_VAR[worst.tone], worst.name, `${worst.value} ${worst.unit}`));
-    return tiles.length ? html`<div style="display:grid;grid-template-columns:repeat(${narrow ? 1 : tiles.length}, minmax(0, 1fr));gap:6px">${tiles}</div>` : nothing;
+    tiles.push(html`<button class="press" aria-haspopup="dialog" @click=${this.openDetails} style="min-width:0;display:flex;align-items:center;gap:5px;min-height:48px;padding:6px;box-sizing:border-box;border:0;border-radius:14px;background:var(--lumen-surface-2);color:inherit;font:750 13px/16px var(--lumen-font);text-align:left;cursor:pointer">${icon("mdi:tune-variant", "flex:none;font-size:18px;color:var(--lumen-text-2)")}<span style="min-width:0">${t("card.purifier.label.more_options")}</span></button>`);
+    return html`<div style="display:grid;grid-template-columns:repeat(${narrow ? 1 : tiles.length}, minmax(0, 1fr));gap:6px">${tiles}</div>`;
   }
 
   private headIcon(size: number, radius: number, gone: boolean, on: boolean, dot?: string) {
@@ -697,6 +699,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
         schema: [
           { name: "controls", helper: "purifier_controls", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { name: { label: t("editor.name"), selector: text }, icon: { label: t("editor.icon"), selector: { icon: {} } }, entity: { label: t("editor.entity"), selector: { entity: { domain: ["switch", "light", "input_boolean", "select", "input_select", "number", "input_number"] } } }, attribute: { label: lab("attribute"), selector: text }, service: { label: lab("service"), selector: text }, field: { label: lab("field"), selector: text }, kind: { label: lab("kind"), selector: select([["switch", "card.purifier.editor.kind_switch"], ["segment", "card.purifier.editor.kind_segment"], ["stepper", "card.purifier.editor.kind_stepper"]]) }, options: { label: lab("options"), selector: { object: {} } }, min: { label: lab("min"), selector: { number: { mode: "box" } } }, max: { label: lab("max"), selector: { number: { mode: "box" } } }, step: { label: lab("step"), selector: { number: { mode: "box" } } }, min_label: { label: lab("min_label"), selector: text } } } } },
           { name: "confirm_timeout", helper: "purifier_confirm_timeout", default: 45, selector: { number: { min: 5, max: 300, mode: "box", unit_of_measurement: "s" } } },
+          { name: "send_delay", helper: "purifier_send_delay", default: 0.8, selector: { number: { min: 0, max: 10, step: 0.1, mode: "box", unit_of_measurement: "s" } } },
         ],
       },
       {

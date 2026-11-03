@@ -755,6 +755,7 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 | `controls[].step` |  | number |  |  | Step |  |
 | `controls[].min_label` |  | text |  |  | Text of the minimum, e.g. Off |  |
 | `confirm_timeout` |  | number (min: 5; max: 300; unit: s) |  | `45` | Time to confirm | An unconfirmed change is undone after this time. Default 45 s |
+| `send_delay` |  | number (min: 0; max: 10; step: 0.1; unit: s) |  | `0.8` | Send delay | How long the card waits after the last tap before it sends a command, so a burst of taps is one command. Default 0.8 s |
 | `pm25_entity` |  | entity (domain: sensor) |  |  | PM2.5 sensor |  |
 | `temperature_entity` |  | entity (domain: sensor) |  |  | Temperature sensor |  |
 | `humidity_entity` |  | entity (domain: sensor) |  |  | Humidity sensor |  |

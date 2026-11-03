@@ -379,7 +379,7 @@ describe("purifier card", () => {
   });
 
   it("works on a bare fan: no PM block, filters or humidity", async () => {
-    const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": ent("fan.air", "on", { friendly_name: "Air" }) }));
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, mockHass({ "fan.air": ent("fan.air", "on", { friendly_name: "Air" }) }));
     expect(texts(el)).toContain("Air");
     expect(texts(el)).not.toContain("PM2.5");
     expect(btn(el, "Manual")).toBeUndefined();
@@ -388,18 +388,18 @@ describe("purifier card", () => {
 
   it("follows the fan's own speed step and presets, and hides what the features do not allow", async () => {
     const h = mockHass({ "fan.air": fan({ percentage_step: 33.33, preset_modes: ["Silent", "Auto"], preset_mode: "Auto" }) });
-    const el = await mount("purifier", { entity: "fan.air" }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h);
     expect(el.shadowRoot!.querySelectorAll('[role="group"]')[1].querySelectorAll("button").length).toBe(3);
     expect(btn(el, "Silent")).toBeTruthy();
     el.remove();
-    const none = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": fan({ supported_features: 48 }) }));
+    const none = await mount("purifier", { entity: "fan.air", send_delay: 0 }, mockHass({ "fan.air": fan({ supported_features: 48 }) }));
     expect(none.shadowRoot!.querySelectorAll('[role="group"]').length).toBe(0);
     none.remove();
   });
 
   it("maps every fan action to its service", async () => {
     const h = mockHass({ "fan.air": fan() });
-    const el = await mount("purifier", { entity: "fan.air" }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h);
     btn(el, "Manual").click();
     expect(h.calls.at(-1)).toEqual(["fan", "set_preset_mode", { preset_mode: "manual" }, { entity_id: "fan.air" }]);
     btn(el, "3").click();
@@ -411,7 +411,7 @@ describe("purifier card", () => {
 
   it("off: a preset or a speed turns the fan on with it", async () => {
     const h = mockHass({ "fan.air": fan({}, "off") });
-    const el = await mount("purifier", { entity: "fan.air" }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h);
     btn(el, "Auto").click();
     expect(h.calls.at(-1)).toEqual(["fan", "turn_on", { preset_mode: "auto" }, { entity_id: "fan.air" }]);
     el.remove();
@@ -419,24 +419,67 @@ describe("purifier card", () => {
 
   it("a speed shows Manual at once, only when the fan has that preset", async () => {
     const h = mockHass({ "fan.air": fan() });
-    const el = await mount("purifier", { entity: "fan.air" }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h);
     btn(el, "3").click();
     await settle(el);
     expect(btn(el, "Manual").getAttribute("aria-pressed")).toBe("true");
     el.remove();
     const h2 = mockHass({ "fan.air": fan({ preset_modes: ["auto"] }) });
-    const el2 = await mount("purifier", { entity: "fan.air" }, h2);
+    const el2 = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h2);
     btn(el2, "3").click();
     await settle(el2);
     expect(btn(el2, "Auto").getAttribute("aria-pressed")).toBe("true");
     el2.remove();
   });
 
+  it("twelve quick taps on + send one command with the last value, and show every step at once", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = mockHass({ "fan.air": fan({ timer: 0 }) });
+      const el = await mount("purifier", { entity: "fan.air", controls: [{ name: "Timer", attribute: "timer", service: "my.set_timer", field: "hours", min: 0, max: 12 }] }, h);
+      (el as unknown as { sheet: { show(): void } }).sheet.show();
+      await el.updateComplete;
+      const plus = () => layer()!.querySelector<HTMLElement>('[aria-label="More"]')!;
+      for (let i = 0; i < 12; i++) {
+        plus().click();
+        await el.updateComplete;
+        vi.advanceTimersByTime(100);
+      }
+      expect(h.calls).toEqual([]);
+      expect(layer()!.textContent).toContain("12");
+      vi.advanceTimersByTime(900);
+      expect(h.calls).toEqual([["my", "set_timer", { hours: 12 }, { entity_id: "fan.air" }]]);
+      el.remove();
+      document.querySelector("lumen-cards-toaster")?.remove();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("different settings go out at least a second apart; a waiting change is sent when the card leaves", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = mockHass({ "fan.air": fan() });
+      const el = await mount("purifier", { entity: "fan.air" }, h);
+      btn(el, "Manual").click();
+      btn(el, "3").click();
+      vi.advanceTimersByTime(850);
+      expect(h.calls.length).toBe(1);
+      vi.advanceTimersByTime(1100);
+      expect(h.calls.length).toBe(2);
+      btn(el, "Auto").click();
+      el.remove();
+      expect(h.calls.length).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("a change HA does not confirm is undone with a retry; a confirmed one stays", async () => {
     vi.useFakeTimers();
     try {
       const h = mockHass({ "fan.air": fan() });
-      const el = await mount("purifier", { entity: "fan.air", confirm_timeout: 45 }, h);
+      const el = await mount("purifier", { entity: "fan.air", confirm_timeout: 45, send_delay: 0 }, h);
       btn(el, "Manual").click();
       await el.updateComplete;
       expect(btn(el, "Manual").getAttribute("aria-pressed")).toBe("true");
@@ -458,7 +501,7 @@ describe("purifier card", () => {
   it("a failed call is undone right away", async () => {
     const h = mockHass({ "fan.air": fan() });
     h.callService = () => Promise.reject(new Error("nope"));
-    const el = await mount("purifier", { entity: "fan.air" }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h);
     btn(el, "Manual").click();
     await settle(el);
     await settle(el);
@@ -470,17 +513,17 @@ describe("purifier card", () => {
   it("reads sensors by device class on the same device, with attributes as the fallback", async () => {
     const h = mockHass({ "fan.air": fan({ pm25: 99 }), "sensor.weird_name": ent("sensor.weird_name", "7", { device_class: "pm25" }) });
     h.entities = { "fan.air": { device_id: "d" }, "sensor.weird_name": { device_id: "d" } };
-    const el = await mount("purifier", { entity: "fan.air" }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, h);
     expect(texts(el)).toContain("7");
     expect(texts(el)).not.toContain("99");
     el.remove();
-    const attr = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": fan({ pm25: 99 }) }));
+    const attr = await mount("purifier", { entity: "fan.air", send_delay: 0 }, mockHass({ "fan.air": fan({ pm25: 99 }) }));
     expect(texts(attr)).toContain("99");
     attr.remove();
   });
 
   it("warns about water and a worn filter, in the unit the device uses", async () => {
-    const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": fan({ humidity: 40, target_humidity: 50, water_level: 15, filter_life_remaining: 4 }) }));
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, mockHass({ "fan.air": fan({ humidity: 40, target_humidity: 50, water_level: 15, filter_life_remaining: 4 }) }));
     expect(texts(el)).toContain("Refill water");
     expect(texts(el)).toContain("Replace filter");
     el.remove();
@@ -488,7 +531,7 @@ describe("purifier card", () => {
 
   it("a configured service control sends its field and shows the value at once", async () => {
     const h = mockHass({ "fan.air": fan({ child_lock: false }) });
-    const el = await mount("purifier", { entity: "fan.air", controls: [{ name: "Lock", attribute: "child_lock", service: "my.set_lock", field: "lock" }] }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0, controls: [{ name: "Lock", attribute: "child_lock", service: "my.set_lock", field: "lock" }] }, h);
     (el as unknown as { sheet: { show(): void } }).sheet.show();
     await settle(el);
     const row = layer()!.querySelector<HTMLElement>('[role="switch"]')!;
@@ -501,22 +544,27 @@ describe("purifier card", () => {
 
   it("a humidifier entity uses the standard service", async () => {
     const h = mockHass({ "fan.air": fan(), "humidifier.air": ent("humidifier.air", "on", { current_humidity: 40, humidity: 50 }) });
-    const el = await mount("purifier", { entity: "fan.air", humidifier_entity: "humidifier.air", humidity_targets: [40, 60] }, h);
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0, humidifier_entity: "humidifier.air", humidity_targets: [40, 60] }, h);
     btn(el, "60%").click();
     expect(h.calls.at(-1)).toEqual(["humidifier", "set_humidity", { humidity: 60 }, { entity_id: "humidifier.air" }]);
     el.remove();
   });
 
   it("the footer names the worst filter and keeps its value apart", async () => {
-    const el = await mount("purifier", { entity: "fan.air", filters: [{ name: "Pre", attribute: "pre", unit: "h" }, { name: "HEPA", attribute: "hepa", unit: "h" }] }, mockHass({ "fan.air": fan({ pre: 318, hepa: 1941 }) }));
-    const tile = [...el.shadowRoot!.querySelectorAll("button")].at(-1)!;
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0, filters: [{ name: "Pre", attribute: "pre", unit: "h" }, { name: "HEPA", attribute: "hepa", unit: "h" }] }, mockHass({ "fan.air": fan({ pre: 318, hepa: 1941 }) }));
+    const buttons = [...el.shadowRoot!.querySelectorAll("button")];
+    const tile = buttons.at(-2)!;
     expect(tile.textContent).toContain("Pre");
     expect(tile.textContent).toContain("318 h");
+    expect(buttons.at(-1)!.textContent).toContain("More options");
+    buttons.at(-1)!.click();
+    await settle(el);
+    expect(layer()!.querySelector('[role="dialog"]')).toBeTruthy();
     el.remove();
   });
 
   it("unavailable: only the header", async () => {
-    const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": ent("fan.air", "unavailable", { friendly_name: "Air" }) }));
+    const el = await mount("purifier", { entity: "fan.air", send_delay: 0 }, mockHass({ "fan.air": ent("fan.air", "unavailable", { friendly_name: "Air" }) }));
     expect(el.shadowRoot!.querySelector('[aria-label="Power"]')).toBeNull();
     expect(el.shadowRoot!.querySelectorAll('[role="group"]').length).toBe(0);
     el.remove();

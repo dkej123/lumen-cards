@@ -881,6 +881,7 @@ controls:
 | `index` | Drugi wskaźnik: `name`, `entity` albo `attribute`, `thresholds`, `labels`, `max` | brak |
 | `controls` | Sterowanie w szczegółach: encja (`switch`, `light`, `select`, `number`…) albo `attribute` + `service` + `field`, z `options` (wybór) lub `min`/`max`/`step` (− / +) | brak |
 | `confirm_timeout` | Sekundy na potwierdzenie zmiany | 45 |
+| `send_delay` | Sekundy ciszy po ostatnim dotknięciu przed wysłaniem polecenia. Seria kliknięć to jedno polecenie, a między poleceniami jest co najmniej 1 s | 0,8 |
 | `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Nadpisania sensorów | szukane na urządzeniu |
 
 Skala PM2.5 jest taka sama jak w karcie jakości powietrza. Poza HA, bez rejestru encji, działa szukanie po nazwie `sensor.<fan>_pm2_5` i atrybutach.

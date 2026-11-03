@@ -889,6 +889,7 @@ controls:
 | `index` | A second index: `name`, `entity` or `attribute`, `thresholds`, `labels`, `max` | none |
 | `controls` | Controls in the details: an entity (`switch`, `light`, `select`, `number`…) or `attribute` + `service` + `field`, with `options` (a choice) or `min`/`max`/`step` (− / +) | none |
 | `confirm_timeout` | Seconds to confirm a change | 45 |
+| `send_delay` | Seconds of quiet after the last tap before a command goes out. A burst of taps is one command, and commands are at least 1 s apart | 0.8 |
 | `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Sensor overrides | found on the device |
 
 The PM2.5 scale is the one of the air quality card. Outside HA, without the entity registry, the card looks for `sensor.<fan>_pm2_5` and attributes.
