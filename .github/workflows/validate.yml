@@ -7,11 +7,12 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -25,8 +26,7 @@ jobs:
         run: git diff --exit-code -- dist/
 
   hacs:
-    # Docker action: needs Docker on the runner (label `docker`).
-    runs-on: [self-hosted, docker]
+    runs-on: ubuntu-latest
     steps:
       - uses: hacs/action@main
         with:

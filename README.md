@@ -21,7 +21,7 @@ What you get:
 
 ### What it looks like in a real home
 
-The author's own dashboard in the evening, in dark mode. On the desktop, the version built from Lumen Cards. On the phone, the "Dom" panel that Lumen Cards grew out of (the cards look the same):
+The author's own dashboard in the evening, in dark mode. On the desktop, the version built from Lumen Cards. On the phone, the "Dom" panel that Lumen Cards grew out of (the cards look the same). Names and some states are changed for privacy:
 
 <p align="center">
   <img src="docs/images/real-home-desktop.jpg" alt="A real home dashboard made of Lumen Cards on a desktop, in the evening" width="820"><br>
