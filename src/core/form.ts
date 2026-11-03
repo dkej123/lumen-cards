@@ -134,6 +134,10 @@ const LABELS: Record<string, string> = {
   show_warnings: "editor.show_warnings",
   show_tilt: "editor.show_tilt",
   show_volume: "editor.show_volume",
+  volume_only: "editor.volume_only",
+  show_playback: "editor.show_playback",
+  volume_remote: "editor.volume_remote",
+  volume_step: "editor.volume_step",
   show_progress: "editor.show_progress",
   show_source: "editor.show_source",
   show_title: "editor.show_title",
@@ -211,6 +215,8 @@ const HELPERS: Record<string, string> = {
   purifier_send_delay: "card.purifier.help.send_delay",
   purifier_index: "card.purifier.help.index",
   fab_sheet_cards: "editor.help.fab_sheet_cards",
+  volume_remote: "editor.help.volume_remote",
+  volume_step: "editor.help.volume_step",
 };
 
 /** A field's own `title` wins over the shared label of its name (e.g. `hours` of the weather card). */

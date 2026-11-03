@@ -19,6 +19,8 @@ export interface SlideOpts {
   enabled: () => boolean;
   /** Final value 0..1 on release (or on a tap with `tapSets`). */
   commit: (f: number) => void;
+  /** Every position while dragging, for controls that follow the finger. */
+  live?: (f: number) => void;
   /** Entity the value belongs to: the committed value shows until HA sends a new state object. */
   source?: () => HassEntity | undefined;
   /** Pointer up without a drag (tiles); ignored with `tapSets`. */
@@ -29,6 +31,8 @@ export interface SlideOpts {
   tapSets?: boolean;
   /** Arrow keys (±1) and Page Up / Down (big). */
   step?: (dir: 1 | -1, big: boolean) => void;
+  /** Home and End commit 0 and 1. */
+  ends?: boolean;
   /** Drag threshold in px (default 6). */
   threshold?: number;
 }
@@ -128,6 +132,7 @@ export class SlideDrag implements ReactiveController {
       }
       this.frac = fractionAt(e.clientX, p.rect);
       this.ticks.move(this.host as unknown as EventTarget, Math.round(this.frac * 100), 0, 100);
+      this.opts.live?.(this.frac);
       this.host.requestUpdate();
     },
     up: (e: PointerEvent) => {
@@ -166,6 +171,9 @@ export class SlideDrag implements ReactiveController {
         e.preventDefault();
         this.haptic();
         o.tap();
+      } else if (o.ends && o.enabled() && (e.key === "Home" || e.key === "End")) {
+        e.preventDefault();
+        o.commit(e.key === "End" ? 1 : 0);
       } else if (o.step && o.enabled() && ["ArrowRight", "ArrowUp", "ArrowLeft", "ArrowDown", "PageUp", "PageDown"].includes(e.key)) {
         e.preventDefault();
         o.step(e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "PageUp" ? 1 : -1, e.key.startsWith("Page"));
@@ -200,6 +208,8 @@ export interface SliderLook {
   trailing?: unknown;
   /** Second row (cover buttons, tilt bar); hidden when compact. */
   below?: unknown;
+  /** The tile is a slider, not a button (0–100, with spoken value). */
+  slider?: { now: number; text: string };
   /** Keyboard hint (aria-keyshortcuts). */
   keys?: string;
   /** Border override (e.g. the open select). */
@@ -215,7 +225,7 @@ export function sliderTile(look: SliderLook, drag: SlideDrag | undefined, intera
   const border = look.border ?? (look.una ? "1px dashed var(--lumen-border-strong)" : look.lit ? `1px solid color-mix(in srgb, ${col} 40%, var(--lumen-border))` : "1px solid var(--lumen-border)");
   const shadow = look.una ? "none" : look.lit ? `0 10px 30px -14px color-mix(in srgb, ${col} 70%, transparent), var(--lumen-shadow-1)` : "var(--lumen-shadow-1)";
   const tr = drag?.dragging ? "width 60ms linear" : "width 620ms var(--lumen-ease-spring)";
-  return html`<div data-fx class="ltile" role=${interactive ? "button" : nothing} tabindex=${interactive ? 0 : nothing} aria-label="${look.label}" aria-pressed=${look.pressed ?? nothing} aria-disabled=${look.una ? "true" : nothing} aria-keyshortcuts=${look.keys ?? nothing}
+  return html`<div data-fx class="ltile" role=${!interactive ? nothing : look.slider ? "slider" : "button"} tabindex=${interactive ? 0 : nothing} aria-label="${look.label}" aria-valuemin=${look.slider && interactive ? 0 : nothing} aria-valuemax=${look.slider && interactive ? 100 : nothing} aria-valuenow=${look.slider && interactive ? look.slider.now : nothing} aria-valuetext=${look.slider && interactive ? look.slider.text : nothing} aria-pressed=${look.pressed ?? nothing} aria-disabled=${look.una ? "true" : nothing} aria-keyshortcuts=${look.keys ?? nothing}
     @pointerdown=${h?.down} @pointermove=${h?.move} @pointerup=${h?.up} @pointercancel=${h?.cancel} @keydown=${h?.key} @contextmenu=${prevent}
     style="position:relative;isolation:isolate;display:flex;flex-direction:column;gap:10px;min-height:${c ? 52 : 58}px;padding:${c ? "6px 8px 6px 8px" : "11px 12px"};box-sizing:border-box;border-radius:${c ? 18 : 20}px;background:${look.una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};border:${border};box-shadow:${shadow};${glass};color:var(--lumen-text-1);cursor:${interactive && !look.una ? "pointer" : "default"};touch-action:pan-y;user-select:none;-webkit-user-select:none;outline:none;transition:box-shadow 700ms var(--lumen-ease-out), border-color 400ms, transform 240ms var(--lumen-ease-spring)">${WFX}
     <div style="position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;pointer-events:none">

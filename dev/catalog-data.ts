@@ -68,6 +68,7 @@ export const SECTIONS: Section[] = [
     variants: [
       { label: "Sceny", config: { chips: [{ type: "action", entity: "scene.movie" }, { type: "action", entity: "scene.evening" }] } },
       { label: "Światła", config: { chips: [{ type: "light", entity: "light.kitchen", name: "Kuchnia" }, { type: "light", entity: "light.strip", name: "Taśma" }, { type: "light", entity: "light.ceiling", name: "Sufit" }] }, hint: "Przytrzymaj chip światła, żeby ustawić jasność." },
+      { label: "Aktywny wybór", config: { chips: [{ type: "action", entity: "media_player.living_room", name: "Gra", icon: "mdi:play", active_value: "playing", tap_action: { action: "none" } }, { type: "action", entity: "media_player.living_room", name: "Pauza", icon: "mdi:pause", active_value: "paused", tap_action: { action: "none" } }] }, hint: "Podświetlenie według stanu albo atrybutu, np. tryb dźwięku." },
       { label: "Wyśrodkowane", config: { alignment: "center", chips: [{ type: "action", entity: "scene.movie" }, { type: "light", entity: "light.sofa", name: "Sofa" }] } },
     ],
   },
@@ -219,6 +220,7 @@ export const SECTIONS: Section[] = [
       { label: "Gra", config: { entity: "media_player.living_room" }, hint: "Pauza, następny utwór, głośność." },
       { label: "Wyłączony", config: { entity: "media_player.kitchen" } },
       { label: "Mała", config: { entity: "media_player.living_room", layout: "compact" } },
+      { label: "Sama głośność", config: { entity: "media_player.living_room", volume_only: true }, hint: "Suwak, odtwarzanie i wyciszenie, np. dla soundbara." },
     ],
   },
   {

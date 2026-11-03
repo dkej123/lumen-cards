@@ -114,7 +114,7 @@ export const GUIDE: Record<string, Guide> = {
   },
   odtwarzacz: {
     tagline: "Głośnik albo telewizor z okładką i głośnością.",
-    about: "Okładka, tytuł i wykonawca, postęp utworu i głośność. W małym miejscu zamienia się w jeden wiersz z przyciskiem odtwarzania.",
+    about: "Okładka, tytuł i wykonawca, postęp utworu i głośność. W małym miejscu zamienia się w jeden wiersz z przyciskiem odtwarzania. Gdy potrzebna jest tylko głośność, np. dla soundbara, opcja „Tylko suwak głośności” zostawia niski kafel z suwakiem, przyciskami odtwarzania i wyciszeniem.",
     need: "Głośnik, telewizor albo inny odtwarzacz",
     controls: [
       ["tap", "Poprzedni, pauza i następny."],

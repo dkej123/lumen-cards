@@ -1,4 +1,4 @@
-import { html, nothing } from "lit";
+import { html, nothing, type PropertyValues } from "lit";
 import { type BaseConfig } from "../core/base-card";
 import { assertCards, LumenContainerCard } from "../core/container-card";
 import { PENDING_MS } from "../core/controllers/pending";
@@ -9,12 +9,13 @@ import { icon } from "../core/lumen-icon";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
 import { emptySheet, Sheet, type CardConfig } from "../core/sheet";
+import type { LumenStackEditor } from "../core/stack-editor";
+import "../core/stack-editor";
 import { glass, ink } from "../core/styles";
 import { toast } from "../core/toast";
-import type { HassEntity, HassLike } from "../hass/types";
-import { badgeCount, bulkSegment, cardEntities, isHeating, panelSummary, panelWarning, type Bulk } from "../logic/fab-sheet";
+import type { HassLike } from "../hass/types";
+import { badgeCount, bulkSegment, cardEntities, panelSummary, panelWarning, type Bulk } from "../logic/fab-sheet";
 import { innerConfig } from "../logic/popup";
-import { formatNumber } from "../logic/time";
 
 export interface FabSheetConfig extends BaseConfig {
   /** FAB / header icon, e.g. mdi:radiator. */
@@ -93,7 +94,7 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
 
   /** The cards are built while the sheet is open. */
   protected get cardsShown() {
-    return this.sheet.open;
+    return this.sheet.open || this.preview;
   }
 
   private floating = new FabController(this, FAB_ORDER.panels, () => this.useFab, () => fabSideOf(this._config));
@@ -243,37 +244,30 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
     </div>`;
   }
 
-  /** Editor preview: the FAB with its corners next to a static copy of the open sheet (like the reminder's). */
+  /** Editor preview: the open sheet with the real cards, the FAB under it; looking only, no taps reach the devices. */
   private previewView() {
     const s = this.status();
-    const states = this._hass?.states ?? {};
-    const rows = this.ids.slice(0, 6).map((id) => states[id]).filter((e): e is HassEntity => !!e);
-    const row = (e: HassEntity) => {
-      const climate = e.entity_id.startsWith("climate.");
-      const heat = isHeating(e);
-      const una = e.state === "unavailable";
-      const act = !climate
-        ? (this._hass?.formatEntityState?.(e) ?? e.state)
-        : una ? t("common.unavailable") : e.state === "off" ? t("common.off_short") : heat ? t("card.climate.action.heating") : t("card.climate.action.idle");
-      const target = climate && typeof e.attributes.temperature === "number" ? `${formatNumber(e.attributes.temperature)}°`.replace(/[.,]0°$/, "°") : "";
-      return html`<div style="display:flex;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:12px;background:var(--lumen-surface-2);font-size:12px;font-weight:700">
-        <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.attributes.friendly_name ?? e.entity_id}</span>
-        <span style="flex:none;color:${heat ? ORANGE : "var(--lumen-text-2)"};font-weight:650">${act}</span>
-        ${target ? html`<span style="flex:none;min-width:30px;text-align:right;font-variant-numeric:tabular-nums">${target}</span>` : nothing}
-      </div>`;
-    };
     const h = this.head(s);
-    return html`<div role="img" aria-label=${t("card.fab_sheet.preview")} style="display:flex;align-items:flex-end;gap:16px;padding:18px 16px;border-radius:22px;background:var(--lumen-sunken);border:1px solid var(--lumen-border);pointer-events:none">
-      <span style="position:relative;flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:var(--lumen-surface-solid);color:${s.heating ? ORANGE : "var(--lumen-text-1)"};box-shadow:var(--lumen-shadow-2)">${icon(this.panelIcon, "display:block")}${this.corners(s, "var(--lumen-sunken)")}</span>
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:8px 10px 12px;border-radius:20px 20px 8px 8px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2)">
+    const body = this.hasCards
+      ? this.inner.grid(this._config.cards)
+      : html`<div style="padding:6px 2px;font-size:12px;font-weight:600;color:var(--lumen-text-3)">${t("card.fab_sheet.empty_text")}</div>`;
+    return html`<div aria-label=${t("card.fab_sheet.preview")} style="display:flex;flex-direction:column;gap:12px;padding:14px;box-sizing:border-box;border-radius:22px;background:var(--lumen-sunken);border:1px solid var(--lumen-border);pointer-events:none">
+      <div class="preview-sheet" style="width:100%;max-width:520px;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;padding:8px 14px 14px;border-radius:24px 24px 12px 12px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2)">
         <span style="align-self:center;width:28px;height:4px;border-radius:2px;background:var(--lumen-border-strong)"></span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:${h.iconBg};color:${h.iconFg}">${icon(this.panelIcon, "display:block")}</span>
-          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.title}</div><div style="font-size:11px;font-weight:650;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums">${h.sub}</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="flex:none;width:34px;height:34px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:${h.iconBg};color:${h.iconFg}">${icon(this.panelIcon, "display:block")}</span>
+          <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.title}</div><div style="font-size:12px;font-weight:650;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.sub}</div></div>
         </div>
-        ${rows.length ? rows.map(row) : html`<div style="padding:6px 2px;font-size:12px;font-weight:600;color:var(--lumen-text-3)">${t("card.fab_sheet.empty_text")}</div>`}
+        ${body}
       </div>
+      <span style="position:relative;align-self:flex-end;flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:var(--lumen-surface-solid);color:${s.heating ? ORANGE : "var(--lumen-text-1)"};box-shadow:var(--lumen-shadow-2)">${icon(this.panelIcon, "display:block")}${this.corners(s, "var(--lumen-sunken)")}</span>
     </div>`;
+  }
+
+  /** The preview shows the real cards, whichever of `preview` and the config arrived first. */
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (this.preview && this.hasCards) this.buildCards();
   }
 
   protected renderCard() {
@@ -297,6 +291,18 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
     };
   }
 
+  /** The fields other than the title and the cards. */
+  private static fields() {
+    return [
+      { name: "narrow_only", helper: "narrow_only_fab", default: true, selector: { boolean: {} } },
+      fabSideField,
+      { name: "badge_entities", selector: { entity: { multiple: true } } },
+      hapticsField,
+      appearance({ layout: false, effects: false }),
+    ];
+  }
+
+  /** Everything as one form; what the editor falls back to when HA's stack editor is missing. */
   static getConfigForm() {
     return form([
       {
@@ -308,13 +314,17 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
           { name: "title", selector: { text: {} } },
         ],
       },
-      { name: "narrow_only", helper: "narrow_only_fab", default: true, selector: { boolean: {} } },
-      fabSideField,
-      { name: "badge_entities", selector: { entity: { multiple: true } } },
       { name: "cards", helper: "fab_sheet_cards", selector: { object: {} } },
-      hapticsField,
-      appearance({ layout: false, effects: false }),
+      ...this.fields(),
     ]);
+  }
+
+  /** The panel's own fields above HA's stack editor, which handles the title and the cards (tabs, card picker). */
+  static getConfigElement() {
+    const el = document.createElement("lumen-stack-editor") as LumenStackEditor;
+    el.form = form([{ name: "icon", selector: { icon: {} } }, ...this.fields()]);
+    el.fallback = this.getConfigForm();
+    return el;
   }
 }
 

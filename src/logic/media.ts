@@ -82,3 +82,45 @@ export const volumeLevel = (e: HassEntity | undefined): number | null => {
   const v = Number(e?.attributes.volume_level);
   return e?.attributes.volume_level === undefined || e?.attributes.volume_level === null || !Number.isFinite(v) ? null : Math.max(0, Math.min(1, v));
 };
+
+export interface VolumeButtons {
+  previous: boolean;
+  play: boolean;
+  next: boolean;
+  mute: boolean;
+  /** Previous / next are shown dimmed: nothing is loaded while idle. */
+  skipDimmed: boolean;
+}
+
+/**
+ * Buttons of the `volume_only` tile by card width (design U11): from 320 px all four, 200–319 px
+ * play/pause and mute, below that play/pause alone. Unsupported ones and an off player have none.
+ * `playback: false` leaves only mute. Width 0 = not measured yet: the full set, so nothing pops in.
+ */
+export function volumeButtons(e: HassEntity | undefined, width: number, playback = true): VolumeButtons {
+  const none = { previous: false, play: false, next: false, mute: false, skipDimmed: false };
+  if (mediaOff(e)) return none;
+  const wide = width === 0 || width >= 320;
+  const medium = width === 0 || width >= 200;
+  const playing = mediaPlaying(e);
+  const canPlay = playing ? mediaSupports(e, MEDIA.PAUSE) || mediaSupports(e, MEDIA.STOP) : mediaSupports(e, MEDIA.PLAY) || mediaSupports(e, MEDIA.PAUSE);
+  return {
+    previous: playback && wide && mediaSupports(e, MEDIA.PREVIOUS_TRACK),
+    play: playback && canPlay,
+    next: playback && wide && mediaSupports(e, MEDIA.NEXT_TRACK),
+    mute: medium && mediaSupports(e, MEDIA.VOLUME_MUTE),
+    skipDimmed: e?.state === "idle",
+  };
+}
+
+/** Next volume key towards `target`: 0 once within half a step. */
+export function stepsNeeded(level: number, target: number, step: number): 1 | -1 | 0 {
+  const d = target - level;
+  return Math.abs(d) < step / 2 ? 0 : d > 0 ? 1 : -1;
+}
+
+/** The level (a multiple of `step`) nearest to `f`, within 0..1. */
+export function snapToStep(f: number, step: number): number {
+  if (!(step > 0)) return f;
+  return Math.max(0, Math.min(1, Math.round(Math.round(f / step) * step * 1000) / 1000));
+}

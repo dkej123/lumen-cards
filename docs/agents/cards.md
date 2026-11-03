@@ -240,6 +240,8 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `chips[].name` |  | text |  |  | Name |  |
 | `chips[].icon` |  | icon |  |  | Icon |  |
 | `chips[].tap_action` |  | ui_action |  |  | Tap action (default: run / toggle) |  |
+| `chips[].active_value` |  | text |  |  | Active when the state is |  |
+| `chips[].active_attribute` |  | text |  |  | Read an attribute instead of the state (optional) |  |
 | `chips[].power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) – only when the bulb sits behind a relay / plug; empty = always powered |  |
 | `alignment` |  | select | `start` (Left), `center` (Centre), `end` (Right), `justify` (Spread) |  | Alignment |  |
 | `fab` |  | boolean |  | `false` | Show as a floating button | The card leaves the grid and becomes a round button in the bottom-right corner of the screen |
@@ -394,10 +396,10 @@ Lumen · Floating panel: A floating button that opens a sheet with any cards, e.
 |---|---|---|---|---|---|---|
 | `icon` |  | icon |  |  | Icon |  |
 | `title` |  | text |  |  | Title |  |
+| `cards` |  | object |  |  | Cards (YAML) | Cards inside the panel (YAML list); climate cards show as compact thermostat rows |
 | `narrow_only` |  | boolean |  | `true` | Only on a narrow screen | Below 1024 px a button in the corner, wider a row in the grid |
 | `fab_side` |  | select | `right` (Right), `left` (Left (left-handed)) | `right` | Button side | Which screen edge the floating button sits at. Each side has its own stack of buttons |
 | `badge_entities` |  | entity[] |  |  | Number on the button | How many of the chosen entities are active (e.g. heating, on, open). Empty: how many thermostats in the panel are heating |
-| `cards` |  | object |  |  | Cards (YAML) | Cards inside the panel (YAML list); climate cards show as compact thermostat rows |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
@@ -572,9 +574,13 @@ Lumen · Media player: Media player: artwork, title, controls and volume; one ro
 | `icon` |  | icon |  |  | Icon |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
+| `volume_only` |  | boolean |  | `false` | Volume slider only |  |
+| `show_playback` |  | boolean |  | `true` | Playback buttons |  |
 | `show_progress` |  | boolean |  | `true` | Progress |  |
 | `show_volume` |  | boolean |  | `true` | Volume |  |
 | `show_source` |  | boolean |  | `true` | Player name |  |
+| `volume_remote` |  | entity (domain: remote) |  |  | Fast volume through a remote | Android TV Remote: the remote entity of this player, so a long jump is one fast command |
+| `volume_step` |  | number (min: 1; max: 25; step: 1; unit: %) |  |  | One volume key changes | Only for a player with volume keys and no level. How much one key changes |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |

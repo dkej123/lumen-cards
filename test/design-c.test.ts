@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 // Catalog section 14 ("Nowe domeny"): cover, media, select, fan, number, calendar, nav, pop-up.
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ent as entity, mockHass, mount as mountCard, type Card } from "./helpers";
 import { setLanguage, setLocale } from "../src/core/i18n";
 import type { HassLike } from "../src/hass/types";
 import { dayLabel, eventTime, eventTone, groupByDay, parseEvents, rangeQuery } from "../src/logic/calendar";
 import { COVER, activeButton, coverIcon, coverPosition, coverState, tiltDegrees } from "../src/logic/cover";
-import { MEDIA, formatTrackTime, mediaInfo, mediaOff, mediaPosition, volumeIcon } from "../src/logic/media";
+import { MEDIA, formatTrackTime, mediaInfo, mediaOff, mediaPosition, snapToStep, stepsNeeded, volumeButtons, volumeIcon } from "../src/logic/media";
+import { StepChaser } from "../src/core/step-chaser";
 import { activeIndex, resolvePath } from "../src/logic/nav";
 import { cardSpan, hashMatches, innerConfig, normalizeHash } from "../src/logic/popup";
 import { fractionAt, fractionOf, numberRange, numberText, snap, stepDecimals, valueAt } from "../src/logic/slider";
@@ -370,5 +371,163 @@ describe("section 14 cards", () => {
     await el.updateComplete;
     expect(document.querySelector("lumen-cards-layer")).toBeNull();
     el.remove();
+  });
+});
+
+describe("media volume_only", () => {
+  const ALL = MEDIA.VOLUME_SET | MEDIA.VOLUME_MUTE | MEDIA.PLAY | MEDIA.PAUSE | MEDIA.PREVIOUS_TRACK | MEDIA.NEXT_TRACK;
+  const player = (state = "playing", extra: Record<string, unknown> = {}) =>
+    entity("media_player.sb", state, { friendly_name: "Soundbar", volume_level: 0.2, is_volume_muted: false, supported_features: ALL, media_title: "Song", ...extra });
+  const open = async (e = player()) => {
+    const h = mockHass({ "media_player.sb": e });
+    const el = await mountCard("media", { entity: "media_player.sb", volume_only: true }, h);
+    return { h, el, root: el.shadowRoot! };
+  };
+  const labels = (root: ShadowRoot) => [...root.querySelectorAll("button")].map((b) => b.getAttribute("aria-label"));
+
+  it("is a slider with the level, without artwork or track title", async () => {
+    const { root } = await open();
+    expect(root.textContent).toContain("20%");
+    expect(root.textContent).not.toContain("Song");
+    const s = root.querySelector('[role="slider"]')!;
+    expect(s.getAttribute("aria-valuenow")).toBe("20");
+    expect(s.getAttribute("aria-valuetext")).toBe("20%");
+    expect(labels(root)).toEqual(["Previous", "Pause", "Next", "Mute"]);
+  });
+
+  it("says muted to a screen reader", async () => {
+    const { root } = await open(player("playing", { is_volume_muted: true }));
+    expect(root.querySelector('[role="slider"]')!.getAttribute("aria-valuetext")).toBe("Muted, 20%");
+    expect(labels(root)).toContain("Unmute");
+  });
+
+  it("buttons call their services", async () => {
+    const { h, root } = await open();
+    root.querySelectorAll("button").forEach((b) => b.click());
+    const services = h.calls.map((c) => c[1]);
+    expect(services).toEqual(["media_previous_track", "media_pause", "media_next_track", "volume_mute"]);
+  });
+
+  it("Home, End and Page keys set the volume", async () => {
+    const { h, root } = await open();
+    const s = root.querySelector<HTMLElement>('[role="slider"]')!;
+    for (const key of ["End", "Home", "PageUp"]) s.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+    expect(h.calls.map((c) => (c[2] as { volume_level: number }).volume_level)).toEqual([1, 0, 0.3]);
+  });
+
+  it("no buttons, slider or percentage when the player is off", async () => {
+    const { root } = await open(player("off"));
+    expect(root.querySelector("button")).toBeNull();
+    expect(root.querySelector('[role="slider"]')).toBeNull();
+    expect(root.textContent).not.toContain("%");
+  });
+
+  it.each([
+    [0, ["previous", "play", "next", "mute"]],
+    [320, ["previous", "play", "next", "mute"]],
+    [319, ["play", "mute"]],
+    [200, ["play", "mute"]],
+    [199, ["play"]],
+  ])("width %d shows %j", (width, shown) => {
+    const b = volumeButtons(player(), width);
+    expect(["previous", "play", "next", "mute"].filter((k) => b[k as "play"])).toEqual(shown);
+  });
+
+  it("show_playback: false leaves only mute", async () => {
+    const el = await mountCard("media", { entity: "media_player.sb", volume_only: true, show_playback: false }, mockHass({ "media_player.sb": player() }));
+    expect(labels(el.shadowRoot!)).toEqual(["Mute"]);
+  });
+
+  it("hides what the player cannot do and dims skipping while idle", () => {
+    const b = volumeButtons(player("playing", { supported_features: MEDIA.VOLUME_SET }), 400);
+    expect([b.previous, b.play, b.next, b.mute]).toEqual([false, false, false, false]);
+    expect(volumeButtons(player("idle"), 400).skipDimmed).toBe(true);
+    expect(volumeButtons(player("paused"), 400).skipDimmed).toBe(false);
+  });
+
+  const drag = (el: Card, ...xs: number[]) => {
+    const tile = el.shadowRoot!.querySelector<HTMLElement>('[role="slider"]')!;
+    tile.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 50, right: 100, bottom: 50, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    const ev = (type: string, clientX: number) => tile.dispatchEvent(new PointerEvent(type, { clientX, clientY: 10, button: 0, bubbles: true, pointerId: 1 }));
+    ev("pointerdown", xs[0]);
+    xs.slice(1).forEach((x) => ev("pointermove", x));
+    return (x: number) => ev("pointerup", x);
+  };
+
+  it("a player with a level follows the finger, spaced, and the release sets the final value", async () => {
+    const { h, el } = await open();
+    const release = drag(el, 20, 40, 41, 42);
+    const during = h.calls.filter((c) => c[1] === "volume_set").length;
+    expect(during).toBe(1);
+    release(42);
+    expect(h.calls.at(-1)![2]).toEqual({ volume_level: 0.42 });
+  });
+
+  describe("volume keys only", () => {
+    const keysOnly = () => player("playing", { supported_features: MEDIA.VOLUME_STEP | MEDIA.VOLUME_MUTE, volume_level: 0.36 });
+
+    it("sends a step while dragging, before the release", async () => {
+      const { h, el } = await open(keysOnly());
+      drag(el, 20, 60);
+      await Promise.resolve();
+      expect(h.calls.map((c) => c[1])).toEqual(["volume_up"]);
+    });
+
+    it("the tile jumps between levels while dragging", async () => {
+      const { el, root } = await open(keysOnly());
+      drag(el, 20, 37);
+      await el.updateComplete;
+      expect(root.querySelector('[role="slider"]')!.getAttribute("aria-valuenow")).toBe("36");
+      expect(root.textContent).toContain("36%");
+      drag(el, 20, 39);
+      await el.updateComplete;
+      expect(root.querySelector('[role="slider"]')!.getAttribute("aria-valuenow")).toBe("40");
+    });
+
+    it("reaches the target one key at a time and stops", async () => {
+      const sent: number[] = [];
+      const level = 0.36;
+      const host = { addController() {}, requestUpdate() {} } as never;
+      const c = new StepChaser(host, async (d) => void sent.push(d), () => level, () => 0.04, 0);
+      c.to(0.5);
+      await vi.waitFor(() => expect(c.pending).toBeNull());
+      expect(sent).toEqual([1, 1, 1, 1]);
+      c.to(0.44);
+      await vi.waitFor(() => expect(c.pending).toBeNull());
+      expect(sent.slice(4)).toEqual([-1, -1]);
+    });
+
+    it("with a remote a long jump is one command with every key", async () => {
+      const h = mockHass({ "media_player.sb": keysOnly() });
+      const el = await mountCard("media", { entity: "media_player.sb", volume_only: true, volume_remote: "remote.tv" }, h);
+      drag(el, 20, 96);
+      await Promise.resolve();
+      expect(h.calls.length).toBe(1);
+      expect(h.calls[0].slice(0, 3)).toEqual(["remote", "send_command", { command: "VOLUME_UP", num_repeats: 15, delay_secs: 0 }]);
+      expect(h.calls[0][3]).toEqual({ entity_id: "remote.tv" });
+    });
+
+    it("a new target redirects it instead of queueing", async () => {
+      const sent: number[] = [];
+      const host = { addController() {}, requestUpdate() {} } as never;
+      const c = new StepChaser(host, async (d) => void sent.push(d), () => 0.5, () => 0.04, 0);
+      c.to(1);
+      c.to(0.5);
+      await vi.waitFor(() => expect(c.pending).toBeNull());
+      expect(sent.reduce((a, b) => a + b, 0)).toBe(0);
+    });
+  });
+
+  it("snapToStep lands on the nearest level", () => {
+    expect(snapToStep(0.37, 0.04)).toBe(0.36);
+    expect(snapToStep(0.39, 0.04)).toBe(0.4);
+    expect(snapToStep(1, 0.04)).toBe(1);
+    expect(snapToStep(0, 0.04)).toBe(0);
+  });
+
+  it("stepsNeeded stops within half a step", () => {
+    expect(stepsNeeded(0.36, 0.4, 0.04)).toBe(1);
+    expect(stepsNeeded(0.36, 0.32, 0.04)).toBe(-1);
+    expect(stepsNeeded(0.36, 0.37, 0.04)).toBe(0);
   });
 });

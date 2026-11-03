@@ -8,11 +8,12 @@ import { icon } from "../core/lumen-icon";
 import { WFX } from "../core/parts";
 import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
-import { SlideDrag, TILE_CSS, thinBar } from "../core/slider-tile";
+import { SlideDrag, TILE_CSS, sliderTile, thinBar } from "../core/slider-tile";
 import { glass, stop } from "../core/styles";
+import { StepChaser } from "../core/step-chaser";
 import { requireEntity } from "../core/validate";
 import { stateText } from "../logic/format";
-import { MEDIA, formatTrackTime, mediaDuration, mediaInfo, mediaOff, mediaPlaying, mediaPosition, mediaSupports, volumeIcon, volumeLevel } from "../logic/media";
+import { MEDIA, formatTrackTime, mediaDuration, mediaInfo, mediaOff, mediaPlaying, mediaPosition, mediaSupports, snapToStep, volumeButtons, volumeIcon, volumeLevel } from "../logic/media";
 
 export interface MediaConfig extends BaseConfig {
   entity: string;
@@ -24,9 +25,21 @@ export interface MediaConfig extends BaseConfig {
   show_volume?: boolean;
   /** Player name / last source line (default true). */
   show_source?: boolean;
+  /** Only a volume slider tile: no artwork or track title (default false). */
+  volume_only?: boolean;
+  /** `volume_only` on a player with volume keys only: how much one key changes, in percent (default 4). */
+  volume_step?: number;
+  /** `volume_only`: previous, play/pause and next on the tile (default true); mute stays. */
+  show_playback?: boolean;
+  /** Android TV Remote `remote.*` of this player: many volume keys go out as one fast command. */
+  volume_remote?: string;
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
 }
+
+const DEFAULT_VOLUME_STEP = 4;
+/** Level commands while dragging: often enough to hear it, not enough to flood a device. */
+const LIVE_SET_MS = 300;
 
 /** Artwork stand-in (design `ART`). */
 const ART = "linear-gradient(135deg, oklch(0.64 0.17 35), oklch(0.46 0.16 300))";
@@ -49,13 +62,49 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   private _artFailed = "";
 
   private vol = new SlideDrag(this, {
-    enabled: () => !mediaOff(this.player) && mediaSupports(this.player, MEDIA.VOLUME_SET),
+    enabled: () => !mediaOff(this.player) && (mediaSupports(this.player, MEDIA.VOLUME_SET) || this.keysOnly),
     source: () => this.player,
     tapSets: true,
     threshold: 3,
-    commit: (f) => this.call("volume_set", { volume_level: Math.round(f * 100) / 100 }),
-    step: (d) => this.call("volume_set", { volume_level: Math.max(0, Math.min(1, Math.round(((volumeLevel(this.player) ?? 0) + d * 0.05) * 100) / 100)) }),
+    ends: true,
+    live: (f) => this.followFinger(f),
+    commit: (f) => (this.keysOnly ? this.keys.to(f) : this.call("volume_set", { volume_level: Math.round(f * 100) / 100 })),
+    step: (d, big) => this.keysOnly ? this.call(d > 0 ? "volume_up" : "volume_down") : this.call("volume_set", { volume_level: Math.max(0, Math.min(1, Math.round(((volumeLevel(this.player) ?? 0) + d * (big ? 0.1 : 0.05)) * 100) / 100)) }),
   });
+
+  /** Volume keys for a `volume_only` tile on a player that cannot be set to a level. */
+  private keys = new StepChaser(
+    this,
+    (dir, count) => this.sendKeys(dir, count),
+    () => volumeLevel(this.player),
+    () => (this._config.volume_step ?? DEFAULT_VOLUME_STEP) / 100,
+    120,
+    () => !!this._config.volume_remote,
+  );
+  private lastLiveSet = 0;
+
+  private sendKeys(dir: 1 | -1, count: number) {
+    const remote = this._config.volume_remote;
+    if (!remote) return this.call(dir > 0 ? "volume_up" : "volume_down");
+    return callOrToast(this, this._hass, "remote", "send_command", { command: dir > 0 ? "VOLUME_UP" : "VOLUME_DOWN", num_repeats: count, delay_secs: 0 }, remote);
+  }
+
+  private get keysOnly(): boolean {
+    return !!this._config?.volume_only && !mediaSupports(this.player, MEDIA.VOLUME_SET) && mediaSupports(this.player, MEDIA.VOLUME_STEP);
+  }
+
+  /** `volume_only`: the volume follows the drag; level commands are spaced, the release sends the final one. */
+  private followFinger(f: number) {
+    if (!this._config.volume_only) return;
+    if (this.keysOnly) {
+      this.keys.to(f);
+      return;
+    }
+    const now = Date.now();
+    if (now - this.lastLiveSet < LIVE_SET_MS) return;
+    this.lastLiveSet = now;
+    this.call("volume_set", { volume_level: Math.round(f * 100) / 100 });
+  }
 
   private seek = new SlideDrag(this, {
     enabled: () => mediaPlaying(this.player) || this.player?.state === "paused" ? mediaSupports(this.player, MEDIA.SEEK) && mediaDuration(this.player) !== null : false,
@@ -138,9 +187,70 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     }} style="flex:none;width:${size}px;height:${size}px;border:0;border-radius:50%;display:grid;place-items:center;font-size:${size >= 52 ? 26 : 22}px;background:var(--lumen-text-1);color:var(--lumen-bg);padding:0;cursor:pointer">${icon(playing ? "mdi:pause" : "mdi:play", "display:block")}</button>`;
   }
 
+  /** The `volume_only` tile has its own rule: it stays full down to 200 px (design). */
+  override get compact(): boolean {
+    if (!this._config?.volume_only || (this._config.layout ?? "auto") !== "auto") return super.compact;
+    return this._width > 0 && this._width < 200;
+  }
+
+  /** A 36 px button of the `volume_only` tile; pointer events stay out of the slider underneath. */
+  private tileButton(ic: string, label: string, color: string, enabled: boolean, click: () => void, opts: { pressed?: boolean; dim?: boolean; gap?: boolean } = {}) {
+    return html`<button class="mbtn" aria-label=${label} title=${label} aria-pressed=${opts.pressed ?? nothing} ?disabled=${!enabled} @pointerdown=${stop} @pointerup=${stop} @keydown=${stop} @click=${(ev: Event) => {
+      ev.stopPropagation();
+      this.haptic();
+      click();
+    }} style="flex:none;width:36px;height:36px;margin-left:${opts.gap ? "6px" : "0"};border:0;border-radius:12px;background:transparent;padding:0;display:grid;place-items:center;font-size:18px;color:${color};opacity:${opts.dim ? 0.38 : 1};cursor:${enabled ? "pointer" : "default"}">${icon(ic, "display:block")}</button>`;
+  }
+
+  /** `volume_only` (design section 14): the whole tile is the volume slider, playback buttons on the right. */
+  private volumeTile() {
+    const c = this._config;
+    const e = this.player;
+    const una = !e || e.state === "unavailable";
+    const off = mediaOff(e);
+    const vl = volumeLevel(e);
+    const raw = this.vol.value() ?? this.keys.pending ?? (off ? 0 : (vl ?? 0));
+    // Keys move in levels: show the level the device will really land on, not the finger's exact spot.
+    const vf = this.keysOnly ? snapToStep(raw, (c.volume_step ?? DEFAULT_VOLUME_STEP) / 100) : raw;
+    const muted = !!e?.attributes.is_volume_muted;
+    const name = entityName(c.name, e, c.entity);
+    const known = !off && (vl !== null || this.vol.dragging);
+    const percent = `${Math.round(vf * 100)}%`;
+    const sub = una ? t("common.unavailable") : off ? t("card.media.off") : known ? percent : "";
+    const b = volumeButtons(e, this._width, c.show_playback !== false);
+    const playing = mediaPlaying(e);
+    const buttons = [
+      b.previous ? this.tileButton("mdi:skip-previous", t("card.media.previous"), "var(--lumen-text-2)", !b.skipDimmed, () => this.call("media_previous_track"), { dim: b.skipDimmed }) : nothing,
+      b.play ? this.tileButton(playing ? "mdi:pause" : "mdi:play", playing ? t("card.media.pause") : t("card.media.play"), "var(--lumen-text-1)", true, () => this.call(playing ? (mediaSupports(e, MEDIA.PAUSE) ? "media_pause" : "media_stop") : "media_play")) : nothing,
+      b.next ? this.tileButton("mdi:skip-next", t("card.media.next"), "var(--lumen-text-2)", !b.skipDimmed, () => this.call("media_next_track"), { dim: b.skipDimmed }) : nothing,
+      b.mute
+        ? this.tileButton(muted ? "mdi:volume-off" : "mdi:volume-high", muted ? t("card.media.unmute") : t("card.media.mute"), muted ? "var(--lumen-accent)" : "var(--lumen-text-3)", true, () => this.call("volume_mute", { is_volume_muted: !muted }), { pressed: muted, gap: b.previous || b.play || b.next })
+        : nothing,
+    ];
+    return sliderTile(
+      {
+        title: name,
+        sub,
+        icon: c.icon || volumeIcon(vl, muted),
+        iconBg: "var(--lumen-surface-2)",
+        iconFg: off ? "var(--lumen-text-3)" : "var(--lumen-accent)",
+        fill: off ? null : Math.round(vf * 100),
+        fillColor: "var(--lumen-accent)",
+        una,
+        compact: this.compact,
+        label: `${t("card.media.volume")} · ${name}`,
+        slider: { now: Math.round(vf * 100), text: muted ? `${t("card.media.muted")}, ${percent}` : percent },
+        trailing: off ? undefined : html`<div style="flex:none;display:flex;align-items:center;gap:6px">${buttons}</div>`,
+      },
+      this.vol,
+      !una && !off,
+    );
+  }
+
   protected renderCard() {
     if (!this._config || !this._hass) return nothing;
     const c = this._config;
+    if (c.volume_only) return this.volumeTile();
     const e = this.player;
     const una = !e || e.state === "unavailable";
     const off = mediaOff(e);
@@ -214,7 +324,12 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
       { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
       nameIcon(),
       actions(true, false),
-      advanced([["show_progress"], ["show_volume"], ["show_source"]]),
+      advanced([["volume_only", false], ["show_playback"], ["show_progress"], ["show_volume"], ["show_source"]], {
+        extra: [
+          { name: "volume_remote", helper: "volume_remote", selector: { entity: { domain: "remote" } } },
+          { name: "volume_step", helper: "volume_step", selector: { number: { min: 1, max: 25, step: 1, mode: "box", unit_of_measurement: "%" } } },
+        ],
+      }),
       appearance({ layout: "width" }),
     ]);
   }

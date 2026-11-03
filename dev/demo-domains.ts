@@ -170,7 +170,7 @@ const POPUP = {
 
 export const DOMAIN_GALLERY: Record<string, Spec[]> = {
   cover: [["cover", { entity: "cover.living_room" }], ["cover", { entity: "cover.office_blind" }], ["cover", { entity: "cover.kitchen" }]],
-  media: [["media", { entity: "media_player.living_room" }], ["media", { entity: "media_player.kitchen" }], ["media", { entity: "media_player.living_room", layout: "compact" }]],
+  media: [["media", { entity: "media_player.living_room" }], ["media", { entity: "media_player.kitchen" }], ["media", { entity: "media_player.living_room", layout: "compact" }], ["media", { entity: "media_player.living_room", volume_only: true }]],
   select: [["select", { entity: "input_select.vacuum_mode", secondary_entity: "sensor.vacuum_status" }]],
   sliders: [["fan", { entity: "fan.bedroom" }, 6], ["number", { entity: "input_number.humidity_threshold" }, 6], ["number", { entity: "number.doorbell_volume" }, 6]],
   calendar: [["calendar", { entity: "calendar.home" }]],

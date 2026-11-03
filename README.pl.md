@@ -244,7 +244,7 @@ Rolety, żaluzje, bramy garażowe. **Przesuń palcem** po karcie, żeby ustawić
 
 <img src="docs/images/media.png" alt="Odtwarzacz z okładką, sterowaniem i głośnością oraz wersja kompaktowa" width="480">
 
-Głośniki i telewizory: okładka, tytuł i wykonawca, poprzedni / odtwarzaj-pauza / następny, postęp i głośność. W małym miejscu zamienia się w jeden wiersz z przyciskiem odtwarzania.
+Głośniki i telewizory: okładka, tytuł i wykonawca, poprzedni / odtwarzaj-pauza / następny, postęp i głośność. W małym miejscu zamienia się w jeden wiersz z przyciskiem odtwarzania. Z `volume_only: true` staje się niskim kaflem z suwakiem głośności, przyciskami odtwarzania i wyciszeniem, np. dla soundbara.
 
 ### Lista wyboru
 
@@ -550,6 +550,7 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `chips` | Lista chipów. Każdy ma `type`: **action** (scena, skrypt, przycisk…) albo **light** (światło). Każdy ma też `entity`, a opcjonalnie `name`, `icon` i `tap_action`. Chip światła może mieć `power_entity`. | – |
+| `active_value`, `active_attribute` (w chipie) | Chip akcji jest podświetlony, gdy stan encji albo ten atrybut ma tę wartość, np. tryb dźwięku | – |
 | `alignment` | Do lewej, do środka, do prawej albo rozłożone | do lewej |
 | `fab` | **Pokaż jako pływający przycisk**: akcje przechodzą do okrągłego przycisku w prawym dolnym rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie.** Pływający przycisk pojawia się tylko na telefonie i tablecie w pionie, a na szerszych ekranach zostaje zwykły rząd chipów. Odznacz, żeby przycisk pływał zawsze. | wł. |
@@ -742,6 +743,10 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | `name`, `icon` | Nazwa oraz ikona, gdy nie ma okładki | z urządzenia |
 | `show_progress` | Pasek postępu (dotknięcie przewija, jeśli odtwarzacz to umie) | wł. |
 | `show_volume` | Suwak głośności i wyciszenie | wł. |
+| `volume_only` | Niski kafel z suwakiem głośności: bez okładki i tytułu utworu. Po prawej przyciski odtwarzania i wyciszenie, tyle, ile się zmieści: wszystkie od 320 px, odtwarzanie i wyciszenie od 200 px, poniżej samo odtwarzanie. Głośność zmienia się w trakcie przeciągania. Odtwarzacz z samymi klawiszami głośności (Android TV Remote) dostaje poziom przez pojedyncze naciśnięcia, a kafel przeskakuje między tymi poziomami | wył. |
+| `volume_remote` | Przy `volume_only` na odtwarzaczu z Android TV Remote: jego encja `remote.*`, dzięki czemu duży skok idzie jednym szybkim poleceniem, a nie klawisz po klawiszu. | – |
+| `show_playback` | Przy `volume_only`: przyciski poprzedni, odtwarzanie/pauza i następny. Wyciszenie zostaje. | wł. |
+| `volume_step` | Przy `volume_only` na odtwarzaczu z samymi klawiszami głośności: o ile zmienia jedno naciśnięcie, w procentach. | 4 |
 | `show_source` | Nazwa odtwarzacza albo ostatnia aplikacja, gdy jest wyłączony | wł. |
 
 <a id="lumen-select-card"></a>

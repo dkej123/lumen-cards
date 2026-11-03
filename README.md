@@ -244,7 +244,7 @@ Roller blinds, shutters, garage doors. **Slide your finger** across the card to 
 
 <img src="docs/images/media.png" alt="Music player with cover art, controls and volume, and a compact row" width="480">
 
-Speakers and TVs: cover art, title and artist, previous / play-pause / next, progress and volume. In a small space it becomes a single row with a play button.
+Speakers and TVs: cover art, title and artist, previous / play-pause / next, progress and volume. In a small space it becomes a single row with a play button. With `volume_only: true` it becomes a low volume slider tile with playback and mute buttons, for example for a soundbar.
 
 ### List (select)
 
@@ -554,6 +554,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | Setting | What it does | Default |
 |---|---|---|
 | `chips` | The list of chips. Each one has a `type`: **action** (scene, script, button…) or **light**. Each also has an `entity`, and optionally a `name`, `icon` and `tap_action`. Light chips can have a `power_entity`. | – |
+| `active_value`, `active_attribute` (each chip) | The action chip is highlighted while the entity's state, or this attribute, has this value, for example a sound mode | – |
 | `alignment` | Left, centre, right or spread out | left |
 | `fab` | **Show as a floating button**: the action chips move into a round button in the bottom-right corner | off |
 | `fab_narrow_only` | **Auto: only on narrow screens.** The floating button appears only on phones and portrait tablets; on wider screens the normal row stays. Untick to always use the floating button. | on |
@@ -750,6 +751,10 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | `name`, `icon` | Name, and the icon shown when there is no cover art | from the device |
 | `show_progress` | The progress bar (tap it to jump, if the player can) | on |
 | `show_volume` | The volume slider and mute button | on |
+| `volume_only` | A compact volume slider tile: no artwork or track title. Playback and mute buttons on the right, as many as fit: all from 320 px, play and mute from 200 px, play alone below that. The volume follows your finger while dragging. A player with volume keys only (Android TV Remote) gets its level through single key presses, and the tile jumps between those levels | off |
+| `volume_remote` | With `volume_only` on an Android TV Remote player: its `remote.*` entity, so a long jump goes out as one fast command instead of key after key. | – |
+| `show_playback` | With `volume_only`: the previous, play/pause and next buttons. Mute stays. | on |
+| `volume_step` | With `volume_only` on a player with volume keys only: how much one key changes, in percent. | 4 |
 | `show_source` | The player's name, or the last app when it is off | on |
 
 <a id="lumen-select-card"></a>

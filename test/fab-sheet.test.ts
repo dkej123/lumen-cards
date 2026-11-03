@@ -153,12 +153,26 @@ describe("floating panel card", () => {
     expect(layer()!.textContent).toContain("No cards in the panel");
   });
 
-  it("editor preview: FAB and a static sheet with the thermostats", async () => {
+  it("the editor is the panel's fields above HA's stack editor; the fallback form still holds the cards", () => {
+    const ctor = customElements.get("lumen-fab-sheet-card") as unknown as { getConfigElement(): HTMLElement & { form: { schema: { name?: string }[] }; fallback: { schema: unknown } } };
+    const el = ctor.getConfigElement();
+    expect(el.localName).toBe("lumen-stack-editor");
+    const names = JSON.stringify(el.form.schema);
+    expect(names).toContain('"icon"');
+    expect(names).not.toContain('"name":"cards"');
+    expect(names).not.toContain('"name":"title"');
+    expect(JSON.stringify(el.fallback.schema)).toContain('"cards"');
+  });
+
+  it("editor preview: the real cards in a static sheet, and no taps reach them", async () => {
     const el = await mount("fab-sheet", { title: "Heating", cards: THREE }, hass(), (x) => (x.preview = true));
+    await vi.waitFor(() => expect(el.shadowRoot!.querySelectorAll("lumen-climate-card").length).toBe(3));
     const t = el.shadowRoot!.textContent!.replace(/\s+/g, " ");
-    expect(t).toContain("Salon");
     expect(t).toContain("Heating");
-    expect(t).toContain("23°");
+    const inner = el.shadowRoot!.querySelector("lumen-climate-card")!;
+    await (inner as unknown as Card).updateComplete;
+    expect(inner.shadowRoot!.textContent).toContain("Salon");
+    expect(el.shadowRoot!.querySelector<HTMLElement>("[aria-label]")!.getAttribute("style")).toContain("pointer-events:none");
   });
 });
 

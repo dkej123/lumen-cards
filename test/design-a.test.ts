@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 // Catalog 2026-10-29, sections 01–04, 07, 08: light, entity, button, person, reminder, chips / FAB.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { chipActive } from "../src/logic/chip";
 import { ent, mockHass, mount as mountCard, type Card } from "./helpers";
 import { setLanguage } from "../src/core/i18n";
 import { FAB_ORDER, fabBottom, fabEdge, fabSize, fabSlot, releaseFab } from "../src/core/layer";
@@ -333,5 +334,55 @@ describe("chips and floating buttons", () => {
     expect(fabSlot(panel, FAB_ORDER.panels, "left")).toBe(0);
     expect(fabSlot(alarm, FAB_ORDER.alarm)).toBe(2);
     [climate, scenes, alarm, panel].forEach(releaseFab);
+  });
+});
+
+describe("chips sharing one entity", () => {
+  const sb = ent("media_player.sb", "playing", { friendly_name: "Soundbar" });
+  const chip = (name: string) => ({
+    type: "action",
+    entity: "media_player.sb",
+    name,
+    tap_action: { action: "perform-action", perform_action: "yamaha_soundbar.sound_settings", data: { sound_program: name } },
+  });
+
+  it("only the tapped chip plays the press animation", async () => {
+    const el = await mountCard("chips", { chips: [chip("music"), chip("tv"), chip("movie")] }, mockHass({ "media_player.sb": sb }));
+    const chips = () => [...el.shadowRoot!.querySelectorAll<HTMLElement>("[aria-label]")].filter((x) => ["music", "tv", "movie"].includes(x.getAttribute("aria-label")!));
+    expect(chips().length).toBe(3);
+    const target = chips()[1];
+    target.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true, pointerId: 1 }));
+    target.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true, pointerId: 1 }));
+    await el.updateComplete;
+    expect(chips().map((x) => x.getAttribute("style")!.includes("lumenPop"))).toEqual([false, true, false]);
+  });
+
+  const mode = (name: string, value: string) => ({ ...chip(name), active_attribute: "sound_program", active_value: value });
+  const modes = [mode("music", "music"), mode("tv", "tv program"), mode("movie", "movie")];
+  const pressed = (el: Card) => [...el.shadowRoot!.querySelectorAll("[aria-pressed]")].map((x) => x.getAttribute("aria-pressed"));
+
+  it("highlights the chip matching the attribute, ignoring case", async () => {
+    const h = mockHass({ "media_player.sb": { ...sb, attributes: { ...sb.attributes, sound_program: "TV Program" } } });
+    const el = await mountCard("chips", { chips: modes }, h);
+    expect(pressed(el)).toEqual(["false", "true", "false"]);
+    expect(el.shadowRoot!.querySelector('[aria-pressed="true"]')!.getAttribute("style")).toContain("--lumen-accent-soft");
+  });
+
+  it("a tapped chip shows as active at once, before the device reports it", async () => {
+    const h = mockHass({ "media_player.sb": { ...sb, attributes: { ...sb.attributes, sound_program: "tv program" } } });
+    const el = await mountCard("chips", { chips: modes }, h);
+    const t = el.shadowRoot!.querySelector('[aria-label="movie"]')!;
+    t.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true, pointerId: 1 }));
+    t.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true, pointerId: 1 }));
+    await el.updateComplete;
+    expect(pressed(el)).toEqual(["false", "false", "true"]);
+  });
+
+  it("chipActive reads the state, the attribute, and nothing without a value", () => {
+    expect(chipActive({ active_value: "playing" }, sb)).toBe(true);
+    expect(chipActive({ active_value: "paused" }, sb)).toBe(false);
+    expect(chipActive({ active_attribute: "friendly_name", active_value: "soundbar" }, sb)).toBe(true);
+    expect(chipActive({}, sb)).toBe(false);
+    expect(chipActive({ active_value: "playing" }, undefined)).toBe(false);
   });
 });

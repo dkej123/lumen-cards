@@ -1,3 +1,4 @@
+import { chipActive } from "../logic/chip";
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
@@ -16,6 +17,9 @@ import { isUnavailable } from "../hass/types";
 import { LightsController, type LightItem } from "../lights/controller";
 import { RUN } from "../logic/run";
 
+/** How long a tapped chip stays highlighted while the device reports its new state (polled integrations are slow). */
+const CHOSEN_MS = 10_000;
+
 /** Runs something: scenes, scripts, buttons (default by domain) or any configured action. */
 export interface ActionChip {
   type: "action";
@@ -25,6 +29,9 @@ export interface ActionChip {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
+  /** Highlight the chip while the entity's state (or `active_attribute`) has this value. */
+  active_value?: string;
+  active_attribute?: string;
 }
 
 /** Compact light pill: tap toggles, drag dims, hold opens brightness and colour. */
@@ -69,10 +76,14 @@ export function validateChips(c: Partial<ChipsConfig>): void {
  */
 export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   protected static grid = GRID.full;
-  static properties = { ...LumenBaseCard.properties, _fab: { state: true }, _pulse: { state: true } };
+  static properties = { ...LumenBaseCard.properties, _fab: { state: true }, _pulse: { state: true }, _chosen: { state: true } };
   private _fab = false;
-  private _pulse: string | null = null;
+  /** The chip just run; by identity, because several chips may share one entity. */
+  private _pulse: ActionChip | null = null;
   private pulseTimer?: number;
+  /** Chip just tapped: shown as active until the device has had time to report the change. */
+  private _chosen: ActionChip | null = null;
+  private chosenTimer?: number;
   private fabTimer?: number;
   private lights = new LightsController(this);
 
@@ -108,6 +119,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.clearTimeout(this.pulseTimer);
+    window.clearTimeout(this.chosenTimer);
     window.clearTimeout(this.fabTimer);
   }
 
@@ -122,9 +134,14 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   }
 
   private run(s: ActionChip) {
-    this._pulse = s.entity;
+    this._pulse = s;
     window.clearTimeout(this.pulseTimer);
     this.pulseTimer = window.setTimeout(() => (this._pulse = null), 600);
+    if (s.active_value !== undefined) {
+      this._chosen = s;
+      window.clearTimeout(this.chosenTimer);
+      this.chosenTimer = window.setTimeout(() => (this._chosen = null), CHOSEN_MS);
+    }
     if (s.tap_action) {
       handleAction(this, s.tap_action, s.entity, "tap");
       return;
@@ -137,7 +154,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   }
 
   private chipHandlers(s: ActionChip) {
-    return this.actions(`chip:${s.entity}`, s, s.entity, { tap: () => this.run(s) });
+    return this.actions(`chip:${(this._config.chips ?? []).indexOf(s)}`, s, s.entity, { tap: () => this.run(s) });
   }
 
   /** Strong fill of the FAB: inverted by default, the accent when accent_color is set. */
@@ -148,8 +165,10 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   /** Catalog chip: 44 px pill, glyph 18 + name. A scene has no on state, so no chip stays highlighted. */
   private actionChip(s: ActionChip) {
     const off = isUnavailable(this.entity(s.entity));
-    return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-label=${this.chipName(s)}
-      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:1px solid var(--lumen-border);background:var(--lumen-surface);color:var(--lumen-text-1);box-shadow:none;font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
+    const chosen = this._chosen?.entity === s.entity ? this._chosen : null;
+    const active = !off && (chosen ? chosen === s : chipActive(s, this.entity(s.entity)));
+    return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-pressed=${s.active_value !== undefined ? active : nothing} aria-label=${this.chipName(s)}
+      style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:1px solid ${active ? "color-mix(in srgb, var(--lumen-accent) 40%, transparent)" : "var(--lumen-border)"};background:${active ? "var(--lumen-accent-soft)" : "var(--lumen-surface)"};color:${active ? "var(--lumen-accent)" : "var(--lumen-text-1)"};box-shadow:none;font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
       ${icon(this.chipIcon(s), "font-size:18px")}${this.chipName(s)}
     </div>`;
   }
@@ -171,7 +190,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
             window.clearTimeout(this.fabTimer);
             this.fabTimer = window.setTimeout(() => (this._fab = false), 450);
           }} style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:14px;background:transparent;color:var(--lumen-text-1);font:700 13px var(--lumen-font);text-align:left;cursor:pointer">
-            ${icon(this.chipIcon(s), `font-size:18px;flex:none;animation:${this._pulse === s.entity ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}`)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this.chipName(s)}</span>
+            ${icon(this.chipIcon(s), `font-size:18px;flex:none;animation:${this._pulse === s ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}`)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this.chipName(s)}</span>
           </button>`,
         )}
       </div>
@@ -245,6 +264,8 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
                 name: { label: t("editor.name"), selector: { text: {} } },
                 icon: { label: t("editor.icon"), selector: { icon: {} } },
                 tap_action: { label: t("card.chips.tap_action"), selector: { ui_action: {} } },
+                active_value: { label: t("card.chips.active_value"), selector: { text: {} } },
+                active_attribute: { label: t("card.chips.active_attribute"), selector: { text: {} } },
                 power_entity: { label: t("card.chips.power_entity"), selector: { entity: { domain: ["switch", "light", "input_boolean"] } } },
               },
             },
