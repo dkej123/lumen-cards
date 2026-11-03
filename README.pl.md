@@ -280,6 +280,10 @@ Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` 
 
 Stos pionowy i poziomy jak wbudowane w Home Assistant (karty jedna pod drugą albo obok siebie po równo), z tym samym edytorem kart, ale z jedną maksymalną szerokością dla całej grupy – w procentach miejsca albo w pikselach, wyśrodkowaną albo przy brzegu. Karty w środku mogą mieć własne warunki widoczności, tak jak we wbudowanych stosach.
 
+### Oczyszczacz powietrza
+
+Oczyszczacz (także z nawilżaniem) na dowolnej encji `fan`. Sama encja wystarczy: karta pokazuje zasilanie oraz tryby i prędkości, które urządzenie ma. PM2.5, temperaturę, wilgotność, wodę i filtry znajduje sama na tym samym urządzeniu albo w atrybutach. Zmiany widać od razu, a jeśli urządzenie ich nie potwierdzi, karta je cofa i proponuje **Ponów**. Dotknięcie bloku PM2.5 albo przytrzymanie nagłówka otwiera wykresy i dodatkowe sterowanie.
+
 ### Odstęp
 
 Niewidoczna karta z pustym miejscem. Dodaj ją na końcu dashboardu, a pływające przyciski nie zasłonią ostatniej karty: odstęp sam dopasowuje się do ich wysokości na ekranie, a gdy ich nie ma, np. na komputerze, nie zajmuje miejsca. Możesz też ustawić stałą wysokość. Podczas edycji dashboardu widać jej obrys.
@@ -831,6 +835,55 @@ cards:
 | `max_width`, `max_width_unit` | Szerokość całego stosu: piksele albo procent miejsca karty w siatce (lub `max_width: 80%`) | cała szerokość |
 | `align` | Położenie węższego stosu: `center` (na środku), `start` (do lewej), `end` (do prawej); przy `card_width: content` także położenie kart w wierszu | `center` |
 | `card_width` | Tylko stos poziomy: `equal` – karty dzielą szerokość po równo, `content` – każda karta ma szerokość swojej treści i w razie potrzeby przechodzi do następnego wiersza (np. pigułki przypomnień) | `equal` |
+
+<a id="lumen-purifier-card"></a>
+
+### Oczyszczacz powietrza (`lumen-purifier-card`)
+
+```yaml
+type: custom:lumen-purifier-card
+entity: fan.oczyszczacz
+```
+
+Wszystkie ustawienia są w edytorze wizualnym. Funkcje specyficzne dla modelu opisujesz konfiguracją:
+
+```yaml
+type: custom:lumen-purifier-card
+entity: fan.oczyszczacz
+preset_modes: [auto, sleep, night]
+speeds:
+  - { percentage: 20, name: Cichy }
+  - { percentage: 100, name: Turbo }
+humidity_targets: [40, 50, 60]
+target_humidity_service: { service: moja_integracja.set_target_humidity, field: humidity }
+humidifier_when: { attribute: function, contains: Humidification }
+index: { name: Alergeny, attribute: allergen_index, thresholds: [3, 6, 9], labels: [Dobry, Średni, Słaby, Bardzo słaby], max: 12 }
+filters:
+  - { name: HEPA, entity: sensor.oczyszczacz_hepa, unit: h }
+controls:
+  - { entity: switch.oczyszczacz_blokada }
+  - { name: Wyłącznik, attribute: timer, service: moja_integracja.set_timer, field: hours, min: 0, max: 12, min_label: Wył. }
+  - { name: Jasność, attribute: brightness, service: moja_integracja.set_brightness, field: level, options: [0, 50, 100] }
+```
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | Encja `fan` | – |
+| `layout` | `wide` albo `compact` (wiersz 58 px) | `wide` |
+| `hours`, `stale_hours` | Okno wykresu w karcie; po ilu godzinach bez odczytu dane są nieaktualne (0 = nigdy) | 24, 2 |
+| `preset_modes` | Które tryby pokazać i w jakiej kolejności | wszystkie z urządzenia |
+| `speeds` | Własne prędkości: `percentage`, `name` | z `percentage_step`, numerowane |
+| `humidifier_entity` | Standardowa encja `humidifier` (`set_humidity`) | brak |
+| `humidity_targets`, `target_humidity_service` | Przyciski celu; usługa dla integracji bez encji nawilżacza | brak |
+| `humidifier_when` | Pokazuj nawilżanie, gdy atrybut zawiera tekst | zawsze przy odczycie wilgotności |
+| `show_humidifier`, `show_filters` | Pokazuj te części | wł. |
+| `filters` | `name`, `entity` albo `attribute`, `unit` (`%`, `h`, `d`) | sensory z „filter” w nazwie, potem atrybuty |
+| `index` | Drugi wskaźnik: `name`, `entity` albo `attribute`, `thresholds`, `labels`, `max` | brak |
+| `controls` | Sterowanie w szczegółach: encja (`switch`, `light`, `select`, `number`…) albo `attribute` + `service` + `field`, z `options` (wybór) lub `min`/`max`/`step` (− / +) | brak |
+| `confirm_timeout` | Sekundy na potwierdzenie zmiany | 45 |
+| `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Nadpisania sensorów | szukane na urządzeniu |
+
+Skala PM2.5 jest taka sama jak w karcie jakości powietrza. Poza HA, bez rejestru encji, działa szukanie po nazwie `sensor.<fan>_pm2_5` i atrybutach.
 
 <a id="lumen-spacer-card"></a>
 

@@ -284,6 +284,10 @@ The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWea
 
 Vertical and horizontal stacks like Home Assistant's own (cards one under another or side by side with equal widths), with the same card editor, plus one max. width for the whole group – as a percent of its place or in pixels, centred or at one side. The cards inside can have their own visibility conditions, as in HA's stacks.
 
+### Air purifier
+
+A purifier (also with a humidifier) on any `fan` entity. The entity alone is enough: the card shows power and the presets and speeds the device has. It finds PM2.5, temperature, humidity, water and filters on the same device or in its attributes. Changes show at once; if the device does not confirm one, the card undoes it and offers **Retry**. A tap on the PM2.5 block or a hold on the header opens the charts and extra controls.
+
 ### Spacer
 
 An invisible card with empty space. Add it at the end of your dashboard and the floating buttons will not cover the last card: it follows their height on screen and takes no space without them, for example on a computer. You can also set a fixed height. While you edit the dashboard you can see its outline.
@@ -839,6 +843,55 @@ cards:
 | `max_width`, `max_width_unit` | Width of the whole stack: pixels or percent of the card's grid place (or `max_width: 80%`) | full width |
 | `align` | Where a narrower stack sits: `center`, `start` (left), `end` (right); with `card_width: content` also where the cards sit in the row | `center` |
 | `card_width` | Horizontal stack only: `equal` – the cards share the width, `content` – each card is as wide as its content and wraps to the next row when needed (e.g. reminder pills) | `equal` |
+
+<a id="lumen-purifier-card"></a>
+
+### Air purifier (`lumen-purifier-card`)
+
+```yaml
+type: custom:lumen-purifier-card
+entity: fan.purifier
+```
+
+Every setting is in the visual editor. Model-specific functions are configuration:
+
+```yaml
+type: custom:lumen-purifier-card
+entity: fan.purifier
+preset_modes: [auto, sleep, night]
+speeds:
+  - { percentage: 20, name: Silent }
+  - { percentage: 100, name: Turbo }
+humidity_targets: [40, 50, 60]
+target_humidity_service: { service: my_integration.set_target_humidity, field: humidity }
+humidifier_when: { attribute: function, contains: Humidification }
+index: { name: Allergens, attribute: allergen_index, thresholds: [3, 6, 9], labels: [Good, Fair, Poor, Very poor], max: 12 }
+filters:
+  - { name: HEPA, entity: sensor.purifier_hepa, unit: h }
+controls:
+  - { entity: switch.purifier_child_lock }
+  - { name: Timer, attribute: timer, service: my_integration.set_timer, field: hours, min: 0, max: 12, min_label: "Off" }
+  - { name: Brightness, attribute: brightness, service: my_integration.set_brightness, field: level, options: [0, 50, 100] }
+```
+
+| Setting | What it does | Default |
+|---|---|---|
+| `entity` | A `fan` entity | – |
+| `layout` | `wide` or `compact` (a 58 px row) | `wide` |
+| `hours`, `stale_hours` | Chart window on the card; hours without a reading until data is outdated (0 = never) | 24, 2 |
+| `preset_modes` | Which presets to show, in what order | all the device has |
+| `speeds` | Own speeds: `percentage`, `name` | from `percentage_step`, numbered |
+| `humidifier_entity` | A standard `humidifier` entity (`set_humidity`) | none |
+| `humidity_targets`, `target_humidity_service` | Target buttons; a service for integrations without a humidifier entity | none |
+| `humidifier_when` | Show humidifying while an attribute contains a text | always with a humidity reading |
+| `show_humidifier`, `show_filters` | Show these parts | on |
+| `filters` | `name`, `entity` or `attribute`, `unit` (`%`, `h`, `d`) | sensors with "filter" in the name, then attributes |
+| `index` | A second index: `name`, `entity` or `attribute`, `thresholds`, `labels`, `max` | none |
+| `controls` | Controls in the details: an entity (`switch`, `light`, `select`, `number`…) or `attribute` + `service` + `field`, with `options` (a choice) or `min`/`max`/`step` (− / +) | none |
+| `confirm_timeout` | Seconds to confirm a change | 45 |
+| `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Sensor overrides | found on the device |
+
+The PM2.5 scale is the one of the air quality card. Outside HA, without the entity registry, the card looks for `sensor.<fan>_pm2_5` and attributes.
 
 <a id="lumen-spacer-card"></a>
 

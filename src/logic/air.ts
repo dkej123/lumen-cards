@@ -25,6 +25,9 @@ const levelFor = (value: number, thresholds: number[]): number => {
   return index === -1 ? thresholds.length : index;
 };
 
+/** Level 0–5 of a PM2.5 reading (the scale of the air quality card). */
+export const pm25Level = (value: number): number => levelFor(value, PM25);
+
 export interface AirQuality {
   level: number | null;
   pm25: number | null;

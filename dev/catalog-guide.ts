@@ -127,6 +127,16 @@ export const GUIDE: Record<string, Guide> = {
     need: "Pomocnik z listą opcji (input_select / select)",
     controls: [["tap", "Dotknij, żeby rozwinąć listę i wybrać."]],
   },
+  oczyszczacz: {
+    tagline: "Tryby, prędkość, jakość powietrza i filtry w jednym kaflu.",
+    about: "Działa z każdym oczyszczaczem, który w Home Assistant jest encją fan. Sama encja wystarczy: karta pokazuje zasilanie, tryby i prędkości urządzenia. PM2.5, wilgotność, wodę i filtry znajduje sama, gdy urządzenie je ma. Funkcje specyficzne dla modelu dodajesz w ustawieniach, bez kodu.",
+    need: "Oczyszczacz jako encja fan",
+    controls: [
+      ["tap", "Przyciski zmieniają tryb i prędkość od razu, a gdy urządzenie nie potwierdzi, karta to cofa."],
+      ["tap", "Dotknij bloku PM2.5: wykresy z 6, 24 lub 48 godzin i dodatkowe sterowanie."],
+      ["hold", "Przytrzymaj nagłówek, żeby otworzyć szczegóły."],
+    ],
+  },
   wentylator: {
     tagline: "Prędkość wentylatora suwakiem.",
     about: "Duży kafel z suwakiem. Ikona kręci się tym szybciej, im wyższa prędkość.",

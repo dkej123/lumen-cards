@@ -9,6 +9,8 @@ export interface Toast {
   title: string;
   text: string;
   code?: string;
+  /** A button on the toast (stays longer). */
+  action?: { label: string; run: () => void };
 }
 
 /** Page-wide toast stack (design `renderToasts`): max 3, 3.8 s each, top centre. */
@@ -21,7 +23,7 @@ class LumenToaster extends LitElement {
   push(t: Toast) {
     const id = Math.random();
     this.items = [...this.items.slice(-2), { ...t, id }];
-    window.setTimeout(() => (this.items = this.items.filter((x) => x.id !== id)), 3800);
+    window.setTimeout(() => (this.items = this.items.filter((x) => x.id !== id)), t.action ? 8000 : 3800);
   }
 
   render() {
@@ -33,6 +35,12 @@ class LumenToaster extends LitElement {
           <div style="width:38px;height:38px;flex:none;border-radius:13px;display:grid;place-items:center;font-size:21px;background:color-mix(in srgb, ${c} 16%, transparent);color:${c}">${icon(t.icon)}</div>
           <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:750">${t.title}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-2);overflow:hidden;text-overflow:ellipsis">${t.text}</div></div>
           ${t.code ? html`<span style="padding:4px 8px;border-radius:8px;background:color-mix(in srgb, ${c} 16%, transparent);color:${c};font:600 12px var(--lumen-mono)">${t.code}</span>` : nothing}
+          ${t.action
+            ? html`<button class="press" @click=${() => {
+                this.items = this.items.filter((x) => x !== t);
+                t.action!.run();
+              }} style="flex:none;min-height:36px;padding:0 12px;border:0;border-radius:11px;background:var(--lumen-surface-2);color:var(--lumen-text-1);font:750 13px var(--lumen-font);cursor:pointer">${t.action.label}</button>`
+            : nothing}
         </div>`;
       })}
     </div>`;

@@ -24,6 +24,8 @@ export interface HassLike {
   states: HassEntities;
   user?: HassUser;
   themes?: { darkMode?: boolean };
+  /** Entity registry of the frontend: finds the other entities of a device. */
+  entities?: Record<string, { device_id?: string | null } | undefined>;
   config?: { location_name?: string; latitude?: number; longitude?: number };
   /** WebSocket connection (subscriptions such as dom_panel/labels/subscribe). */
   connection?: {

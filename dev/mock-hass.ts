@@ -125,6 +125,14 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       e("light.kitchen_all", "on", { friendly_name: "Kitchen · all", brightness: 204, entity_id: ["light.kitchen", "light.sofa", "light.ceiling"], ...CT }),
       e("light.bedroom", "unavailable", { friendly_name: "Bedroom" }),
       e("light.hall", "unknown", { friendly_name: "Hall", ...CT }),
+      e("fan.air_purifier", "on", { friendly_name: "Oczyszczacz", icon: "mdi:air-purifier", model: "Demo 3000", preset_modes: ["auto", "allergen", "sleep", "manual"], preset_mode: "auto", percentage: 40, percentage_step: 20, supported_features: 57, function: "Purification & Humidification", pm25: 8, allergen_index: 2, temperature: 22, humidity: 44, target_humidity: 50, water_level: 80, pre_filter: 318, hepa_filter: 1941, carbon_filter: 1941, wick_filter: 1200, timer: 0, timer_remaining_minutes: 0, light_brightness: 75, display_light: true, child_lock: false }),
+      e("sensor.air_purifier_pm2_5", "8", { friendly_name: "PM2.5", device_class: "pm25", unit_of_measurement: "µg/m³" }),
+      e("sensor.air_purifier_humidity", "44", { friendly_name: "Wilgotność", device_class: "humidity", unit_of_measurement: "%" }),
+      e("sensor.air_purifier_allergens", "2", { friendly_name: "Alergeny" }),
+      e("fan.simple_purifier", "on", { friendly_name: "Oczyszczacz", preset_modes: ["Auto", "Silent", "Favorite"], preset_mode: "Auto", percentage: 33, percentage_step: 33.33, supported_features: 57 }),
+      e("sensor.simple_purifier_pm2_5", "62", { friendly_name: "PM2.5", device_class: "pm25", unit_of_measurement: "µg/m³" }),
+      e("fan.old_filter_purifier", "on", { friendly_name: "Oczyszczacz", preset_modes: ["auto", "sleep"], preset_mode: "sleep", percentage: 20, percentage_step: 25, supported_features: 57, pm25: 18, filter_life_remaining: 4, water_level: 15, humidity: 38, target_humidity: 50 }),
+      e("fan.gone_purifier", "unavailable", { friendly_name: "Oczyszczacz" }),
       e("fan.purifier", "on", { friendly_name: "Purifier", icon: "mdi:air-purifier" }),
       e("input_boolean.purifier_night", "off", { friendly_name: "Night mode", icon: "mdi:weather-night" }),
       e("input_boolean.purifier_lock", "unavailable", { friendly_name: "Child lock", icon: "mdi:lock-outline" }),
@@ -193,6 +201,14 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       if (domainService(ctx, domain, service, data, id)) return undefined;
       if (domain === "light")
         set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin, color_mode: "color_temp" } : data.hs_color ? { hs_color: data.hs_color, color_mode: "hs", rgb_color: undefined } : {});
+      if (domain === "fan") {
+        const old = states[id]?.attributes ?? {};
+        const on = service === "turn_off" ? "off" : "on";
+        const speed = data.percentage !== undefined ? { percentage: data.percentage, preset_mode: (old.preset_modes as string[] | undefined)?.includes("manual") ? "manual" : old.preset_mode } : {};
+        set(id, on, { ...speed, ...(data.preset_mode ? { preset_mode: data.preset_mode } : {}) });
+      }
+      // The made-up purifier's own services: "demo_purifier.set_x" writes the attribute of the field.
+      if (domain === "demo_purifier") set(id, states[id].state, Object.fromEntries(Object.entries(data).map(([k, v]) => [{ hours: "timer", level: "light_brightness", light: "display_light", lock: "child_lock", humidity: "target_humidity" }[k] ?? k, v])));
       // Gate with a response sensor: every third press fails (catalog live demo).
       if (domain === "script" && id === "script.gate") {
         const n = (gatePresses = gatePresses + 1);
@@ -229,7 +245,7 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
     callWS: async <T>() => {
       // A day of made-up history for the sparklines.
       const hist: Record<string, { s: string; lu: number }[]> = {};
-      for (const [id, base] of [["sensor.living_temp", 21], ["sensor.outside_temp", 7], ["sensor.pm25", 15], ["sensor.pm10", 24]] as const)
+      for (const [id, base] of [["sensor.living_temp", 21], ["sensor.outside_temp", 7], ["sensor.pm25", 15], ["sensor.pm10", 24], ["sensor.air_purifier_pm2_5", 8], ["sensor.air_purifier_humidity", 44], ["sensor.air_purifier_allergens", 2], ["sensor.simple_purifier_pm2_5", 62]] as const)
         hist[id] = Array.from({ length: 48 }, (_, i) => ({ s: String(base + Math.sin(i / 5) * 2), lu: Date.now() / 1000 - (48 - i) * 1800 }));
       return hist as T;
     },

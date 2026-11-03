@@ -132,6 +132,7 @@ With `auto`, a card follows either its own width or the screen. Cards without a 
 | `lumen-media-card` | card < 280 px |
 | `lumen-number-card` | card < 200 px |
 | `lumen-person-card` | card < 240 px |
+| `lumen-purifier-card` | never (only `layout: compact`) |
 | `lumen-select-card` | card < 200 px |
 | `lumen-sensor-card` | never (only `layout: compact`) |
 | `lumen-weather-card` | card < 240 px |

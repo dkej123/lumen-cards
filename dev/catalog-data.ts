@@ -24,6 +24,22 @@ export interface Section {
 }
 
 const reminder = { entity: "input_boolean.bike_battery", name: "Rower", icon: "mdi:bicycle-electric", color: "danger", value: "Bateria {value}%", value_entity: "sensor.bike_battery", title: "Naładuj rower", message: "Bateria spadła poniżej 20 %." };
+const purifierFull = {
+  entity: "fan.air_purifier",
+  name: "Oczyszczacz",
+  speeds: [{ percentage: 20, name: "Cichy" }, { percentage: 40, name: "1" }, { percentage: 60, name: "2" }, { percentage: 80, name: "3" }, { percentage: 100, name: "Turbo" }],
+  humidity_targets: [40, 50, 60],
+  target_humidity_service: { service: "demo_purifier.set_target_humidity", field: "humidity" },
+  humidifier_when: { attribute: "function", contains: "Humidification" },
+  index: { name: "Alergeny", entity: "sensor.air_purifier_allergens", thresholds: [3, 6, 9], labels: ["Dobry", "Średni", "Słaby", "Bardzo słaby"], max: 12 },
+  filters: [{ name: "Wstępny", attribute: "pre_filter", unit: "h" }, { name: "HEPA", attribute: "hepa_filter", unit: "h" }, { name: "Węglowy", attribute: "carbon_filter", unit: "h" }, { name: "Knot", attribute: "wick_filter", unit: "h" }],
+  controls: [
+    { name: "Wyłącznik czasowy", attribute: "timer", service: "demo_purifier.set_timer", field: "hours", min: 0, max: 12, min_label: "Wył." },
+    { name: "Jasność panelu", attribute: "light_brightness", service: "demo_purifier.set_light_brightness", field: "level", options: [0, 25, 50, 75, 100] },
+    { name: "Podświetlenie wyświetlacza", attribute: "display_light", service: "demo_purifier.set_display_light", field: "light" },
+    { name: "Blokada rodzicielska", attribute: "child_lock", service: "demo_purifier.set_child_lock", field: "lock" },
+  ],
+};
 const thermostats = ["th_living", "th_bedroom", "th_bathroom"].map((id) => ({ type: "custom:lumen-climate-card", entity: `climate.${id}` }));
 
 export const SECTIONS: Section[] = [
@@ -212,6 +228,20 @@ export const SECTIONS: Section[] = [
     group: "Dom",
     lead: "Opcje input_select / select jako lista rozwijana, z drugą encją pod spodem.",
     variants: [{ label: "Odkurzacz", config: { entity: "input_select.vacuum_mode", secondary_entity: "sensor.vacuum_status" }, hint: "Dotknij, żeby wybrać tryb." }],
+  },
+  {
+    id: "oczyszczacz",
+    name: "Oczyszczacz powietrza",
+    card: "purifier",
+    group: "Klimat",
+    lead: "Oczyszczacz na dowolnej encji fan: tryby i prędkość z urządzenia, reszta tylko gdy ją ma.",
+    variants: [
+      { label: "Z nawilżaniem", config: purifierFull, hint: "Zmień tryb albo prędkość. Dotknij bloku PM2.5, żeby otworzyć wykresy i sterowanie." },
+      { label: "Samo fan", config: { entity: "fan.simple_purifier" }, hint: "Bez konfiguracji: tryby i trzy prędkości wynikają z urządzenia. Zła jakość powietrza barwi kartę." },
+      { label: "Alarmy", config: { entity: "fan.old_filter_purifier" }, hint: "Mało wody i filtr do wymiany, z atrybutów urządzenia." },
+      { label: "Mała", config: { entity: "fan.air_purifier", name: "Oczyszczacz", layout: "compact" }, span: 8 },
+      { label: "Niedostępny", config: { entity: "fan.gone_purifier" } },
+    ],
   },
   {
     id: "wentylator",

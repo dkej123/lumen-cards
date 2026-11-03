@@ -363,3 +363,154 @@ describe("light chip", () => {
     el.remove();
   });
 });
+
+describe("purifier card", () => {
+  const fan = (attrs: Record<string, unknown> = {}, state = "on") => ent("fan.air", state, { friendly_name: "Air", supported_features: 57, percentage_step: 20, preset_modes: ["auto", "manual"], preset_mode: "auto", percentage: 40, ...attrs });
+  const texts = (el: HTMLElement) => el.shadowRoot!.textContent ?? "";
+  const btn = (el: HTMLElement, label: string) => [...el.shadowRoot!.querySelectorAll("button")].find((b) => b.textContent?.trim() === label)!;
+
+  it("shows errors for a missing entity and another domain", async () => {
+    const a = await mount("purifier", {}, mockHass());
+    expect(texts(a)).toContain("entity");
+    const b = await mount("purifier", { entity: "light.x" }, mockHass());
+    expect(texts(b)).toContain("fan");
+    a.remove();
+    b.remove();
+  });
+
+  it("works on a bare fan: no PM block, filters or humidity", async () => {
+    const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": ent("fan.air", "on", { friendly_name: "Air" }) }));
+    expect(texts(el)).toContain("Air");
+    expect(texts(el)).not.toContain("PM2.5");
+    expect(btn(el, "Manual")).toBeUndefined();
+    el.remove();
+  });
+
+  it("follows the fan's own speed step and presets, and hides what the features do not allow", async () => {
+    const h = mockHass({ "fan.air": fan({ percentage_step: 33.33, preset_modes: ["Silent", "Auto"], preset_mode: "Auto" }) });
+    const el = await mount("purifier", { entity: "fan.air" }, h);
+    expect(el.shadowRoot!.querySelectorAll('[role="group"]')[1].querySelectorAll("button").length).toBe(3);
+    expect(btn(el, "Silent")).toBeTruthy();
+    el.remove();
+    const none = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": fan({ supported_features: 48 }) }));
+    expect(none.shadowRoot!.querySelectorAll('[role="group"]').length).toBe(0);
+    none.remove();
+  });
+
+  it("maps every fan action to its service", async () => {
+    const h = mockHass({ "fan.air": fan() });
+    const el = await mount("purifier", { entity: "fan.air" }, h);
+    btn(el, "Manual").click();
+    expect(h.calls.at(-1)).toEqual(["fan", "set_preset_mode", { preset_mode: "manual" }, { entity_id: "fan.air" }]);
+    btn(el, "3").click();
+    expect(h.calls.at(-1)).toEqual(["fan", "set_percentage", { percentage: 60 }, { entity_id: "fan.air" }]);
+    el.shadowRoot!.querySelector<HTMLElement>('[aria-label="Power"]')!.click();
+    expect(h.calls.at(-1)).toEqual(["fan", "turn_off", {}, { entity_id: "fan.air" }]);
+    el.remove();
+  });
+
+  it("off: a preset or a speed turns the fan on with it", async () => {
+    const h = mockHass({ "fan.air": fan({}, "off") });
+    const el = await mount("purifier", { entity: "fan.air" }, h);
+    btn(el, "Auto").click();
+    expect(h.calls.at(-1)).toEqual(["fan", "turn_on", { preset_mode: "auto" }, { entity_id: "fan.air" }]);
+    el.remove();
+  });
+
+  it("a speed shows Manual at once, only when the fan has that preset", async () => {
+    const h = mockHass({ "fan.air": fan() });
+    const el = await mount("purifier", { entity: "fan.air" }, h);
+    btn(el, "3").click();
+    await settle(el);
+    expect(btn(el, "Manual").getAttribute("aria-pressed")).toBe("true");
+    el.remove();
+    const h2 = mockHass({ "fan.air": fan({ preset_modes: ["auto"] }) });
+    const el2 = await mount("purifier", { entity: "fan.air" }, h2);
+    btn(el2, "3").click();
+    await settle(el2);
+    expect(btn(el2, "Auto").getAttribute("aria-pressed")).toBe("true");
+    el2.remove();
+  });
+
+  it("a change HA does not confirm is undone with a retry; a confirmed one stays", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = mockHass({ "fan.air": fan() });
+      const el = await mount("purifier", { entity: "fan.air", confirm_timeout: 45 }, h);
+      btn(el, "Manual").click();
+      await el.updateComplete;
+      expect(btn(el, "Manual").getAttribute("aria-pressed")).toBe("true");
+      vi.advanceTimersByTime(45_100);
+      await el.updateComplete;
+      expect(btn(el, "Manual").getAttribute("aria-pressed")).toBe("false");
+      const toast = document.querySelector("lumen-cards-toaster") as HTMLElement & { items: { action?: { run(): void } }[] };
+      expect(toast.items.at(-1)?.action).toBeTruthy();
+      toast.items.at(-1)!.action!.run();
+      expect(h.calls.filter((c) => c[1] === "set_preset_mode").length).toBe(2);
+      vi.advanceTimersByTime(45_100);
+      el.remove();
+      toast.remove();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a failed call is undone right away", async () => {
+    const h = mockHass({ "fan.air": fan() });
+    h.callService = () => Promise.reject(new Error("nope"));
+    const el = await mount("purifier", { entity: "fan.air" }, h);
+    btn(el, "Manual").click();
+    await settle(el);
+    await settle(el);
+    expect(btn(el, "Manual").getAttribute("aria-pressed")).toBe("false");
+    el.remove();
+    document.querySelector("lumen-cards-toaster")?.remove();
+  });
+
+  it("reads sensors by device class on the same device, with attributes as the fallback", async () => {
+    const h = mockHass({ "fan.air": fan({ pm25: 99 }), "sensor.weird_name": ent("sensor.weird_name", "7", { device_class: "pm25" }) });
+    h.entities = { "fan.air": { device_id: "d" }, "sensor.weird_name": { device_id: "d" } };
+    const el = await mount("purifier", { entity: "fan.air" }, h);
+    expect(texts(el)).toContain("7");
+    expect(texts(el)).not.toContain("99");
+    el.remove();
+    const attr = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": fan({ pm25: 99 }) }));
+    expect(texts(attr)).toContain("99");
+    attr.remove();
+  });
+
+  it("warns about water and a worn filter, in the unit the device uses", async () => {
+    const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": fan({ humidity: 40, target_humidity: 50, water_level: 15, filter_life_remaining: 4 }) }));
+    expect(texts(el)).toContain("Refill water");
+    expect(texts(el)).toContain("Replace filter");
+    el.remove();
+  });
+
+  it("a configured service control sends its field and shows the value at once", async () => {
+    const h = mockHass({ "fan.air": fan({ child_lock: false }) });
+    const el = await mount("purifier", { entity: "fan.air", controls: [{ name: "Lock", attribute: "child_lock", service: "my.set_lock", field: "lock" }] }, h);
+    (el as unknown as { sheet: { show(): void } }).sheet.show();
+    await settle(el);
+    const row = layer()!.querySelector<HTMLElement>('[role="switch"]')!;
+    row.click();
+    expect(h.calls.at(-1)).toEqual(["my", "set_lock", { lock: true }, { entity_id: "fan.air" }]);
+    await settle(el);
+    expect(layer()!.querySelector('[role="switch"]')!.getAttribute("aria-checked")).toBe("true");
+    el.remove();
+  });
+
+  it("a humidifier entity uses the standard service", async () => {
+    const h = mockHass({ "fan.air": fan(), "humidifier.air": ent("humidifier.air", "on", { current_humidity: 40, humidity: 50 }) });
+    const el = await mount("purifier", { entity: "fan.air", humidifier_entity: "humidifier.air", humidity_targets: [40, 60] }, h);
+    btn(el, "60%").click();
+    expect(h.calls.at(-1)).toEqual(["humidifier", "set_humidity", { humidity: 60 }, { entity_id: "humidifier.air" }]);
+    el.remove();
+  });
+
+  it("unavailable: only the header", async () => {
+    const el = await mount("purifier", { entity: "fan.air" }, mockHass({ "fan.air": ent("fan.air", "unavailable", { friendly_name: "Air" }) }));
+    expect(el.shadowRoot!.querySelector('[aria-label="Power"]')).toBeNull();
+    expect(el.shadowRoot!.querySelectorAll('[role="group"]').length).toBe(0);
+    el.remove();
+  });
+});

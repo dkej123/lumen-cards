@@ -13,6 +13,9 @@ const RELOAD_MS = 10 * 60_000;
 const DAY_MS = 24 * 3_600_000;
 
 const points = new Map<string, Point[]>();
+/** How far back an entity is kept, when a card wants more than a day. */
+const spans = new Map<string, number>();
+const spanOf = (id: string) => spans.get(id) ?? DAY_MS;
 const loadedAt = new Map<string, number>();
 const listeners = new Set<() => void>();
 let queue = new Set<string>();
@@ -23,10 +26,15 @@ async function flush() {
   queue = new Set();
   const hass = flushHass;
   if (!hass || !ids.length) return;
+  await Promise.all([...new Set(ids.map(spanOf))].map((span) => fetchSpan(hass, ids.filter((id) => spanOf(id) === span), span)));
+  listeners.forEach((l) => l());
+}
+
+async function fetchSpan(hass: HassLike, ids: string[], span: number) {
   try {
     const result = await hass.callWS<Record<string, { s: string; lu: number }[]>>({
       type: "history/history_during_period",
-      start_time: new Date(Date.now() - DAY_MS).toISOString(),
+      start_time: new Date(Date.now() - span).toISOString(),
       entity_ids: ids,
       minimal_response: true,
       no_attributes: true,
@@ -35,7 +43,6 @@ async function flush() {
       let lu = 0;
       points.set(id, (result[id] ?? []).map((p) => ({ t: (lu = p.lu ?? lu) * 1000, v: Number(p.s) })).filter((p) => !Number.isNaN(p.v)));
     }
-    listeners.forEach((l) => l());
   } catch {
     // History is decorative; keep the last data and retry on the next round.
     ids.forEach((id) => loadedAt.delete(id));
@@ -54,6 +61,8 @@ export class History implements ReactiveController {
     /** The entities the card shows history for. */
     private ids: () => (string | undefined)[],
     private onLoad: () => void = () => host.requestUpdate(),
+    /** Keep this many hours (more than the default day). */
+    private hours = 24,
   ) {
     host.addController(this);
   }
@@ -88,6 +97,15 @@ export class History implements ReactiveController {
   load(hass: HassLike | undefined, ids: (string | undefined)[]) {
     if (!hass) return;
     const now = Date.now();
+    const span = this.hours * 3_600_000;
+    if (span > DAY_MS) {
+      for (const id of ids) {
+        if (id && spanOf(id) < span) {
+          spans.set(id, span);
+          loadedAt.delete(id);
+        }
+      }
+    }
     const due = ids.filter((id): id is string => !!id && now - (loadedAt.get(id) ?? 0) > RELOAD_MS);
     if (!due.length) return;
     due.forEach((id) => {
@@ -107,15 +125,22 @@ export class History implements ReactiveController {
     const at = e ? Date.parse(e.last_changed) : NaN;
     const last = list.at(-1);
     if (current !== null && Number.isFinite(at) && (!last || at > last.t)) list.push({ t: at, v: current });
-    const keep = list.findIndex((p) => p.t > Date.now() - DAY_MS);
+    const keep = list.findIndex((p) => p.t > Date.now() - spanOf(entity));
     if (keep > 1) points.set(entity, list.slice(keep - 1));
   }
 
+  /** Lowest and highest value of the last `hours`. */
+  range(entity: string, hours: number): [number, number] | undefined {
+    const from = Date.now() - hours * 3_600_000;
+    const vs = (points.get(entity) ?? []).filter((p) => p.t > from).map((p) => p.v);
+    return vs.length ? [Math.min(...vs), Math.max(...vs)] : undefined;
+  }
+
   /** Time-axis sparkline of the last `hours` (pure). */
-  spark(entity: string, hours: number, w: number, h: number, minSpan = 0) {
+  spark(entity: string, hours: number, w: number, h: number, minSpan = 0, range?: [number, number]) {
     const list = points.get(entity);
     if (!list) return { line: "", area: "" };
     const now = Date.now();
-    return sparkPath(list, now - hours * 3_600_000, now, w, h, minSpan);
+    return sparkPath(list, now - hours * 3_600_000, now, w, h, minSpan, range);
   }
 }

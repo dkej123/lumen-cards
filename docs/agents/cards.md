@@ -16,7 +16,7 @@ Reading the tables:
 - `ui_color` takes a Home Assistant colour name, hex or rgb.
 - `action` selectors (`ui_action`) take a Home Assistant action: `action` is one of `toggle`, `more-info`, `perform-action`, `call-service`, `navigate`, `url`, `assist`, `none`.
 
-## Index (28)
+## Index (29)
 
 | Tag | Name | Picker suggests it for |
 |---|---|---|
@@ -40,6 +40,7 @@ Reading the tables:
 | [`lumen-number-card`](#lumen-number-card) | Lumen · Number | input_number, number |
 | [`lumen-person-card`](#lumen-person-card) | Lumen · Person | person |
 | [`lumen-popup-card`](#lumen-popup-card) | Lumen · Pop-up |  |
+| [`lumen-purifier-card`](#lumen-purifier-card) | Lumen · Air purifier |  |
 | [`lumen-reminder-card`](#lumen-reminder-card) | Lumen · Reminder | input_boolean |
 | [`lumen-select-card`](#lumen-select-card) | Lumen · Select | input_select, select |
 | [`lumen-sensor-card`](#lumen-sensor-card) | Lumen · Sensor | sensor |
@@ -703,6 +704,78 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
+
+## `lumen-purifier-card`
+
+Lumen · Air purifier: Purifier and humidifier in one tile
+
+- YAML: `type: custom:lumen-purifier-card`
+- `layout: auto` is compact when: never (only `layout: compact`)
+- Default `grid_options`: `{"columns":12,"min_columns":6,"rows":"auto"}`
+- Config error with no options: "The entity field is missing"
+- Starting config: `{"entity":"fan.air_purifier"}`
+
+| Field | Req | Selector | Allowed values | Default | Label | Help |
+|---|---|---|---|---|---|---|
+| `entity` | yes | entity (domain: fan) |  |  | Entity |  |
+| `name` |  | text |  |  | Name |  |
+| `layout` |  | select | `wide` (Full), `compact` (Compact) |  | Layout | A wide card or a compact row |
+| `hours` |  | number (min: 6; max: 48; step: 6; unit: h) |  | `24` | Chart range (h) |  |
+| `stale_hours` |  | number (min: 0; max: 48; unit: h) |  | `2` | Data outdated after (h) |  |
+| `preset_modes` |  | select[] | `auto` (Auto), `allergen` (Allergen), `sleep` (Sleep), `manual` (Manual), `bacteria` (Bacteria), `night` (Night) |  | Presets | Which modes to show and in what order. Empty = all the device has |
+| `speeds` |  | object[] |  |  | Speed names | Empty = buttons follow the device's speed step and are numbered |
+| `speeds[].percentage` | yes | number (min: 1; max: 100; unit: %) |  |  | Percent |  |
+| `speeds[].name` |  | text |  |  | Name |  |
+| `show_humidifier` |  | boolean |  | `true` | Show humidifying |  |
+| `humidifier_entity` |  | entity (domain: humidifier) |  |  | Humidifier entity |  |
+| `humidity_targets` |  | select[] | `30`, `40`, `50`, `60`, `70` |  | Humidity targets | Target buttons. They work with a humidifier entity or the service below |
+| `target_humidity_service` |  | object |  |  | Target humidity service | For integrations without a humidifier entity, e.g. service: my_integration.set_target_humidity, field: humidity |
+| `target_humidity_service.service` |  | text |  |  | Service (domain.service) |  |
+| `target_humidity_service.field` |  | text |  |  | Value field |  |
+| `humidifier_when` |  | object |  |  | Humidifying only when | E.g. attribute: function, contains: Humidification. Empty = always when there is a humidity reading |
+| `humidifier_when.attribute` |  | text |  |  | Purifier attribute |  |
+| `humidifier_when.contains` |  | text |  |  | Contains text |  |
+| `show_filters` |  | boolean |  | `true` | Show filters |  |
+| `filters` |  | object[] |  |  | Filters | Empty = sensors with “filter” in the name on this device. Attribute or entity, unit %, h or d |
+| `filters[].name` |  | text |  |  | Name |  |
+| `filters[].entity` |  | entity (domain: sensor) |  |  | Entity |  |
+| `filters[].attribute` |  | text |  |  | Purifier attribute |  |
+| `filters[].unit` |  | select | `%`, `h`, `d` |  | Unit |  |
+| `controls` |  | object[] |  |  | Controls in the details | An entity (switch, list, number) or your own service: attribute, service and value field |
+| `controls[].name` |  | text |  |  | Name |  |
+| `controls[].icon` |  | icon |  |  | Icon |  |
+| `controls[].entity` |  | entity (domain: switch, light, input_boolean, select, input_select, number, input_number) |  |  | Entity |  |
+| `controls[].attribute` |  | text |  |  | Purifier attribute |  |
+| `controls[].service` |  | text |  |  | Service (domain.service) |  |
+| `controls[].field` |  | text |  |  | Value field |  |
+| `controls[].kind` |  | select | `switch` (Switch), `segment` (Choice), `stepper` (− / +) |  | Kind |  |
+| `controls[].options` |  | object |  |  | Options (YAML) |  |
+| `controls[].min` |  | number |  |  | Minimum |  |
+| `controls[].max` |  | number |  |  | Maximum |  |
+| `controls[].step` |  | number |  |  | Step |  |
+| `controls[].min_label` |  | text |  |  | Text of the minimum, e.g. Off |  |
+| `confirm_timeout` |  | number (min: 5; max: 300; unit: s) |  | `45` | Time to confirm | An unconfirmed change is undone after this time. Default 45 s |
+| `pm25_entity` |  | entity (domain: sensor) |  |  | PM2.5 sensor |  |
+| `temperature_entity` |  | entity (domain: sensor) |  |  | Temperature sensor |  |
+| `humidity_entity` |  | entity (domain: sensor) |  |  | Humidity sensor |  |
+| `target_humidity_entity` |  | entity (domain: sensor) |  |  | Target humidity sensor |  |
+| `water_level_entity` |  | entity (domain: sensor) |  |  | Water level sensor |  |
+| `water_empty_entity` |  | entity (domain: binary_sensor) |  |  | Empty tank sensor |  |
+| `index` |  | object |  |  | Second index | A value beside PM2.5, e.g. an allergen index: name, attribute or entity, thresholds, labels, max |
+| `index.name` |  | text |  |  | Name |  |
+| `index.entity` |  | entity (domain: sensor) |  |  | Entity |  |
+| `index.attribute` |  | text |  |  | Purifier attribute |  |
+| `index.thresholds` |  | object |  |  | Thresholds (YAML) |  |
+| `index.labels` |  | object |  |  | Level names (YAML) |  |
+| `index.max` |  | number |  |  | Maximum |  |
+| `tap_action` |  | ui_action |  |  | Tap action |  |
+| `hold_action` |  | ui_action |  |  | Hold action |  |
+| `double_tap_action` |  | ui_action |  |  | Double tap action |  |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
+| `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
+| `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
+| `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
 
 ## `lumen-reminder-card`
 
