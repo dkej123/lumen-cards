@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karty Lumen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400..800&display=swap">
+<style>
+/* Layout: a guide for people setting up their home – a hero with a small live dashboard on an evening sky,
+   three start steps, a gallery of every card, then one section per card (live card beside plain words). */
+:root {
+  --bg: #F2F0EC;
+  --paper: #FBFAF8;
+  --fg: #1B1916;
+  --fg-2: #57524B;
+  --fg-3: #857F76;
+  --line: rgba(28, 24, 20, .10);
+  --line-2: rgba(28, 24, 20, .16);
+  --accent: oklch(0.52 0.13 255);
+  --accent-soft: color-mix(in oklch, var(--accent) 13%, transparent);
+  --ink: #17191F;
+  --ink-fg: #D9DCE4;
+  --ink-dim: #7C8292;
+  --ink-line: rgba(255, 255, 255, .07);
+  --ink-btn: rgba(255, 255, 255, .08);
+  --t-key: #8FB8FF;
+  --t-str: #E9C48A;
+  --t-num: #F29E7A;
+  --sky: linear-gradient(165deg, #B7C2DC 0%, #CFCBE0 46%, #E9E2DC 100%);
+  --display: "Bricolage Grotesque", "Manrope", system-ui, sans-serif;
+  --body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121110; --paper: #1A1917; --fg: #F2EEE8; --fg-2: #B4ADA3; --fg-3: #8D877E;
+    --line: rgba(255, 248, 240, .09); --line-2: rgba(255, 248, 240, .15);
+    --accent: oklch(0.76 0.11 255); --ink: #0D0E12;
+    --sky: linear-gradient(165deg, #1E2333 0%, #272335 50%, #2A2420 100%);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121110; --paper: #1A1917; --fg: #F2EEE8; --fg-2: #B4ADA3; --fg-3: #8D877E;
+  --line: rgba(255, 248, 240, .09); --line-2: rgba(255, 248, 240, .15);
+  --accent: oklch(0.76 0.11 255); --ink: #0D0E12;
+  --sky: linear-gradient(165deg, #1E2333 0%, #272335 50%, #2A2420 100%);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  margin: 0;
+  padding-block: 0 72px;
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in oklch, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 19px; text-decoration: none; margin-right: auto; }
+.brand i { width: 24px; height: 24px; border-radius: 8px; background: var(--sky); box-shadow: inset 0 0 0 1px var(--line-2); }
+.top nav { display: flex; gap: 4px; }
+.top nav a { text-decoration: none; font-weight: 700; font-size: 14px; color: var(--fg-2); padding: 6px 10px; border-radius: 9px; }
+.top nav a:hover { color: var(--fg); background: var(--accent-soft); }
+#theme { border: 1px solid var(--line-2); background: var(--paper); width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; cursor: pointer; font-size: 18px; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; align-items: center; padding-block: 64px 56px; }
+.hero h1 { font-size: clamp(40px, 6.4vw, 72px); line-height: .98; letter-spacing: -.04em; margin: 14px 0 20px; }
+.hero p { margin: 0; font-size: 18px; color: var(--fg-2); max-width: 46ch; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 15px; padding: 12px 20px; border-radius: 14px; border: 1px solid var(--line-2); }
+.btn.main { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn:hover { border-color: var(--fg-3); }
+.hero .try { margin-top: 22px; font-size: 14px; color: var(--fg-3); }
+.try b { color: var(--fg-2); }
+.hero-sky { background: var(--sky); border-radius: 28px; padding: 28px; box-shadow: inset 0 0 0 1px var(--line); }
+#hero-cards { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; max-width: 460px; margin: 0 auto; }
+#hero-cards > * { min-width: 0; }
+
+/* start */
+.start { padding-block: 56px; border-top: 1px solid var(--line); }
+.section-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; max-width: 62ch; }
+.section-head h2 { font-size: clamp(30px, 4vw, 42px); letter-spacing: -.03em; line-height: 1.05; }
+.section-head p { margin: 0; color: var(--fg-2); }
+.start-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; list-style: none; padding: 0; margin: 0; }
+.start-steps > li { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 10px; counter-increment: s; min-width: 0; }
+.start-steps > li::before { content: counter(s); font-family: var(--display); font-weight: 700; font-size: 15px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.start-steps h3 { font-size: 20px; letter-spacing: -.01em; }
+.start-steps p, .start-steps ol { margin: 0; color: var(--fg-2); font-size: 15px; }
+.start-steps ol { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.start-steps details { font-size: 14px; color: var(--fg-2); }
+.start-steps summary { cursor: pointer; font-weight: 700; color: var(--fg); }
+code, .pill { font-family: var(--mono); font-size: .86em; background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+.pill { font-family: var(--body); font-weight: 700; white-space: nowrap; }
+
+/* gallery */
+.all { padding-block: 56px; border-top: 1px solid var(--line); }
+#filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.filter { border: 1px solid var(--line-2); background: transparent; padding: 7px 15px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--fg-2); cursor: pointer; }
+.filter:hover { color: var(--fg); border-color: var(--fg-3); }
+.filter[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+#gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.tile { display: flex; flex-direction: column; text-decoration: none; border-radius: 22px; background: var(--paper); border: 1px solid var(--line); overflow: hidden; transition: transform .2s, border-color .2s; }
+.tile:hover { transform: translateY(-2px); border-color: var(--line-2); }
+.tile-prev { background: var(--sky); padding: 18px; height: 190px; display: grid; align-content: center; overflow: hidden; }
+.tile-prev > * { min-width: 0; }
+.tile-words { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 2px; }
+.tile-words b { font-family: var(--display); font-size: 19px; letter-spacing: -.01em; }
+.tile-words span { color: var(--fg-2); font-size: 14px; }
+
+/* card sections */
+#cards { display: flex; flex-direction: column; }
+.group-title { font-size: 14px; font-family: var(--body); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-3); padding-top: 56px; border-top: 1px solid var(--line); }
+.card { padding-block: 36px 40px; display: flex; flex-direction: column; gap: 22px; }
+.card + .card { border-top: 1px dashed var(--line-2); }
+.card-head { display: flex; flex-direction: column; gap: 4px; }
+.card-head h2 { font-size: clamp(30px, 4vw, 40px); letter-spacing: -.03em; line-height: 1.05; }
+.tagline { margin: 4px 0 0; font-size: 18px; color: var(--fg-2); }
+.card-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 32px; align-items: start; }
+.demo { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.looks { display: flex; flex-wrap: wrap; gap: 6px; }
+.look { border: 1px solid var(--line-2); background: transparent; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--fg-2); cursor: pointer; }
+.look:hover { color: var(--fg); border-color: var(--fg-3); }
+.look[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.stage { min-height: 220px; border-radius: 24px; background: var(--sky); padding: 32px 22px; display: grid; place-items: center; box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+.stage-grid { --span: 12; width: 100%; max-width: 540px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; }
+.stage-grid > * { grid-column: span var(--span); min-width: 0; }
+.hint { margin: 0; font-size: 14px; color: var(--fg-2); display: flex; gap: 8px; }
+.hint::before { content: "Wypróbuj"; flex: none; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 6px; height: fit-content; margin-top: 1px; }
+.words { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.about { margin: 0; max-width: 60ch; }
+.need { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 15px; }
+.need span { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); }
+.words h3 { font-size: 18px; letter-spacing: -.01em; }
+.how { list-style: none; padding: 0; margin: -6px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.how li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.g-icon { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; background: var(--accent-soft); color: var(--accent); font-size: 19px; }
+.how li > span:last-child { padding-top: 5px; }
+
+.more { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
+.fold + .fold { border-top: 1px solid var(--line); }
+.fold summary { list-style: none; display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; padding: 15px 18px; cursor: pointer; border-radius: 18px; }
+.fold summary::-webkit-details-marker { display: none; }
+.fold-title { font-weight: 800; }
+.fold-note { color: var(--fg-3); font-size: 14px; }
+.chev { margin-left: auto; font-size: 22px; color: var(--fg-3); transition: transform .2s; display: grid; }
+.fold[open] .chev { transform: rotate(180deg); }
+.fold > :last-child:not(summary) { margin: 0 18px 18px; }
+.steps { padding-left: 22px; display: flex; flex-direction: column; gap: 6px; color: var(--fg-2); }
+.steps b { color: var(--fg); }
+.settings { columns: 3 260px; column-gap: 40px; }
+.set-group { break-inside: avoid; padding-bottom: 22px; }
+.set-group h4 { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); }
+.set-group ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.set-group li { display: flex; flex-direction: column; gap: 2px; font-size: 14.5px; }
+.set-group li > span { color: var(--fg-2); font-size: 14px; }
+.choices { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.choices i { font-style: normal; font-size: 12.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--fg-2); }
+.yaml { background: var(--ink); border-radius: 14px; overflow: hidden; }
+.yaml-bar { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--ink-line); color: var(--ink-dim); font-size: 13px; }
+.yaml-bar > span { flex: 1; }
+.copy { display: inline-flex; align-items: center; gap: 6px; border: 0; background: var(--ink-btn); color: var(--ink-fg); font-size: 13px; font-weight: 700; padding: 6px 11px; border-radius: 9px; cursor: pointer; }
+.copy:hover { color: #fff; }
+.yaml pre { margin: 0; padding: 14px 16px; font: 400 13px/1.65 var(--mono); color: var(--ink-fg); overflow-x: auto; }
+.t-key { color: var(--t-key); } .t-str { color: var(--t-str); } .t-num { color: var(--t-num); } .t-dim { color: var(--ink-dim); }
+
+/* questions */
+.faq { padding-block: 56px 0; border-top: 1px solid var(--line); }
+.faq-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
+.faq-list details + details { border-top: 1px solid var(--line); }
+.faq-list summary { cursor: pointer; padding: 15px 18px; font-weight: 800; }
+.faq-list p { margin: 0 18px 16px; color: var(--fg-2); max-width: 70ch; }
+footer { padding-top: 40px; color: var(--fg-3); font-size: 14px; }
+.loading { padding: 32px 0; color: var(--fg-3); }
+body.ready .loading { display: none; }
+
+@media (max-width: 900px) {
+  .hero, .card-body { grid-template-columns: minmax(0, 1fr); }
+  .hero { gap: 32px; padding-block: 40px; }
+  .start-steps { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .top nav { display: none; }
+  .hero-sky { padding: 16px; border-radius: 22px; }
+  .stage { padding: 20px 12px; }
+  .tile-prev { height: 150px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#start-strony"><i aria-hidden="true"></i>Lumen</a>
+    <nav aria-label="Strona">
+      <a href="#jak-zaczac">Jak zacząć</a>
+      <a href="#karty">Karty</a>
+      <a href="#pytania">Pytania</a>
+      <a href="https://github.com/dkej123/lumen-cards">GitHub</a>
+    </nav>
+    <button id="theme" type="button" aria-label="Zmień motyw"></button>
+  </div>
+</header>
+
+<div class="wrap" id="start-strony">
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Karty do Home Assistant</span>
+      <h1>Dom, który dobrze wygląda na telefonie.</h1>
+      <p>Lumen to <span id="count">25</span> kart do dashboardu Home Assistant: światła, alarm, klimatyzacja, pogoda, domownicy i więcej. Ustawiasz je w zwykłym oknie edycji, bez pisania kodu.</p>
+      <div class="cta">
+        <a class="btn main" href="#karty">Zobacz wszystkie karty</a>
+        <a class="btn" href="#jak-zaczac">Jak zainstalować</a>
+      </div>
+      <p class="try">Karty na tej stronie działają naprawdę, w wymyślonym domu. Śmiało klikaj. Kod do alarmu i zamka: <b>1234</b>.</p>
+    </div>
+    <div class="hero-sky"><div id="hero-cards"></div></div>
+  </section>
+
+  <section class="start" id="jak-zaczac">
+    <div class="section-head">
+      <span class="eyebrow">Jak zacząć</span>
+      <h2>Trzy kroki do pierwszej karty</h2>
+      <p>Potrzebujesz Home Assistant 2026.6 lub nowszego i sklepu z dodatkami HACS.</p>
+    </div>
+    <ol class="start-steps">
+      <li>
+        <h3>Zainstaluj przez HACS</h3>
+        <ol>
+          <li>Otwórz <b>HACS</b>, menu <b>⋮</b> → <b>Custom repositories</b>.</li>
+          <li>Wklej <code>https://github.com/dkej123/lumen-cards</code>, typ <b>Dashboard</b>, <b>Add</b>.</li>
+          <li>Wyszukaj <b>Lumen Cards</b> i kliknij <b>Download</b>.</li>
+        </ol>
+        <details>
+          <summary>Bez HACS</summary>
+          <p>Skopiuj <code>lumen-cards.js</code> i pliki czcionek do <code>config/www/lumen-cards/</code>, potem w <b>Ustawienia → Dashboardy → ⋮ → Zasoby</b> dodaj <code>/local/lumen-cards/lumen-cards.js</code> jako moduł JavaScript.</p>
+        </details>
+      </li>
+      <li>
+        <h3>Odśwież przeglądarkę</h3>
+        <p>Na komputerze <b>Ctrl+F5</b> (na Macu <b>Cmd+Shift+R</b>).</p>
+        <p>W aplikacji na telefonie: <b>Ustawienia → Aplikacja towarzysząca → Debugowanie → Zresetuj pamięć podręczną interfejsu</b>.</p>
+      </li>
+      <li>
+        <h3>Dodaj kartę</h3>
+        <p>Kliknij <b>ołówek</b> na dashboardzie, potem <b>+ Dodaj kartę</b> i wpisz <b>Lumen</b>. Wybierz kartę i swoje urządzenie, a podgląd od razu się zmieni.</p>
+        <p>W zakładce <b>Według encji</b> Lumen sam podpowie kartę do wybranego urządzenia.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="all" id="karty">
+    <div class="section-head">
+      <span class="eyebrow">Karty</span>
+      <h2>Wybierz kartę, żeby zobaczyć, co potrafi</h2>
+      <p>Każda karta sama zmniejsza się w wąskim miejscu, np. na telefonie albo w rzędzie kilku kart.</p>
+    </div>
+    <div id="filters" role="group" aria-label="Pokaż karty"></div>
+    <div id="gallery"></div>
+  </section>
+
+  <main id="cards"><p class="loading">Wczytuję karty…</p></main>
+
+  <section class="faq" id="pytania">
+    <div class="section-head">
+      <span class="eyebrow">Pytania</span>
+      <h2>Gdy coś nie działa</h2>
+    </div>
+    <div class="faq-list">
+      <details><summary>Zainstalowałem, ale nie widzę kart.</summary><p>Odśwież przeglądarkę klawiszami Ctrl+F5 (na Macu Cmd+Shift+R). W aplikacji na telefonie: Ustawienia → Aplikacja towarzysząca → Debugowanie → Zresetuj pamięć podręczną interfejsu. Potem przy dodawaniu karty wpisz „Lumen”.</p></details>
+      <details><summary>Widzę „Custom element doesn't exist: lumen-…”.</summary><p>To samo: odśwież przeglądarkę. Jeśli dalej to widać, sprawdź Ustawienia → Dashboardy → ⋮ → Zasoby. Powinien tam być jeden wpis kończący się na lumen-cards.js.</p></details>
+      <details><summary>Na telefonie karty wyglądają inaczej niż na tablecie.</summary><p>Tak ma być: mała karta pokazuje wersję kompaktową. W ustawieniach karty możesz wybrać wygląd Pełny albo Kompaktowy, żeby się nie przełączała.</p></details>
+      <details><summary>Jak zrobić tło z prawdziwą pogodą?</summary><p>Dodaj kartę Lumen · Tło pogodowe raz w każdym widoku i wybierz w niej swoją prognozę. Niebo za kartami pokaże słońce, chmury, deszcz albo śnieg, w dzień i w nocy.</p></details>
+      <details><summary>Pływający przycisk coś zasłania.</summary><p>Kilka pływających przycisków samo ustawia się jeden nad drugim. Żeby podnieść je wyżej, np. nad dolny pasek nawigacji, dodaj do motywu Home Assistant lumen-cards-fab-bottom: 90px.</p></details>
+      <details><summary>Czy mogę zmienić kolory?</summary><p>Tak. Każda karta ma w ustawieniach kolor akcentu i poświaty. Dla wszystkich kart naraz ustaw je w motywie Home Assistant.</p></details>
+      <details><summary>Czy da się obsługiwać karty klawiaturą?</summary><p>Tak. Tab przechodzi między kartami, Enter albo spacja to dotknięcie, Shift+Enter to przytrzymanie. Strzałki zmieniają jasność, a Escape zamyka okna.</p></details>
+    </div>
+  </section>
+
+  <footer>Lumen Cards · karty na tej stronie sterują wymyślonym domem, bez połączenia z Twoim Home Assistant.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<script type="module" src="catalog.js"></script>
+</body>
+</html>
