@@ -2,11 +2,12 @@ import { css, html, nothing, svg, type TemplateResult } from "lit";
 import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { Optimistic, CONFIRM_MS, SEND_DELAY_MS } from "../core/controllers/optimistic";
-import { actions, appearance, form, select, type Schema } from "../core/form";
+import { actions, advanced, appearance, form, nameIcon, select, type Schema } from "../core/form";
 import { History } from "../core/history";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
+import { WFX } from "../core/parts";
 import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { Sheet } from "../core/sheet";
@@ -49,6 +50,7 @@ export interface PurifierFilter {
 export interface PurifierConfig extends BaseConfig {
   entity: string;
   name?: string;
+  icon?: string;
   hours?: number;
   stale_hours?: number;
   /** Seconds a change waits for HA before it is undone. */
@@ -74,9 +76,12 @@ export interface PurifierConfig extends BaseConfig {
   /** Humidifying is available only while this attribute of the fan contains the text. */
   humidifier_when?: { attribute?: string; contains?: string };
   /** A second air index beside PM2.5. */
-  index?: { name?: string; entity?: string; attribute?: string; thresholds?: number[]; labels?: string[]; max?: number };
+  index?: { name?: string; entity?: string; attribute?: string; thresholds?: (number | string)[]; labels?: string[]; max?: number };
   filters?: PurifierFilter[];
+  /** Extra controls in the details: entities, or (still valid here) services. */
   controls?: PurifierControl[];
+  /** Extra controls that call a service, listed after `controls`. */
+  service_controls?: PurifierControl[];
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
 }
@@ -91,6 +96,22 @@ const MONO = "font:500 11px var(--lumen-mono);color:var(--lumen-text-3)";
 export function validatePurifier(c: Partial<PurifierConfig>): void {
   if (!c.entity || typeof c.entity !== "string") throw new Error(t("card.purifier.error.entity"));
   if (!c.entity.startsWith("fan.")) throw new Error(t("card.purifier.error.domain"));
+}
+
+/** The index's thresholds as numbers: the editor stores what is typed, as text. */
+const thresholdsOf = (index: PurifierConfig["index"]): number[] => listOf<number | string>(index?.thresholds).map(Number).filter(Number.isFinite);
+
+/** A value typed in the editor is text; a device attribute that holds 1 must get and match the number 1. */
+const typedValue = (v: unknown): unknown => (typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v);
+
+/** Short forms of YAML spelled out for the editor's fields: plain options, numeric thresholds. */
+export function purifierFormConfig(c: Record<string, unknown>): Record<string, unknown> {
+  const options = (x: PurifierControl) => (x?.options ? { ...x, options: x.options.map((o) => (typeof o === "object" ? o : { value: String(o) })) } : x);
+  const out = { ...c };
+  for (const key of ["controls", "service_controls"]) if (Array.isArray(c[key])) out[key] = (c[key] as PurifierControl[]).map(options);
+  const index = c.index as PurifierConfig["index"];
+  if (Array.isArray(index?.thresholds)) out.index = { ...index, thresholds: index.thresholds.map(String) };
+  return out;
 }
 
 const has = (features: unknown, bit: number) => ((Number(features) || 0) & bit) !== 0;
@@ -283,6 +304,10 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     return this._config.name ?? String(this.fan?.attributes.friendly_name ?? t("card.purifier.name"));
   }
 
+  private get iconName(): string {
+    return this._config.icon || String(this.fan?.attributes.icon ?? "mdi:air-purifier");
+  }
+
   private stateLine(): string {
     if (isUnavailable(this.fan)) return t("common.unavailable");
     if (!this.on) return t("card.purifier.label.state_off");
@@ -341,7 +366,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
 
   /** The configured controls in one shape. */
   private controls(): Control[] {
-    return listOf<PurifierControl>(this._config.controls).flatMap((x, i): Control[] => {
+    return [...listOf<PurifierControl>(this._config.controls), ...listOf<PurifierControl>(this._config.service_controls)].flatMap((x, i): Control[] => {
       const key = `control:${i}`;
       const base = { key, icon: x.icon, min: Number(x.min ?? 0), max: Number(x.max ?? 100), step: Number(x.step ?? 1), minLabel: x.min_label };
       const options = (x.options ?? []).map((o) => (typeof o === "object" ? { value: o.value, label: o.label ?? String(o.value), icon: o.icon } : { value: o, label: String(o) }));
@@ -364,7 +389,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
       const [d, s] = x.service.split(".", 2);
       const path = `${this._config.entity}|${x.attribute}`;
       const kind = x.kind ?? (options.length ? "segment" : x.max !== undefined ? "stepper" : "switch");
-      return [{ ...base, name: x.name ?? humanize(x.attribute), kind, path, options, change: (v) => ({ expected: { [path]: v }, send: () => this._hass!.callService(d, s, { [x.field!]: v }, { entity_id: this._config.entity }) }) }];
+      return [{ ...base, name: x.name ?? humanize(x.attribute), kind, path, options, change: (v) => ({ expected: { [path]: typedValue(v) }, send: () => this._hass!.callService(d, s, { [x.field!]: typedValue(v) }, { entity_id: this._config.entity }) }) }];
     });
   }
 
@@ -430,8 +455,9 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     const idx = this.indexReading;
     const cfg = this._config.index;
     const age = this.entity(pm.entity) ?? this.fan;
-    const band = idx ? bandOf(idx.value, cfg?.thresholds ?? []) : 0;
-    const bands = (cfg?.thresholds?.length ?? 0) + 1;
+    const limits = thresholdsOf(cfg);
+    const band = idx ? bandOf(idx.value, limits) : 0;
+    const bands = limits.length + 1;
     return html`<button class="press" aria-haspopup="dialog" aria-label="PM2.5 ${pm.value} µg/m³ · ${t(AIR_LEVELS[level].title)}" @click=${this.openDetails} style="position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:0;border-radius:18px;background:var(--lumen-surface-2);color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%;box-sizing:border-box">
       ${spark.line
         ? html`<svg aria-hidden="true" viewBox="0 0 300 90" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:62%;color:${color};opacity:${staleNow ? 0.4 : 1};pointer-events:none">${svg`<path d=${spark.area} fill="currentColor" opacity="0.14"></path><path d=${spark.line} fill="none" stroke="currentColor" stroke-opacity="0.65" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>`}</svg>`
@@ -538,7 +564,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
 
   private headIcon(size: number, radius: number, gone: boolean, on: boolean, dot?: string) {
     return html`<span class=${on ? "float-wrap" : ""} style="position:relative;flex:none;width:${size}px;height:${size}px;border-radius:${radius}px;display:grid;place-items:center;font-size:${size > 36 ? 24 : 20}px;background:${gone ? "transparent" : on ? "var(--lumen-accent-soft)" : "var(--lumen-surface-2)"};color:${gone ? "var(--lumen-unavailable)" : on ? "var(--lumen-accent)" : "var(--lumen-text-2)"}">
-      <span class=${on ? "float" : ""} style="display:grid;${on ? "animation:lumenPurifierFloat 2.6s ease-in-out infinite" : ""}">${icon(String(this.fan?.attributes.icon ?? "mdi:air-purifier"))}</span>
+      <span class=${on ? "float" : ""} style="display:grid;${on ? "animation:lumenPurifierFloat 2.6s ease-in-out infinite" : ""}">${icon(this.iconName)}</span>
       ${dot ? html`<span style="position:absolute;right:-2px;top:-2px;width:10px;height:10px;border-radius:50%;background:${dot};box-shadow:0 0 0 2px var(--lumen-surface-solid)"></span>` : nothing}
     </span>`;
   }
@@ -552,7 +578,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     const level = pm ? pm25Level(pm.value) : 0;
     const roomy = !this._width || this._width >= COMPACT_PILL;
     const line = this.stateLine();
-    return html`<div data-fx ${pressable(h)} class="press" aria-label="${this.name} · ${line}" style="display:flex;align-items:center;gap:10px;min-height:58px;padding:0 8px 0 12px;box-sizing:border-box;border-radius:20px;background:${gone ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};${gone ? "" : glass};border:${gone ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};box-shadow:${gone ? "none" : "var(--lumen-shadow-1)"};user-select:none;touch-action:pan-y">
+    return html`<div data-fx ${pressable(h)} class="press" aria-label="${this.name} · ${line}" style="position:relative;display:flex;align-items:center;gap:10px;min-height:58px;padding:0 8px 0 12px;box-sizing:border-box;border-radius:20px;background:${gone ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};${gone ? "" : glass};border:${gone ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};box-shadow:${gone ? "none" : "var(--lumen-shadow-1)"};user-select:none;touch-action:pan-y">${WFX}
       <button aria-label=${t("card.purifier.label.details")} aria-haspopup="dialog" @pointerdown=${stop} @pointerup=${stop} @click=${(e: Event) => {
         e.stopPropagation();
         if (!gone) this.openDetails();
@@ -577,7 +603,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     const flat = gone || stale;
     const line = this.stateLine();
     const h = this.actions("head", c, c.entity, { tap: c.tap_action ? undefined : null, hold: this.openDetails });
-    return html`<div data-fx style="display:flex;flex-direction:column;gap:${narrow ? 12 : 14}px;padding:${narrow ? 12 : 16}px;box-sizing:border-box;border-radius:22px;background:${flat ? "var(--lumen-surface-2)" : bad ? `color-mix(in srgb, ${bad} 9%, var(--lumen-surface))` : "var(--lumen-surface)"};${flat ? "" : glass};border:${flat ? "1px dashed var(--lumen-border-strong)" : bad ? `1px solid color-mix(in srgb, ${bad} 35%, transparent)` : "1px solid var(--lumen-border)"};box-shadow:${flat ? "none" : "var(--lumen-shadow-1)"}">
+    return html`<div data-fx style="position:relative;display:flex;flex-direction:column;gap:${narrow ? 12 : 14}px;padding:${narrow ? 12 : 16}px;box-sizing:border-box;border-radius:22px;background:${flat ? "var(--lumen-surface-2)" : bad ? `color-mix(in srgb, ${bad} 9%, var(--lumen-surface))` : "var(--lumen-surface)"};${flat ? "" : glass};border:${flat ? "1px dashed var(--lumen-border-strong)" : bad ? `1px solid color-mix(in srgb, ${bad} 35%, transparent)` : "1px solid var(--lumen-border)"};box-shadow:${flat ? "none" : "var(--lumen-shadow-1)"}">${WFX}
       <div style="display:flex;align-items:center;gap:12px">
         <div ${pressable(h)} aria-label="${this.name} · ${line}" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;user-select:none;touch-action:pan-y">
           ${this.headIcon(40, 14, gone, !gone && this.on)}
@@ -650,7 +676,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
       ${hasCharts
         ? html`${this.group([6, 24, 48].map((h) => this.seg({ active: hours === h, label: `${h} h`, on: () => (this._range = h) })), 3, t("card.purifier.label.range"))}
             ${this.chart({ name: "PM2.5", entity: pm?.entity, value: `${pm?.value ?? ""} µg/m³`, hours, range: [0, Math.max(pmPeak * 1.15, PM25[1] * 1.5)], lines: [PM25[0], PM25[1]], color: pm ? aq(pm25Level(pm.value)) : "var(--lumen-info)" })}
-            ${this.chart({ name: c.index?.name ?? "", entity: idx?.entity, value: String(idx?.value ?? ""), hours, range: [0, Number(c.index?.max) || Math.max(idxPeak * 1.15, 1)], lines: (c.index?.thresholds ?? []).slice(0, 2), color: "var(--lumen-accent)" })}
+            ${this.chart({ name: c.index?.name ?? "", entity: idx?.entity, value: String(idx?.value ?? ""), hours, range: [0, Number(c.index?.max) || Math.max(idxPeak * 1.15, 1)], lines: thresholdsOf(c.index).slice(0, 2), color: "var(--lumen-accent)" })}
             ${this.humidifierOn ? this.chart({ name: t("card.purifier.label.humidity"), entity: hum?.entity, value: `${hum?.value ?? ""}%`, hours, range: [20, 80], lines: this.target !== undefined ? [this.target] : [], color: "var(--lumen-info)" }) : nothing}`
         : nothing}
       ${controls.map((x) => this.controlView(x))}
@@ -659,7 +685,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
             (f) => html`<div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:14px;background:${f.tone === "danger" ? "color-mix(in srgb, var(--lumen-danger) 8%, transparent)" : "var(--lumen-surface-2)"}"><span style="flex:1;min-width:0;font-size:14px;font-weight:700">${f.name}</span><span style="font-size:13px;font-weight:750;font-variant-numeric:tabular-nums">${f.value} ${f.unit}</span><span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;background:color-mix(in srgb, ${TONE_VAR[f.tone]} 18%, transparent);color:${TONE_VAR[f.tone]};font-size:11px;font-weight:750">${t(`card.purifier.filter.state.${f.tone}`)}</span></div>`,
           )}</div>`
         : nothing}`;
-    return this.sheet.render({ title: this.name, sub: sub || undefined, icon: String(this.fan?.attributes.icon ?? "mdi:air-purifier"), iconBg: this.on ? "var(--lumen-accent-soft)" : undefined, iconFg: this.on ? "var(--lumen-accent)" : undefined }, body, nothing, { body: "gap:14px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))" });
+    return this.sheet.render({ title: this.name, sub: sub || undefined, icon: this.iconName, iconBg: this.on ? "var(--lumen-accent-soft)" : undefined, iconFg: this.on ? "var(--lumen-accent)" : undefined }, body, nothing, { body: "gap:14px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))" });
   }
 
   // ---------------------------------------------------------------- editor
@@ -674,49 +700,66 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     const text = { text: {} };
     const sensor = (name: string): Schema => ({ name, selector: { entity: { domain: "sensor" } } });
     const modes = Object.keys(MODE_ICONS).map((value) => ({ value, label: t(`card.purifier.mode.${value}`) }));
-    return form([
-      { name: "entity", required: true, selector: { entity: { domain: "fan" } } },
-      { name: "name", selector: text },
-      { name: "layout", helper: "purifier_layout", selector: select([["wide", "editor.layout.wide"], ["compact", "editor.layout.compact"]]) },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "hours", default: 24, selector: { number: { min: 6, max: 48, step: 6, mode: "box", unit_of_measurement: "h" } } }, { name: "stale_hours", default: 2, selector: { number: { min: 0, max: 48, mode: "box", unit_of_measurement: "h" } } }] },
-      { name: "preset_modes", helper: "purifier_preset_modes", selector: { select: { multiple: true, custom_value: true, reorder: true, mode: "list", options: modes } } },
-      { name: "speeds", helper: "purifier_speeds", selector: { object: { multiple: true, label_field: "name", description_field: "percentage", fields: { percentage: { label: lab("speed_percentage"), required: true, selector: { number: { min: 1, max: 100, mode: "box", unit_of_measurement: "%" } } }, name: { label: t("editor.name"), selector: text } } } } },
-      {
-        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.humidifier_group"), icon: "mdi:water-percent",
-        schema: [
-          { name: "show_humidifier", default: true, selector: { boolean: {} } },
-          { name: "humidifier_entity", selector: { entity: { domain: "humidifier" } } },
-          { name: "humidity_targets", helper: "purifier_humidity_targets", selector: { select: { multiple: true, custom_value: true, mode: "dropdown", options: ["30", "40", "50", "60", "70"] } } },
-          { name: "target_humidity_service", helper: "purifier_target_service", selector: { object: { fields: { service: { label: lab("service"), selector: text }, field: { label: lab("field"), selector: text } } } } },
-          { name: "humidifier_when", helper: "purifier_when", selector: { object: { fields: { attribute: { label: lab("attribute"), selector: text }, contains: { label: lab("contains"), selector: text } } } } },
-        ],
+    const controlOptions = { label: lab("options"), selector: { object: { multiple: true, label_field: "label", description_field: "value", fields: { value: { label: lab("option_value"), required: true, selector: text }, label: { label: lab("option_label"), selector: text }, icon: { label: t("editor.icon"), selector: { icon: {} } } } } } };
+    const range = { min: { label: lab("min"), selector: { number: { mode: "box" } } }, max: { label: lab("max"), selector: { number: { mode: "box" } } }, step: { label: lab("step"), selector: { number: { mode: "box" } } }, min_label: { label: lab("min_label"), selector: text } };
+    const look = { name: { label: t("editor.name"), selector: text }, icon: { label: t("editor.icon"), selector: { icon: {} } } };
+    const service = { attribute: { label: lab("attribute"), selector: text }, service: { label: lab("service"), selector: text }, field: { label: lab("field"), selector: text }, kind: { label: lab("kind"), selector: select([["switch", "card.purifier.editor.kind_switch"], ["segment", "card.purifier.editor.kind_segment"], ["stepper", "card.purifier.editor.kind_stepper"]]) } };
+    const controlEntity = ["switch", "light", "input_boolean", "select", "input_select", "number", "input_number"];
+    return form(
+      (c) => {
+        // A service control written in `controls` stays editable there; new ones go in their own list.
+        const old = !c || listOf<PurifierControl>(c.controls).some((x) => x?.service || x?.attribute);
+        return [
+          { name: "entity", required: true, selector: { entity: { domain: "fan" } } },
+          nameIcon(),
+          { name: "layout", helper: "purifier_layout", selector: select([["wide", "editor.layout.wide"], ["compact", "editor.layout.compact"]]) },
+          { name: "", type: "grid", flatten: true, schema: [{ name: "hours", default: 24, selector: { number: { min: 6, max: 48, step: 6, mode: "box", unit_of_measurement: "h" } } }, { name: "stale_hours", default: 2, selector: { number: { min: 0, max: 48, mode: "box", unit_of_measurement: "h" } } }] },
+          { name: "preset_modes", helper: "purifier_preset_modes", selector: { select: { multiple: true, custom_value: true, reorder: true, mode: "list", options: modes } } },
+          { name: "speeds", helper: "purifier_speeds", selector: { object: { multiple: true, label_field: "name", description_field: "percentage", fields: { percentage: { label: lab("speed_percentage"), required: true, selector: { number: { min: 1, max: 100, mode: "box", unit_of_measurement: "%" } } }, name: { label: t("editor.name"), selector: text } } } } },
+          {
+            name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.humidifier_group"), icon: "mdi:water-percent",
+            schema: [
+              { name: "show_humidifier", default: true, selector: { boolean: {} } },
+              { name: "humidifier_entity", selector: { entity: { domain: "humidifier" } } },
+              { name: "humidity_targets", helper: "purifier_humidity_targets", selector: { select: { multiple: true, custom_value: true, mode: "dropdown", options: ["30", "40", "50", "60", "70"] } } },
+              { name: "target_humidity_service", helper: "purifier_target_service", selector: { object: { fields: { service: { label: lab("service"), selector: text }, field: { label: lab("field"), selector: text } } } } },
+              { name: "humidifier_when", helper: "purifier_when", selector: { object: { fields: { attribute: { label: lab("attribute"), selector: text }, contains: { label: lab("contains"), selector: text } } } } },
+            ],
+          },
+          {
+            name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.filters_group"), icon: "mdi:air-filter",
+            schema: [
+              { name: "show_filters", default: true, selector: { boolean: {} } },
+              { name: "filters", helper: "purifier_filters", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { name: { label: t("editor.name"), selector: text }, entity: { label: t("editor.entity"), selector: { entity: { domain: "sensor" } } }, attribute: { label: lab("attribute"), selector: text }, unit: { label: lab("unit"), selector: { select: { mode: "dropdown", options: ["%", "h", "d"] } } } } } } },
+            ],
+          },
+          {
+            name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.controls_group"), icon: "mdi:tune-variant",
+            schema: [
+              { name: "controls", helper: "purifier_controls", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { ...look, entity: { label: t("editor.entity"), required: !old, selector: { entity: { domain: controlEntity } } }, ...(old ? service : {}), options: controlOptions, ...range } } } },
+              { name: "service_controls", helper: "purifier_service_controls", selector: { object: { multiple: true, label_field: "name", description_field: "service", fields: { ...look, ...service, options: controlOptions, ...range } } } },
+              { name: "confirm_timeout", helper: "purifier_confirm_timeout", default: 45, selector: { number: { min: 5, max: 300, mode: "box", unit_of_measurement: "s" } } },
+              { name: "send_delay", helper: "purifier_send_delay", default: 0.8, selector: { number: { min: 0, max: 10, step: 0.1, mode: "box", unit_of_measurement: "s" } } },
+            ],
+          },
+          {
+            name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.sensors_group"), icon: "mdi:gauge",
+            schema: [
+              sensor("pm25_entity"), sensor("temperature_entity"), sensor("humidity_entity"),
+              { name: "target_humidity_entity", selector: { entity: { domain: ["sensor", "number", "input_number"] } } },
+              sensor("water_level_entity"),
+              { name: "water_empty_entity", selector: { entity: { domain: "binary_sensor" } } },
+              { name: "index", helper: "purifier_index", selector: { object: { fields: { name: { label: t("editor.name"), selector: text }, entity: { label: t("editor.entity"), selector: { entity: { domain: "sensor" } } }, attribute: { label: lab("attribute"), selector: text }, thresholds: { label: lab("thresholds"), selector: { select: { multiple: true, custom_value: true, mode: "dropdown", options: [] } } }, labels: { label: lab("labels"), selector: { select: { multiple: true, custom_value: true, mode: "dropdown", options: [] } } }, max: { label: lab("max"), selector: { number: { mode: "box" } } } } } } },
+            ],
+          },
+          actions(),
+          advanced(),
+          appearance({ layout: false }),
+        ];
       },
-      {
-        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.filters_group"), icon: "mdi:air-filter",
-        schema: [
-          { name: "show_filters", default: true, selector: { boolean: {} } },
-          { name: "filters", helper: "purifier_filters", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { name: { label: t("editor.name"), selector: text }, entity: { label: t("editor.entity"), selector: { entity: { domain: "sensor" } } }, attribute: { label: lab("attribute"), selector: text }, unit: { label: lab("unit"), selector: { select: { mode: "dropdown", options: ["%", "h", "d"] } } } } } } },
-        ],
-      },
-      {
-        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.controls_group"), icon: "mdi:tune-variant",
-        schema: [
-          { name: "controls", helper: "purifier_controls", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { name: { label: t("editor.name"), selector: text }, icon: { label: t("editor.icon"), selector: { icon: {} } }, entity: { label: t("editor.entity"), selector: { entity: { domain: ["switch", "light", "input_boolean", "select", "input_select", "number", "input_number"] } } }, attribute: { label: lab("attribute"), selector: text }, service: { label: lab("service"), selector: text }, field: { label: lab("field"), selector: text }, kind: { label: lab("kind"), selector: select([["switch", "card.purifier.editor.kind_switch"], ["segment", "card.purifier.editor.kind_segment"], ["stepper", "card.purifier.editor.kind_stepper"]]) }, options: { label: lab("options"), selector: { object: {} } }, min: { label: lab("min"), selector: { number: { mode: "box" } } }, max: { label: lab("max"), selector: { number: { mode: "box" } } }, step: { label: lab("step"), selector: { number: { mode: "box" } } }, min_label: { label: lab("min_label"), selector: text } } } } },
-          { name: "confirm_timeout", helper: "purifier_confirm_timeout", default: 45, selector: { number: { min: 5, max: 300, mode: "box", unit_of_measurement: "s" } } },
-          { name: "send_delay", helper: "purifier_send_delay", default: 0.8, selector: { number: { min: 0, max: 10, step: 0.1, mode: "box", unit_of_measurement: "s" } } },
-        ],
-      },
-      {
-        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.sensors_group"), icon: "mdi:gauge",
-        schema: [
-          sensor("pm25_entity"), sensor("temperature_entity"), sensor("humidity_entity"), sensor("target_humidity_entity"), sensor("water_level_entity"),
-          { name: "water_empty_entity", selector: { entity: { domain: "binary_sensor" } } },
-          { name: "index", helper: "purifier_index", selector: { object: { fields: { name: { label: t("editor.name"), selector: text }, entity: { label: t("editor.entity"), selector: { entity: { domain: "sensor" } } }, attribute: { label: lab("attribute"), selector: text }, thresholds: { label: lab("thresholds"), selector: { object: {} } }, labels: { label: lab("labels"), selector: { object: {} } }, max: { label: lab("max"), selector: { number: { mode: "box" } } } } } } },
-        ],
-      },
-      actions(),
-      appearance({ layout: false }),
-    ]);
+      undefined,
+      purifierFormConfig,
+    );
   }
 }
 

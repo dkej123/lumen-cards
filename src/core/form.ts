@@ -28,6 +28,7 @@ const LABELS: Record<string, string> = {
   show_filters: "card.purifier.editor.show_filters",
   filters: "card.purifier.editor.filters",
   controls: "card.purifier.editor.controls",
+  service_controls: "card.purifier.editor.service_controls",
   confirm_timeout: "card.purifier.editor.confirm_timeout",
   send_delay: "card.purifier.editor.send_delay",
   pm25_entity: "card.purifier.editor.pm25_entity",
@@ -212,6 +213,7 @@ const HELPERS: Record<string, string> = {
   purifier_when: "card.purifier.help.when",
   purifier_filters: "card.purifier.help.filters",
   purifier_controls: "card.purifier.help.controls",
+  purifier_service_controls: "card.purifier.help.service_controls",
   purifier_confirm_timeout: "card.purifier.help.confirm_timeout",
   purifier_send_delay: "card.purifier.help.send_delay",
   purifier_index: "card.purifier.help.index",
@@ -351,9 +353,9 @@ export const nameIcon = (): Schema => ({
  * Editor form. `assertConfig` throws only for configs the form cannot show (HA then falls back to
  * the YAML editor) – never for a field that is just empty while the user edits.
  */
-export function form(schema: Schema[] | ((config?: FormConfig) => Schema[]), assertConfig?: (c: Record<string, unknown>) => void) {
+export function form(schema: Schema[] | ((config?: FormConfig) => Schema[]), assertConfig?: (c: Record<string, unknown>) => void, normalizeConfig?: (c: FormConfig) => FormConfig) {
   const build = typeof schema === "function" ? schema : () => schema;
-  return { schema: build(), schemaFor: (config: FormConfig) => build(config), computeLabel, computeHelper, assertConfig };
+  return { schema: build(), schemaFor: (config: FormConfig) => build(config), computeLabel, computeHelper, assertConfig, normalizeConfig };
 }
 
 /**

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { form, hide, type Schema } from "../src/core/form";
 import { LumenFormEditor } from "../src/core/form-editor";
 import "../src/lumen-cards";
+import { purifierFormConfig } from "../src/cards/purifier";
 import { ent, mockHass, mount, settle } from "./helpers";
 
 type Field = Schema & { name?: string; schema?: Field[] };
@@ -121,5 +122,89 @@ describe("volume tile", () => {
     await press(el, '[role="slider"]', 600);
     expect(actions).toEqual([]);
     el.remove();
+  });
+});
+
+describe("purifier editor", () => {
+  type ObjectField = { selector: { object?: { fields?: Record<string, { selector: Record<string, unknown> }> } } };
+  const fieldOf = (list: Field[], name: string): Field & ObjectField => {
+    for (const f of list) {
+      if (f.name === name) return f as Field & ObjectField;
+      if (f.schema) {
+        try {
+          return fieldOf(f.schema, name);
+        } catch {
+          /* next group */
+        }
+      }
+    }
+    throw new Error(name);
+  };
+  const raw = (list: Field[]) => JSON.stringify(list).match(/"selector":\{"object":\{\}\}/g) ?? [];
+
+  it("has no raw YAML box left", () => {
+    expect(raw(formOf("purifier").schema)).toEqual([]);
+  });
+
+  it("an entity control offers no service fields; a list with an old service control still does", () => {
+    const fields = (c: Record<string, unknown>) => Object.keys(fieldOf(formOf("purifier").schemaFor(c), "controls").selector.object!.fields!);
+    expect(fields({ entity: "fan.a" })).not.toContain("service");
+    expect(fields({ entity: "fan.a", controls: [{ service: "a.b", attribute: "x", field: "y" }] })).toContain("service");
+    expect(Object.keys(fieldOf(formOf("purifier").schema, "controls").selector.object!.fields!)).toContain("service");
+    expect(Object.keys(fieldOf(formOf("purifier").schemaFor({ entity: "fan.a" }), "service_controls").selector.object!.fields!)).toEqual(expect.arrayContaining(["attribute", "service", "field", "kind", "options"]));
+  });
+
+  it("spells out YAML's short forms for the fields", () => {
+    expect(purifierFormConfig({ controls: [{ options: ["a", 1, { value: "b" }] }], index: { thresholds: [50, 100] } })).toEqual({ controls: [{ options: [{ value: "a" }, { value: "1" }, { value: "b" }] }], index: { thresholds: ["50", "100"] } });
+  });
+
+  const FAN = () => ent("fan.a", "on", { supported_features: 0, pm25: 12, iaq: 120, level: 1 });
+
+  it("thresholds typed in the editor count as numbers", async () => {
+    const el = await mount("purifier", { entity: "fan.a", index: { name: "IAQ", attribute: "iaq", thresholds: ["100", "50"].reverse(), labels: ["Low", "Mid", "High"] } }, mockHass([FAN()]));
+    await settle(el);
+    expect(el.shadowRoot!.textContent).toContain("High");
+    el.remove();
+  });
+
+  it("a value typed for a service control goes out and is matched as a number", async () => {
+    const h = mockHass([FAN()]);
+    const el = await mount("purifier", { entity: "fan.a", send_delay: 0, service_controls: [{ name: "Level", attribute: "level", service: "x.set_level", field: "value", options: [{ value: "1" }, { value: "2" }] }] }, h);
+    await settle(el);
+    const c = el as unknown as { controls(): { change(v: unknown): { expected: Record<string, unknown>; send(): Promise<unknown> } }[] };
+    expect(c.controls()).toHaveLength(1);
+    const change = c.controls()[0].change("2");
+    expect(change.expected).toEqual({ "fan.a|level": 2 });
+    await change.send();
+    expect(h.calls.at(-1)).toEqual(["x", "set_level", { value: 2 }, { entity_id: "fan.a" }]);
+    el.remove();
+  });
+
+  it("controls and service controls both show, in that order", async () => {
+    const el = await mount("purifier", { entity: "fan.a", controls: [{ name: "One", entity: "switch.one" }], service_controls: [{ name: "Two", attribute: "level", service: "x.y", field: "v" }] }, mockHass([FAN(), ent("switch.one", "on")]));
+    await settle(el);
+    expect((el as unknown as { controls(): { name: string }[] }).controls().map((x) => x.name)).toEqual(["One", "Two"]);
+    el.remove();
+  });
+
+  it("the card's icon wins over the fan's; the groups match its siblings", async () => {
+    const el = await mount("purifier", { entity: "fan.a", icon: "mdi:fan-alert" }, mockHass([ent("fan.a", "on", { icon: "mdi:air-purifier" })]));
+    await settle(el);
+    expect((el as unknown as { iconName: string }).iconName).toBe("mdi:fan-alert");
+    expect(names(formOf("purifier").schema)).toEqual(expect.arrayContaining(["icon", "styles", "edit_note", "haptics"]));
+    el.remove();
+  });
+
+  it("draws weather effects like the other cards", async () => {
+    for (const layout of ["wide", "compact"]) {
+      const el = await mount("purifier", { entity: "fan.a", layout }, mockHass([FAN()]));
+      await settle(el);
+      expect(el.shadowRoot!.querySelector("canvas.wfx"), layout).not.toBeNull();
+      el.remove();
+    }
+  });
+
+  it("a number or input_number can be the target humidity", () => {
+    expect(JSON.stringify(fieldOf(formOf("purifier").schema, "target_humidity_entity"))).toContain('"number"');
   });
 });

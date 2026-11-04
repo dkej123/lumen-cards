@@ -9,11 +9,13 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 - Default `grid_options`: `{"columns":12,"min_columns":6,"rows":"auto"}`
 - Config error with no options: "The entity field is missing"
 - Starting config: `{"entity":"fan.air_purifier"}`
+- A control that calls a service goes in `service_controls`. One written in `controls` keeps working; the editor shows the service fields of `controls` only then.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity (domain: fan) |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
+| `icon` |  | icon |  |  | Icon |  |
 | `layout` |  | select | `wide` (Full), `compact` (Compact) |  | Layout | A wide card or a compact row |
 | `hours` |  | number (min: 6; max: 48; step: 6; unit: h) |  | `24` | Chart range (h) |  |
 | `stale_hours` |  | number (min: 0; max: 48; unit: h) |  | `2` | Data outdated after (h) |  |
@@ -36,7 +38,7 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 | `filters[].entity` |  | entity (domain: sensor) |  |  | Entity |  |
 | `filters[].attribute` |  | text |  |  | Purifier attribute |  |
 | `filters[].unit` |  | select | `%`, `h`, `d` |  | Unit |  |
-| `controls` |  | object[] |  |  | Controls in the details | An entity (switch, list, number) or your own service: attribute, service and value field |
+| `controls` |  | object[] |  |  | Controls in the details | Entities shown in the details: a switch, a list or a number. Options only apply to a list; minimum, maximum and step only to a number |
 | `controls[].name` |  | text |  |  | Name |  |
 | `controls[].icon` |  | icon |  |  | Icon |  |
 | `controls[].entity` |  | entity (domain: switch, light, input_boolean, select, input_select, number, input_number) |  |  | Entity |  |
@@ -44,29 +46,51 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 | `controls[].service` |  | text |  |  | Service (domain.service) |  |
 | `controls[].field` |  | text |  |  | Value field |  |
 | `controls[].kind` |  | select | `switch` (Switch), `segment` (Choice), `stepper` (− / +) |  | Kind |  |
-| `controls[].options` |  | object |  |  | Options (YAML) |  |
+| `controls[].options` |  | object[] |  |  | Options |  |
+| `controls[].options[].value` | yes | text |  |  | Value |  |
+| `controls[].options[].label` |  | text |  |  | Name shown |  |
+| `controls[].options[].icon` |  | icon |  |  | Icon |  |
 | `controls[].min` |  | number |  |  | Minimum |  |
 | `controls[].max` |  | number |  |  | Maximum |  |
 | `controls[].step` |  | number |  |  | Step |  |
 | `controls[].min_label` |  | text |  |  | Text of the minimum, e.g. Off |  |
+| `service_controls` |  | object[] |  |  | Controls that call a service | For integrations with their own service: the purifier attribute that holds the value, the service and its value field. Options make it a choice, a maximum makes it − / + buttons, otherwise it is a switch |
+| `service_controls[].name` |  | text |  |  | Name |  |
+| `service_controls[].icon` |  | icon |  |  | Icon |  |
+| `service_controls[].attribute` |  | text |  |  | Purifier attribute |  |
+| `service_controls[].service` |  | text |  |  | Service (domain.service) |  |
+| `service_controls[].field` |  | text |  |  | Value field |  |
+| `service_controls[].kind` |  | select | `switch` (Switch), `segment` (Choice), `stepper` (− / +) |  | Kind |  |
+| `service_controls[].options` |  | object[] |  |  | Options |  |
+| `service_controls[].options[].value` | yes | text |  |  | Value |  |
+| `service_controls[].options[].label` |  | text |  |  | Name shown |  |
+| `service_controls[].options[].icon` |  | icon |  |  | Icon |  |
+| `service_controls[].min` |  | number |  |  | Minimum |  |
+| `service_controls[].max` |  | number |  |  | Maximum |  |
+| `service_controls[].step` |  | number |  |  | Step |  |
+| `service_controls[].min_label` |  | text |  |  | Text of the minimum, e.g. Off |  |
 | `confirm_timeout` |  | number (min: 5; max: 300; unit: s) |  | `45` | Time to confirm | An unconfirmed change is undone after this time. Default 45 s |
 | `send_delay` |  | number (min: 0; max: 10; step: 0.1; unit: s) |  | `0.8` | Send delay | How long the card waits after the last tap before it sends a command, so a burst of taps is one command. Default 0.8 s |
 | `pm25_entity` |  | entity (domain: sensor) |  |  | PM2.5 sensor |  |
 | `temperature_entity` |  | entity (domain: sensor) |  |  | Temperature sensor |  |
 | `humidity_entity` |  | entity (domain: sensor) |  |  | Humidity sensor |  |
-| `target_humidity_entity` |  | entity (domain: sensor) |  |  | Target humidity sensor |  |
+| `target_humidity_entity` |  | entity (domain: sensor, number, input_number) |  |  | Target humidity sensor |  |
 | `water_level_entity` |  | entity (domain: sensor) |  |  | Water level sensor |  |
 | `water_empty_entity` |  | entity (domain: binary_sensor) |  |  | Empty tank sensor |  |
 | `index` |  | object |  |  | Second index | A value beside PM2.5, e.g. an allergen index: name, attribute or entity, thresholds, labels, max |
 | `index.name` |  | text |  |  | Name |  |
 | `index.entity` |  | entity (domain: sensor) |  |  | Entity |  |
 | `index.attribute` |  | text |  |  | Purifier attribute |  |
-| `index.thresholds` |  | object |  |  | Thresholds (YAML) |  |
-| `index.labels` |  | object |  |  | Level names (YAML) |  |
+| `index.thresholds` |  | select[] |  |  | Thresholds |  |
+| `index.labels` |  | select[] |  |  | Level names |  |
 | `index.max` |  | number |  |  | Maximum |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
+| `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |

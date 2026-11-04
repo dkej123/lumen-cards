@@ -84,6 +84,7 @@ const SUPPLEMENT: Record<string, Supplement> = {
   "lumen-popup-card": {
     notes: [CARDS_KEY_NOTE, CARDS_EDITOR("and the title (`name`) are"), "Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: \"#living-room\"`."],
   },
+  "lumen-purifier-card": { notes: ["A control that calls a service goes in `service_controls`. One written in `controls` keeps working; the editor shows the service fields of `controls` only then."] },
   "lumen-title-card": { notes: ["An item of `badges` may also be a plain entity id string."] },
   "lumen-vertical-stack-card": { notes: STACK_NOTES },
   "lumen-weather-card": { yaml: [{ key: "sun_entity", type: "entity", note: "Day and night icons", default: "sun.sun" }] },

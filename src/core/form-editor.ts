@@ -10,6 +10,8 @@ export interface CardForm {
   computeLabel?: (s: Schema) => string | undefined;
   computeHelper?: (s: Schema) => string | undefined;
   assertConfig?: (c: Record<string, unknown>) => void;
+  /** Short forms YAML allows but the form's fields cannot show, spelled out for the editor. */
+  normalizeConfig?: (c: Record<string, unknown>) => Record<string, unknown>;
 }
 
 /**
@@ -55,7 +57,7 @@ export class LumenFormEditor extends LitElement {
   setConfig(config: Record<string, unknown>) {
     // Throwing makes HA switch to the YAML editor (same contract as assertConfig).
     this.form.assertConfig?.(config);
-    this._config = config;
+    this._config = this.form.normalizeConfig?.(config) ?? config;
   }
 
   private get defaults() {
