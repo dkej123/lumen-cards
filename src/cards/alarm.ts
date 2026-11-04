@@ -113,7 +113,10 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       const ring = alert && c.screen_ring !== false ? alarmRing() : nothing;
       // Phones: the banner floats at the top of the screen (a grid cell is too small for it).
       const banner = alert && c.banner !== false && this.compact
-        ? html`<div style="position:absolute;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top));z-index:9;pointer-events:auto;max-width:520px;margin:0 auto">${alarmBanner(true, this.bannerText, () => this.primary())}</div>`
+        ? html`<div style="position:absolute;left:12px;right:12px;top:calc(64px + env(safe-area-inset-top));z-index:9;pointer-events:auto;max-width:520px;margin:0 auto">${alarmBanner(true, this.bannerText, () => {
+            this.haptic();
+            this.primary();
+          })}</div>`
         : nothing;
       if (ring === nothing && banner === nothing && !this.pad.state) return nothing;
       return html`${ring}${banner}${this.pad.state ? this.padView() : nothing}`;

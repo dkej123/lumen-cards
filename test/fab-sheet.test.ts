@@ -422,3 +422,27 @@ describe("floating panel options", () => {
     expect(JSON.stringify(cls.getConfigForm().schema)).not.toContain("accent_color");
   });
 });
+
+describe('the "All" segment', () => {
+  it("a choice the thermostats never follow goes away by itself after 10 s", async () => {
+    vi.useFakeTimers();
+    try {
+      const c = (id: string) => ent(id, "heat", { hvac_modes: ["heat", "off"], preset_modes: ["comfort", "eco"], preset_mode: "comfort" });
+      const h = mockHass([c("climate.a"), c("climate.b")]);
+      const el = await mountCard("fab-sheet", { narrow_only: false, cards: [{ type: "custom:lumen-climate-card", entity: "climate.a" }, { type: "custom:lumen-climate-card", entity: "climate.b" }] }, h);
+      await vi.advanceTimersByTimeAsync(0);
+      layer()!.querySelector<HTMLElement>(".acfab")!.click();
+      await vi.advanceTimersByTimeAsync(0);
+      const row = () => [...layer()!.querySelectorAll<HTMLButtonElement>('[role="group"] button.seg')];
+      const eco = () => row().find((b) => b.textContent!.includes("Eco"))!;
+      eco().click();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(eco().getAttribute("aria-pressed")).toBe("true");
+      await vi.advanceTimersByTimeAsync(10_100);
+      expect(eco().getAttribute("aria-pressed")).toBe("false");
+      el.remove();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

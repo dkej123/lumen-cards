@@ -83,6 +83,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
 
   private tap = () => {
     const c = this._config;
+    this.haptic();
     if (c.tap_action) handleAction(this, c.tap_action, c.entity);
     else if (c.entity) this.moreInfo(c.entity);
   };

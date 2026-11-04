@@ -515,3 +515,57 @@ describe("greeting card", () => {
     expect(JSON.stringify(cls.getConfigForm().schema)).not.toContain("sun_entity");
   });
 });
+
+describe("small things every card does alike", () => {
+  const PLUG = "power-plug-off";
+  const html = (el: Card) => el.shadowRoot!.innerHTML;
+
+  it("unavailable rows show the plug-off glyph", async () => {
+    const h = mockHass([ent("binary_sensor.u", "unavailable"), ent("person.u", "unavailable"), ent("binary_sensor.k", "off"), ent("person.k", "home")]);
+    const has = async (type: string, entity: string) => {
+      const el = await mountCard(type, { entity, layout: "wide" }, h);
+      const out = el.shadowRoot!.querySelector('[data-icon*="power-plug-off"], ha-icon[icon*="power-plug-off"]') !== null || html(el).includes(PLUG);
+      el.remove();
+      return out;
+    };
+    expect(await has("entity", "binary_sensor.u")).toBe(true);
+    expect(await has("person", "person.u")).toBe(true);
+    expect(await has("entity", "binary_sensor.k")).toBe(false);
+    expect(await has("person", "person.k")).toBe(false);
+  });
+
+  it("cover buttons, a title and a reminder pill give haptic feedback", async () => {
+    const h = mockHass([ent("cover.c", "open", { current_position: 50, supported_features: 15 }), ent("input_boolean.r", "on"), ent("sensor.s", "1")]);
+    const buzz = (el: Card) => {
+      const seen: string[] = [];
+      el.addEventListener("haptic", (e) => seen.push((e as CustomEvent).detail));
+      return seen;
+    };
+    const cover = await mountCard("cover", { entity: "cover.c" }, h);
+    const c = buzz(cover);
+    cover.shadowRoot!.querySelector<HTMLElement>("button.seg")!.click();
+    expect(c.length).toBe(1);
+    const title = await mountCard("title", { title: "T", entity: "sensor.s" }, h);
+    const t = buzz(title);
+    title.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!.click();
+    expect(t.length).toBe(1);
+    const rem = await mountCard("reminder", { entity: "input_boolean.r" }, h);
+    await rem.updateComplete;
+    (rem as unknown as { _open: boolean })._open = false;
+    await rem.updateComplete;
+    const r = buzz(rem);
+    rem.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!.click();
+    expect(r.length).toBe(1);
+  });
+
+  it("a person whose picture failed tries a new picture", async () => {
+    const h = mockHass([ent("person.a", "home", { entity_picture: "/a.jpg" })]);
+    const el = await mountCard("person", { entity: "person.a", layout: "wide" }, h);
+    el.shadowRoot!.querySelector("img")!.dispatchEvent(new Event("error"));
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector("img")).toBeNull();
+    el.hass = { ...h, states: { "person.a": ent("person.a", "home", { entity_picture: "/b.jpg" }) } };
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector("img")?.getAttribute("src")).toBe("/b.jpg");
+  });
+});

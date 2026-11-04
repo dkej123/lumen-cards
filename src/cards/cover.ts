@@ -109,16 +109,19 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   }
 
   private open() {
+    this.haptic();
     this.target.set(100);
     this.call("open_cover");
   }
 
   private close() {
+    this.haptic();
     this.target.set(0);
     this.call("close_cover");
   }
 
   private stop() {
+    this.haptic();
     this.target.clear();
     this.call("stop_cover");
   }

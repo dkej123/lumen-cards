@@ -137,6 +137,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
       showTitle: c.show_name !== false,
       showSub: c.show_state !== false,
       label: `${name} · ${label}`,
+      plug: una,
       trailing: this.subs.render(c.sub_buttons, { compact: false, max: this.subMax }),
     };
     return rowTile(opts);

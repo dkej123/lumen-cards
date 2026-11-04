@@ -1,7 +1,7 @@
 import { html, nothing, type PropertyValues } from "lit";
 import { type BaseConfig } from "../core/base-card";
 import { assertCards, LumenContainerCard } from "../core/container-card";
-import { PENDING_MS } from "../core/controllers/pending";
+import { Pending } from "../core/controllers/pending";
 import { advanced, appearance, fabSideField, form } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
@@ -58,7 +58,8 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
   private sheet = new Sheet(this, () => this.sheet.hide());
   private idsFor?: unknown;
   private idsCache: string[] = [];
-  private bulkPending: { value: string; until: number } | null = null;
+  /** The "All" choice just sent, until the thermostats follow (or 10 s). */
+  private bulkPending = new Pending<string>(this, () => undefined);
 
   protected layer = new LayerController(
     this,
@@ -141,17 +142,15 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
   private bulk(): Bulk | null {
     const b = bulkSegment(this.ids, this._hass?.states ?? {});
     if (!b) return null;
-    const p = this.bulkPending;
-    if (p && (p.until < Date.now() || b.selected === p.value)) this.bulkPending = null;
-    return this.bulkPending ? { ...b, selected: this.bulkPending.value } : b;
+    if (b.selected === this.bulkPending.value) this.bulkPending.clear();
+    return this.bulkPending.active ? { ...b, selected: this.bulkPending.value! } : b;
   }
 
   private async setAll(b: Bulk, value: string) {
     const hass = this._hass;
     if (!hass) return;
     this.haptic();
-    this.bulkPending = { value, until: Date.now() + PENDING_MS };
-    this.requestUpdate();
+    this.bulkPending.set(value);
     try {
       if (value === "off") {
         await hass.callService("climate", "set_hvac_mode", { hvac_mode: "off" }, { entity_id: b.ids });
@@ -162,8 +161,7 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
       if (off.length) await hass.callService("climate", "set_hvac_mode", { hvac_mode: "heat" }, { entity_id: off });
       await hass.callService("climate", "set_preset_mode", { preset_mode: value }, { entity_id: b.ids });
     } catch (err) {
-      this.bulkPending = null;
-      this.requestUpdate();
+      this.bulkPending.clear();
       toast(this, { icon: "mdi:alert-circle", tone: "danger", title: t("common.error"), text: (err as Error)?.message ?? String(err) });
     }
   }

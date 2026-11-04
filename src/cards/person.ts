@@ -41,7 +41,8 @@ export function validatePerson(c: Partial<PersonConfig>): void {
 /** One household member: avatar (picture or initial), presence dot with a pulse, zone and time since the change. */
 export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
   protected static compactBelow = 240;
-  private failed = false;
+  /** The picture that failed to load: a new one gets a chance. */
+  private failed?: string;
   private subs = new SubButtons(this);
 
   protected entityIds() {
@@ -50,11 +51,6 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
 
   protected validate(c: PersonConfig) {
     validatePerson(c);
-  }
-
-  setConfig(config: PersonConfig): void {
-    super.setConfig(config);
-    this.failed = false;
   }
 
   connectedCallback(): void {
@@ -75,7 +71,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     const size = compact ? 30 : 34;
     const d = compact ? 11 : 10;
     const src = c.picture || this.entity(c.entity)?.attributes.entity_picture;
-    const failed = !src || this.failed;
+    const failed = !src || this.failed === src;
     const bg = s.unavailable ? "var(--lumen-unavailable)" : colorOr(c.avatar_color, avatarColor(name));
     const dot = s.unavailable ? "transparent" : s.unknown ? "var(--lumen-warning)" : s.home ? "var(--lumen-ok)" : "var(--lumen-text-3)";
     return html`<div style="position:relative;flex:none;width:${size}px;height:${size}px">
@@ -83,7 +79,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
         ${failed
           ? html`<span>${(name[0] ?? "?").toUpperCase()}</span>`
           : html`<img src=${src} alt="" style="width:100%;height:100%;object-fit:cover" @error=${() => {
-              this.failed = true;
+              this.failed = src;
               this.requestUpdate();
             }} />`}
       </div>
@@ -120,6 +116,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
       lead: this.avatar(name, s, false),
       handlers: h,
       label: `${name} · ${s.status}`,
+      plug: s.unavailable,
       showTitle: c.show_name !== false,
       showSub: c.show_status !== false,
       trailing: this.subs.render(c.sub_buttons, { compact, max: subButtonLimit(compact, this._width) }),
