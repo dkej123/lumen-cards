@@ -36,6 +36,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
   private drag = new SlideDrag(this, {
     enabled: () => !this.offline,
     source: () => this.num,
+    ends: true,
     commit: (f) => {
       const r = numberRange(this.num?.attributes);
       this.setValue(valueAt(f, r.min, r.max, r.step));
@@ -102,6 +103,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
         una,
         compact: this.compact,
         label: `${name} · ${value}`,
+        slider: una ? undefined : { now: v === null ? 0 : Math.round(fractionOf(v, r.min, r.max) * 100), text: value },
         keys: "ArrowLeft ArrowRight Shift+Enter",
       },
       this.drag,

@@ -50,6 +50,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     enabled: () => !this.offline && fanSpeed(this.fan).settable,
     source: () => this.fan,
     commit: (f) => this.setPct(f * 100),
+    ends: true,
     tap: () => this.tap(),
     hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
@@ -117,6 +118,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
         una,
         compact: this.compact,
         pressed: on,
+        slider: !una && s.settable ? { now: pct, text: value } : undefined,
         label: `${name} · ${value}`,
         keys: s.settable ? "ArrowLeft ArrowRight Shift+Enter" : "Shift+Enter",
       },

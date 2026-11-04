@@ -250,11 +250,11 @@ describe("section 14 cards", () => {
     await el.updateComplete;
     expect(h.calls.at(-1)).toEqual(["cover", "close_cover", {}, { entity_id: "cover.shutter" }]);
     expect(root.textContent).toContain("Closing…");
-    expect(root.querySelector('[role="slider"]')).toBeNull();
+    expect(root.querySelector('.ltile [role="slider"]')).toBeNull();
     el.remove();
     const blind = await mount("cover", { entity: "cover.blind", layout: "wide" });
     expect(blind.root.textContent).toContain("slats 45°");
-    press(blind.root.querySelector('[role="slider"]')!, "ArrowRight");
+    press(blind.root.querySelector('.ltile [role="slider"]')!, "ArrowRight");
     expect(blind.h.calls.at(-1)).toEqual(["cover", "set_cover_tilt_position", { tilt_position: 60 }, { entity_id: "cover.blind" }]);
     blind.el.remove();
     const off = await mount("cover", { entity: "cover.off", layout: "wide" });
@@ -274,7 +274,8 @@ describe("section 14 cards", () => {
   it("fan: tap is HA's toggle, arrows step the speed by the fan's step", async () => {
     const { el, h, root } = await mount("fan", { entity: "fan.f" });
     const tile = root.querySelector(".ltile")!;
-    expect(tile.getAttribute("aria-pressed")).toBe("true");
+    // A settable fan is a slider: its value says whether it runs.
+    expect(tile.getAttribute("role")).toBe("slider");
     expect(root.textContent).toContain("60%");
     const fired: unknown[] = [];
     el.addEventListener("hass-action", (e) => fired.push((e as CustomEvent).detail));
@@ -578,7 +579,7 @@ describe("a refused slider command rolls back at once", () => {
     const h = mockHass([ent("cover.c", "open", { current_position: 50, current_tilt_position: 20, supported_features: 15 | 128 })]);
     h.fail = () => true;
     const el = await mountCard("cover", { entity: "cover.c", show_buttons: false }, h);
-    const bar = el.shadowRoot!.querySelector<HTMLElement>('[role="slider"]')!;
+    const bar = el.shadowRoot!.querySelector<HTMLElement>('.ltile [role="slider"]')!;
     await drag(el, bar, 80);
     await wait();
     await el.updateComplete;
@@ -733,5 +734,62 @@ describe("sensor value: Home Assistant's own formatting", () => {
       expect(tile.getAttribute("aria-label")).toContain("1.5 kW");
       el.remove();
     }
+  });
+});
+
+describe("slider tiles for the keyboard and screen readers", () => {
+  const tile = (el: Card) => el.shadowRoot!.querySelector<HTMLElement>(".ltile")!;
+
+  it("no card takes the focus ring away; sliders get one too", async () => {
+    const { shared } = await import("../src/core/styles");
+    expect(shared).toMatch(/\[role="slider"\]:focus-visible[^{]*\{ outline: 2px/);
+    const h = mockHass([ent("fan.f", "on", { percentage: 40, supported_features: 1 }), ent("light.l", "on", { brightness: 100 })]);
+    const fan = await mountCard("fan", { entity: "fan.f" }, h);
+    expect(tile(fan).getAttribute("style")).not.toContain("outline:none");
+    const light = await mountCard("light", { entity: "light.l" }, h);
+    expect(light.shadowRoot!.querySelector<HTMLElement>(".tile")!.getAttribute("style")).not.toContain("outline:none");
+    fan.remove();
+    light.remove();
+  });
+
+  it("a settable tile is a slider with its value; one that cannot be set stays a button", async () => {
+    const h = mockHass([
+      ent("fan.f", "on", { percentage: 40, supported_features: 1 }),
+      ent("fan.g", "on", { supported_features: 0 }),
+      ent("input_number.n", "25", { min: 0, max: 50, step: 1 }),
+      ent("input_number.o", "unavailable"),
+      ent("cover.c", "open", { current_position: 30, supported_features: 15 }),
+      ent("cover.d", "open", { supported_features: 3 }),
+    ]);
+    const check = async (type: string, entity: string, role: string, now?: string) => {
+      const el = await mountCard(type, { entity }, h);
+      expect(tile(el).getAttribute("role"), entity).toBe(role);
+      expect(tile(el).getAttribute("aria-valuenow") ?? undefined, entity).toBe(now);
+      if (role === "slider") expect(tile(el).hasAttribute("aria-pressed")).toBe(false);
+      el.remove();
+    };
+    await check("fan", "fan.f", "slider", "40");
+    await check("fan", "fan.g", "button");
+    await check("number", "input_number.n", "slider", "50");
+    await check("number", "input_number.o", "button");
+    await check("cover", "cover.c", "slider", "30");
+    await check("cover", "cover.d", "button");
+  });
+
+  it("Home and End go to the ends", async () => {
+    const h = mockHass([ent("input_number.n", "25", { min: 10, max: 50, step: 1 }), ent("fan.f", "on", { percentage: 40, supported_features: 1 }), ent("cover.c", "open", { current_position: 30, supported_features: 15 })]);
+    const key = (el: Card, k: string) => tile(el).dispatchEvent(new KeyboardEvent("keydown", { key: k }));
+    const n = await mountCard("number", { entity: "input_number.n" }, h);
+    key(n, "End");
+    expect(h.calls.at(-1)).toEqual(["input_number", "set_value", { value: 50 }, { entity_id: "input_number.n" }]);
+    key(n, "Home");
+    expect(h.calls.at(-1)).toEqual(["input_number", "set_value", { value: 10 }, { entity_id: "input_number.n" }]);
+    const f = await mountCard("fan", { entity: "fan.f" }, h);
+    key(f, "End");
+    expect(h.calls.at(-1)).toEqual(["fan", "set_percentage", { percentage: 100 }, { entity_id: "fan.f" }]);
+    const c = await mountCard("cover", { entity: "cover.c" }, h);
+    key(c, "Home");
+    expect(h.calls.at(-1)).toEqual(["cover", "set_cover_position", { position: 0 }, { entity_id: "cover.c" }]);
+    [n, f, c].forEach((x) => x.remove());
   });
 });

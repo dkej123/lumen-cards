@@ -44,7 +44,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .acfab:active { transform: scale(0.9); }
 .seg:hover, .seg:active { background: var(--lumen-surface-solid) !important; color: var(--lumen-text-1) !important; }
 .seg:active { transform: scale(0.94); }
-[role="button"]:focus-visible, button:focus-visible { outline: 2px solid var(--lumen-accent); outline-offset: 2px; }
+[role="button"]:focus-visible, [role="slider"]:focus-visible, button:focus-visible { outline: 2px solid var(--lumen-accent); outline-offset: 2px; }
 `;
 
 export const glass = "backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4)";

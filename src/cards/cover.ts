@@ -43,6 +43,7 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     enabled: () => this.canSetPosition,
     source: () => this.cover,
     commit: (f) => this.setPosition(Math.round(f * 100)),
+    ends: true,
     tap: () => this.tap(),
     hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
@@ -168,6 +169,7 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
         spin: s.moving,
         compact: this.compact,
         label: `${name} · ${s.label}${meta ? ` ${meta}` : ""}`,
+        slider: this.canSetPosition ? { now: pos ?? 0, text: `${s.label}${meta ? ` ${meta}` : ""}` } : undefined,
         keys: this.canSetPosition ? "ArrowLeft ArrowRight Shift+Enter" : "Shift+Enter",
         below,
       },
