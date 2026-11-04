@@ -2,7 +2,7 @@
 
 # `lumen-number-card`
 
-Lumen · Number: input_number / number as a slider tile
+Lumen · Number: A number helper or number entity as a big slider tile
 
 - YAML: `type: custom:lumen-number-card`
 - Picker suggests it for: `input_number`, `number`

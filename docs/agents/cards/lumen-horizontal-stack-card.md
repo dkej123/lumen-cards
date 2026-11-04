@@ -14,11 +14,11 @@ Lumen · Horizontal stack: Cards side by side with equal widths, like HA's horiz
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `title` |  | text |  |  | Title |  |
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
-| `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
-| `card_width` |  | select | `equal` (Equal), `content` (Fit content) | `equal` | Card width |  |
+| `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position | Where a stack narrower than its place sits. With the “Fit content” card width, also where the cards sit in the row |
+| `card_width` |  | select | `equal` (Equal), `content` (Fit content) | `equal` | Card width | Equal: the cards share the width. Fit content: each is as wide as its content and wraps to the next row |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 

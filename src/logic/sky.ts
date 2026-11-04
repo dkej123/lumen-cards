@@ -15,13 +15,6 @@ export function phaseFromSun(sun: HassEntity | undefined, now = new Date()): Pha
   return "day";
 }
 
-export const GREETING: Record<Phase, string> = {
-  dawn: "card.greeting.morning",
-  day: "card.greeting.day",
-  dusk: "card.greeting.evening",
-  night: "card.greeting.night",
-};
-
 /** UI condition (8 states) for label/icon; drawing uses the raw HA state. */
 export function weatherCondition(weather: HassEntity | undefined): { ui: string; raw: string; label: string; icon: string } {
   const raw = weather?.state ?? "cloudy";

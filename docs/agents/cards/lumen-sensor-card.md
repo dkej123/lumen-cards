@@ -15,10 +15,10 @@ Lumen · Sensor: Sensor tile (e.g. temperature) with a chart of the last hours
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity (domain: sensor) |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
-| `hours` |  | number (min: 1; max: 24; step: 1; unit: h) |  | `12` | Chart range (h) |  |
+| `hours` |  | number (min: 1; max: 24; step: 1; unit: h) |  | `12` | Chart range |  |
 | `color` |  | ui_color |  |  | Colour |  |
 | `height` |  | number (min: 28; max: 200; step: 2; unit: px) |  |  | Height | In pixels; empty = default (52, compact 36). Under 48 px one line: name left, value right, chart behind |
-| `stale_after` |  | number (min: 0; max: 168; step: 0.5; unit: h) |  |  | Stale after | Empty or 0 = never. No new reading for this many hours = dashed card, "Outdated · 3 h". Many thermometers only report when the temperature changes |
+| `stale_after` |  | number (min: 0; max: 168; step: 0.5; unit: h) |  |  | Outdated after | Empty or 0 = never. No new reading for this many hours = dashed card, "Outdated · 3 h". Many thermometers only report when the temperature changes |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |

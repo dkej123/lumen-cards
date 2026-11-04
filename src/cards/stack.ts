@@ -30,7 +30,7 @@ const fields = (row = false) => [
     type: "grid",
     flatten: true,
     schema: [
-      { name: "align", default: "center", selector: select([["center", "editor.align.center"], ["start", "editor.align.start"], ["end", "editor.align.end"]]) },
+      { name: "align", helper: row ? "align_row" : "align", default: "center", selector: select([["center", "editor.align.center"], ["start", "editor.align.start"], ["end", "editor.align.end"]]) },
       ...(row ? [{ name: "card_width", default: "equal", selector: select([["equal", "editor.card_width.equal"], ["content", "editor.card_width.content"]]) }] : []),
     ],
   },

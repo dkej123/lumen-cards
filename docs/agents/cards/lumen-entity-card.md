@@ -23,7 +23,7 @@ Lumen · Entity: Small state tile, e.g. a door contact (closed / open); a narrow
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_icon` |  | boolean |  | `true` | Show icon |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |

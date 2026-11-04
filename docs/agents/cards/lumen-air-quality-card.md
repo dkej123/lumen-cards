@@ -16,8 +16,8 @@ Lumen · Air quality: Air quality (PM2.5 / PM10 / AQI) in 6 levels with a 24 h c
 | `pm25` |  | entity (domain: sensor) |  |  | PM2.5 | One of PM2.5, PM10 or AQI is enough |
 | `pm10` |  | entity (domain: sensor) |  |  | PM10 |  |
 | `aqi_entity` |  | entity (domain: sensor) |  |  | Air quality index (AQI) |  |
-| `footer` |  | text |  |  | Footer (location, source) |  |
-| `stale_hours` |  | number (min: 0.25; max: 24; step: 0.25; unit: h) |  | `2` | Data outdated after (h) |  |
+| `footer` |  | text |  |  | Footer (location, source) | A short note at the bottom of the chart window |
+| `stale_hours` |  | number (min: 0.25; max: 24; step: 0.25; unit: h) |  | `2` | Data outdated after |  |
 | `show_values` |  | boolean |  | `true` | Show values |  |
 | `show_bar` |  | boolean |  | `true` | Show level bar |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |

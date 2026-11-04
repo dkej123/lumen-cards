@@ -2,7 +2,7 @@
 
 # `lumen-reminder-card`
 
-Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g. bike to charge); “Done” turns it off
+Lumen · Reminder: A pill and a reminder window while an entity has a state (e.g. bike to charge); an optional “Done” turns it off
 
 - YAML: `type: custom:lumen-reminder-card`
 - Picker suggests it for: `input_boolean`
@@ -13,11 +13,11 @@ Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity |  |  | Entity |  |
-| `state` |  | text |  | `on` | Show while the state is |  |
+| `state` |  | text |  | `on` | Show while the state is | Default: on |
 | `color` |  | select | `info` (Info), `ok` (OK), `warning` (Warning), `danger` (Alarm) | `info` | Colour |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
-| `value` |  | text |  |  | Value in the pill |  |
+| `value` |  | text |  |  | Value in the pill | Text on the pill. {value} is replaced by the state of the value entity, e.g. Battery {value}% |
 | `value_entity` |  | entity |  |  | Value entity ({value}) |  |
 | `show_chip` |  | boolean |  | `true` | Show the pill |  |
 | `dialog` |  | boolean |  | `true` | Pop-up window when it starts |  |

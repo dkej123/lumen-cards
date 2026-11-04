@@ -66,8 +66,8 @@ Lumen · Air quality: Air quality (PM2.5 / PM10 / AQI) in 6 levels with a 24 h c
 | `pm25` |  | entity (domain: sensor) |  |  | PM2.5 | One of PM2.5, PM10 or AQI is enough |
 | `pm10` |  | entity (domain: sensor) |  |  | PM10 |  |
 | `aqi_entity` |  | entity (domain: sensor) |  |  | Air quality index (AQI) |  |
-| `footer` |  | text |  |  | Footer (location, source) |  |
-| `stale_hours` |  | number (min: 0.25; max: 24; step: 0.25; unit: h) |  | `2` | Data outdated after (h) |  |
+| `footer` |  | text |  |  | Footer (location, source) | A short note at the bottom of the chart window |
+| `stale_hours` |  | number (min: 0.25; max: 24; step: 0.25; unit: h) |  | `2` | Data outdated after |  |
 | `show_values` |  | boolean |  | `true` | Show values |  |
 | `show_bar` |  | boolean |  | `true` | Show level bar |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
@@ -97,18 +97,18 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `arm_modes` |  | select[] | `armed_home` (Home), `armed_away` (Away), `armed_night` (Night), `armed_vacation` (Vacation), `armed_custom_bypass` (Custom) |  | Arm modes | Nothing selected = every mode the alarm supports |
-| `arming_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Exit delay | Length of the countdown bars when the alarm does not report it (arming_time / delay attributes) |
-| `pending_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Entry delay | Length of the countdown bars when the alarm does not report it (arming_time / delay attributes) |
+| `arming_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Exit delay | Seconds. Only used when the alarm does not report this time itself; sets the length of the countdown bar |
+| `pending_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Entry delay | Seconds. Only used when the alarm does not report this time itself; sets the length of the countdown bar |
 | `banner` |  | boolean |  | `true` | Banner when triggered |  |
 | `screen_ring` |  | boolean |  | `true` | Red screen ring when triggered |  |
 | `banner_text` |  | text |  |  | Banner text |  |
-| `disarmed_color` |  | ui_color |  |  | Disarmed colour | Neutral by default; e.g. red as in the Dom panel |
+| `disarmed_color` |  | ui_color |  |  | Disarmed colour | Neutral by default; choose e.g. red to make “disarmed” stand out |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
 | `show_buttons` |  | boolean |  | `true` | Buttons |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
@@ -127,7 +127,7 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 
 ## `lumen-bar-card`
 
-Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, locks, buttons) as cells in one frame
+Lumen · Bar: Several cards (doors, alarms, locks, buttons) as small tiles in one glass bar
 
 - YAML: `type: custom:lumen-bar-card`
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
@@ -138,7 +138,7 @@ Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, lock
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
@@ -164,10 +164,10 @@ Lumen · Button: Runs a script, scene or button, optionally waiting for the devi
 | `icon` |  | icon |  |  | Icon |  |
 | `color` |  | ui_color |  |  | Colour |  |
 | `secondary_info` |  | select | `auto` (Auto (last use)), `state` (State), `last-triggered` (Last run), `last-changed` (Last change), `none` (None) | `auto` | Second line |  |
-| `last_used_entity` |  | entity (domain: input_datetime, sensor) |  |  | Last use (input_datetime) |  |
+| `last_used_entity` |  | entity (domain: input_datetime, sensor) |  |  | Last use (helper or sensor) | A date-and-time helper or a timestamp sensor. Your automation updates it; the card only reads the time |
 | `feedback` |  | group: expandable |  |  | Device response | Without it the card only runs the action |
 | `feedback.status_entity` |  | entity (domain: sensor) |  |  | Response code sensor |  |
-| `feedback.success_state` |  | text |  |  | Success code |  |
+| `feedback.success_state` |  | text |  |  | Success code | Default: 200 |
 | `feedback.success_text` |  | text |  |  | Text on success |  |
 | `feedback.message_entity` |  | entity (domain: sensor) |  |  | Response text sensor |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
@@ -176,7 +176,7 @@ Lumen · Button: Runs a script, scene or button, optionally waiting for the devi
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_icon` |  | boolean |  | `true` | Show icon |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
@@ -363,7 +363,7 @@ Lumen · Entity: Small state tile, e.g. a door contact (closed / open); a narrow
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_icon` |  | boolean |  | `true` | Show icon |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
@@ -382,7 +382,7 @@ Lumen · Entity: Small state tile, e.g. a door contact (closed / open); a narrow
 
 ## `lumen-fab-sheet-card`
 
-Lumen · Floating panel: A floating button that opens a sheet with any cards, e.g. all thermostats
+Lumen · Floating panel: A floating button that opens a panel with any cards, e.g. all thermostats
 
 - YAML: `type: custom:lumen-fab-sheet-card`
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
@@ -395,8 +395,8 @@ Lumen · Floating panel: A floating button that opens a sheet with any cards, e.
 |---|---|---|---|---|---|---|
 | `icon` |  | icon |  |  | Icon |  |
 | `title` |  | text |  |  | Title |  |
-| `cards` |  | object |  |  | Cards (YAML) | Cards inside the panel (YAML list); climate cards show as compact thermostat rows |
-| `narrow_only` |  | boolean |  | `true` | Only on a narrow screen | Below 1024 px a button in the corner, wider a row in the grid |
+| `cards` |  | object |  |  | Cards | Cards inside the panel; climate cards show as compact thermostat rows |
+| `narrow_only` |  | boolean |  | `true` | Only on a narrow screen | Below 1024 px a button in the corner, wider a row in the grid. Off: the button on every screen |
 | `fab_side` |  | select | `right` (Right), `left` (Left (left-handed)) | `right` | Button side | Which screen edge the floating button sits at. Each side has its own stack of buttons |
 | `badge_entities` |  | entity[] |  |  | Number on the button | How many of the chosen entities are active (e.g. heating, on, open). Empty: how many thermostats in the panel are heating |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
@@ -471,11 +471,11 @@ Lumen · Horizontal stack: Cards side by side with equal widths, like HA's horiz
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `title` |  | text |  |  | Title |  |
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
-| `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
-| `card_width` |  | select | `equal` (Equal), `content` (Fit content) | `equal` | Card width |  |
+| `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position | Where a stack narrower than its place sits. With the “Fit content” card width, also where the cards sit in the row |
+| `card_width` |  | select | `equal` (Equal), `content` (Fit content) | `equal` | Card width | Equal: the cards share the width. Fit content: each is as wide as its content and wraps to the next row |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 
@@ -498,7 +498,7 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) | A relay or plug that cuts the bulb's power. While it is off the bulb shows “Off” instead of “Unavailable”, and a tap turns the relay on. Empty = the bulb is always powered |
 | `power_entities` |  | entity[] (domain: switch, light, input_boolean) |  |  | Power (several relays) | Several relays or plugs feeding this light, usually a group of bulbs. The card gets one button per relay and only they switch the relays: a tap on the card does nothing. While any relay is on, the card sets the brightness and colour of the whole light. Replaces the field above |
 | `height` |  | number (min: 40; max: 200; step: 2; unit: px) |  |  | Height | In pixels, at least 40. Empty: 64, or 44 on the compact tile |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
@@ -538,7 +538,7 @@ Lumen · Lock: Lock state with Lock / Unlock (and Open) buttons, code and confir
 | `entity` | yes | entity (domain: lock) |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
-| `busy_entity` |  | entity (domain: input_boolean, binary_sensor, switch) |  |  | “In progress” flag (optional) |  |
+| `busy_entity` |  | entity (domain: input_boolean, binary_sensor, switch) |  |  | “In progress” flag (optional) | On while the lock is working; the card waits for it before showing the result |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
@@ -615,7 +615,7 @@ Lumen · Navigation bar: Bottom navigation bar between dashboard views
 
 ## `lumen-number-card`
 
-Lumen · Number: input_number / number as a slider tile
+Lumen · Number: A number helper or number entity as a big slider tile
 
 - YAML: `type: custom:lumen-number-card`
 - Picker suggests it for: `input_number`, `number`
@@ -645,7 +645,7 @@ Lumen · Number: input_number / number as a slider tile
 
 ## `lumen-person-card`
 
-Lumen · Person: Household member with avatar, presence dot and since when
+Lumen · Person: Household member with a photo, a home/away dot and the time since the last change
 
 - YAML: `type: custom:lumen-person-card`
 - Picker suggests it for: `person`
@@ -668,7 +668,7 @@ Lumen · Person: Household member with avatar, presence dot and since when
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_status` |  | boolean |  | `true` | Show status |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
@@ -687,7 +687,7 @@ Lumen · Person: Household member with avatar, presence dot and since when
 
 ## `lumen-popup-card`
 
-Lumen · Pop-up: Pop-up with any cards, opened by a #hash
+Lumen · Pop-up: A window with any cards, opened from a button or the navigation bar by a link like #living-room
 
 - YAML: `type: custom:lumen-popup-card`
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
@@ -698,12 +698,12 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
-| `hash` | yes | text |  |  | Hash (#name) | Going to this #hash opens the pop-up (e.g. a button with a navigate action to #name) |
+| `hash` | yes | text |  |  | Link (#name) | Going to this link opens the pop-up, e.g. a button with a navigate action to #name |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `show_trigger` |  | boolean |  | `false` | Trigger row | A row in the dashboard that opens the pop-up; off = the card is invisible |
 | `auto_close` |  | number (min: 0; max: 600; step: 5; unit: s) |  | `0` | Close after | Seconds; 0 keeps it open |
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
@@ -713,12 +713,12 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 
 ## `lumen-purifier-card`
 
-Lumen · Air purifier: Purifier and humidifier in one tile
+Lumen · Air purifier: Air purifier on a fan entity: modes, speed, air quality, filters and optional humidifying
 
 - YAML: `type: custom:lumen-purifier-card`
 - `layout: auto` is compact when: never (only `layout: compact`)
 - Default `grid_options`: `{"columns":12,"min_columns":6,"rows":"auto"}`
-- Config error with no options: "The entity field is missing"
+- Config error with no options: "Pick a purifier (fan.*)"
 - Starting config: `{"entity":"fan.air_purifier"}`
 - A control that calls a service goes in `service_controls`. One written in `controls` keeps working; the editor shows the service fields of `controls` only then.
 
@@ -728,8 +728,8 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `layout` |  | select | `wide` (Full), `compact` (Compact) | `wide` | Layout | A wide card or a compact row |
-| `hours` |  | number (min: 6; max: 48; step: 6; unit: h) |  | `24` | Chart range (h) |  |
-| `stale_hours` |  | number (min: 0; max: 48; unit: h) |  | `2` | Data outdated after (h) |  |
+| `hours` |  | number (min: 6; max: 48; step: 6; unit: h) |  | `24` | Chart range |  |
+| `stale_hours` |  | number (min: 0; max: 48; unit: h) |  | `2` | Data outdated after |  |
 | `preset_modes` |  | select[] | `auto` (Auto), `allergen` (Allergen), `sleep` (Sleep), `manual` (Manual), `bacteria` (Bacteria), `night` (Night) |  | Presets | Which modes to show and in what order. Empty = all the device has |
 | `speeds` |  | object[] |  |  | Speed names | Empty = buttons follow the device's speed step and are numbered |
 | `speeds[].percentage` | yes | number (min: 1; max: 100; unit: %) |  |  | Percent |  |
@@ -809,7 +809,7 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 
 ## `lumen-reminder-card`
 
-Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g. bike to charge); “Done” turns it off
+Lumen · Reminder: A pill and a reminder window while an entity has a state (e.g. bike to charge); an optional “Done” turns it off
 
 - YAML: `type: custom:lumen-reminder-card`
 - Picker suggests it for: `input_boolean`
@@ -820,11 +820,11 @@ Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity |  |  | Entity |  |
-| `state` |  | text |  | `on` | Show while the state is |  |
+| `state` |  | text |  | `on` | Show while the state is | Default: on |
 | `color` |  | select | `info` (Info), `ok` (OK), `warning` (Warning), `danger` (Alarm) | `info` | Colour |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
-| `value` |  | text |  |  | Value in the pill |  |
+| `value` |  | text |  |  | Value in the pill | Text on the pill. {value} is replaced by the state of the value entity, e.g. Battery {value}% |
 | `value_entity` |  | entity |  |  | Value entity ({value}) |  |
 | `show_chip` |  | boolean |  | `true` | Show the pill |  |
 | `dialog` |  | boolean |  | `true` | Pop-up window when it starts |  |
@@ -843,7 +843,7 @@ Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g
 
 ## `lumen-select-card`
 
-Lumen · Select: input_select / select with a drop-down list
+Lumen · Select: Pick one option from a list, e.g. a vacuum mode
 
 - YAML: `type: custom:lumen-select-card`
 - Picker suggests it for: `input_select`, `select`
@@ -885,10 +885,10 @@ Lumen · Sensor: Sensor tile (e.g. temperature) with a chart of the last hours
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity (domain: sensor) |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
-| `hours` |  | number (min: 1; max: 24; step: 1; unit: h) |  | `12` | Chart range (h) |  |
+| `hours` |  | number (min: 1; max: 24; step: 1; unit: h) |  | `12` | Chart range |  |
 | `color` |  | ui_color |  |  | Colour |  |
 | `height` |  | number (min: 28; max: 200; step: 2; unit: px) |  |  | Height | In pixels; empty = default (52, compact 36). Under 48 px one line: name left, value right, chart behind |
-| `stale_after` |  | number (min: 0; max: 168; step: 0.5; unit: h) |  |  | Stale after | Empty or 0 = never. No new reading for this many hours = dashed card, "Outdated · 3 h". Many thermometers only report when the temperature changes |
+| `stale_after` |  | number (min: 0; max: 168; step: 0.5; unit: h) |  |  | Outdated after | Empty or 0 = never. No new reading for this many hours = dashed card, "Outdated · 3 h". Many thermometers only report when the temperature changes |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
@@ -918,7 +918,7 @@ Lumen · Spacer: Empty space, by default as tall as the floating buttons on scre
 
 ## `lumen-title-card`
 
-Lumen · Section title: Heading: overline, section or room title, with entity values (e.g. temperature)
+Lumen · Section title: Heading: a small label, a section title or a room header, with entity values (e.g. temperature)
 
 - YAML: `type: custom:lumen-title-card`
 - `layout: auto` is compact when: screen < 1024 px
@@ -929,12 +929,12 @@ Lumen · Section title: Heading: overline, section or room title, with entity va
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `title` |  | text |  |  | Title |  |
-| `heading_style` |  | select | `overline` (Overline (caps)), `section` (Section title), `room` (Room header) | `overline` | Style | Default: overline (caps) |
+| `heading_style` |  | select | `overline` (Small label (caps)), `section` (Section title), `room` (Room header) | `overline` | Style | Default: small label (caps) |
 | `badges` |  | object[] |  |  | Values next to the title |  |
 | `badges[].entity` | yes | entity |  |  | Entity |  |
 | `badges[].state_content` |  | text |  |  | Attribute instead of the state (optional) |  |
 | `badges[].name` |  | text |  |  | Label before the value |  |
-| `entity` |  | entity |  |  | Entity |  |
+| `entity` |  | entity |  |  | Entity | Tapping the title opens this entity's details |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
@@ -957,10 +957,10 @@ Lumen · Vertical stack: Cards one under another, like HA's vertical stack, with
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `title` |  | text |  |  | Title |  |
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
-| `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
+| `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position | Where a stack narrower than its place sits |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 
@@ -979,7 +979,7 @@ Lumen · Weather background: Sky, rain, fog and wind behind the view's cards plu
 |---|---|---|---|---|---|---|
 | `weather_entity` | yes | entity (domain: weather) |  |  | Weather entity |  |
 | `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
-| `show_controls` |  | boolean |  |  | “On this device” switches |  |
+| `show_controls` |  | boolean |  |  | “On this device” switches | Three switches so each device can turn off the background, the weather on cards and the animations |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |

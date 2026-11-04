@@ -139,7 +139,7 @@ describe("floating panel card", () => {
     const ed = await mount("fab-sheet", { title: "Heating", cards: THREE, narrow_only: false }, hass(), (x) => (x.editMode = true));
     const erow = ed.shadowRoot!.querySelector<HTMLElement>(".trow")!;
     expect(erow.getAttribute("style")).toContain("dashed");
-    expect(erow.textContent).toContain("FAB on every screen");
+    expect(erow.textContent).toContain("Floating on all screens");
     expect(ed.getGridOptions()).toMatchObject({ rows: "auto" });
   });
 

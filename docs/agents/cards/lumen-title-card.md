@@ -2,7 +2,7 @@
 
 # `lumen-title-card`
 
-Lumen · Section title: Heading: overline, section or room title, with entity values (e.g. temperature)
+Lumen · Section title: Heading: a small label, a section title or a room header, with entity values (e.g. temperature)
 
 - YAML: `type: custom:lumen-title-card`
 - `layout: auto` is compact when: screen < 1024 px
@@ -13,12 +13,12 @@ Lumen · Section title: Heading: overline, section or room title, with entity va
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `title` |  | text |  |  | Title |  |
-| `heading_style` |  | select | `overline` (Overline (caps)), `section` (Section title), `room` (Room header) | `overline` | Style | Default: overline (caps) |
+| `heading_style` |  | select | `overline` (Small label (caps)), `section` (Section title), `room` (Room header) | `overline` | Style | Default: small label (caps) |
 | `badges` |  | object[] |  |  | Values next to the title |  |
 | `badges[].entity` | yes | entity |  |  | Entity |  |
 | `badges[].state_content` |  | text |  |  | Attribute instead of the state (optional) |  |
 | `badges[].name` |  | text |  |  | Label before the value |  |
-| `entity` |  | entity |  |  | Entity |  |
+| `entity` |  | entity |  |  | Entity | Tapping the title opens this entity's details |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |

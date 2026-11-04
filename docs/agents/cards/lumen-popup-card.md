@@ -2,7 +2,7 @@
 
 # `lumen-popup-card`
 
-Lumen · Pop-up: Pop-up with any cards, opened by a #hash
+Lumen · Pop-up: A window with any cards, opened from a button or the navigation bar by a link like #living-room
 
 - YAML: `type: custom:lumen-popup-card`
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
@@ -13,12 +13,12 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
-| `hash` | yes | text |  |  | Hash (#name) | Going to this #hash opens the pop-up (e.g. a button with a navigate action to #name) |
+| `hash` | yes | text |  |  | Link (#name) | Going to this link opens the pop-up, e.g. a button with a navigate action to #name |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `show_trigger` |  | boolean |  | `false` | Trigger row | A row in the dashboard that opens the pop-up; off = the card is invisible |
 | `auto_close` |  | number (min: 0; max: 600; step: 5; unit: s) |  | `0` | Close after | Seconds; 0 keeps it open |
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |

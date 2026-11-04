@@ -2,7 +2,7 @@
 
 # `lumen-person-card`
 
-Lumen · Person: Household member with avatar, presence dot and since when
+Lumen · Person: Household member with a photo, a home/away dot and the time since the last change
 
 - YAML: `type: custom:lumen-person-card`
 - Picker suggests it for: `person`
@@ -25,7 +25,7 @@ Lumen · Person: Household member with avatar, presence dot and since when
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_status` |  | boolean |  | `true` | Show status |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |

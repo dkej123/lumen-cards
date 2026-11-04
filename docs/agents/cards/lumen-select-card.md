@@ -2,7 +2,7 @@
 
 # `lumen-select-card`
 
-Lumen · Select: input_select / select with a drop-down list
+Lumen · Select: Pick one option from a list, e.g. a vacuum mode
 
 - YAML: `type: custom:lumen-select-card`
 - Picker suggests it for: `input_select`, `select`

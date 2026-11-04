@@ -343,6 +343,19 @@ describe("section 14 cards", () => {
     el.remove();
   });
 
+  it("calendar: an empty list reads right for one day and for several", async () => {
+    const empty = async (days: number) => {
+      const { el, root } = await mount("calendar", { entity: "calendar.c", days }, mkHass(() => []));
+      await new Promise((r) => setTimeout(r, 0));
+      await el.updateComplete;
+      const text = root.textContent;
+      el.remove();
+      return text;
+    };
+    expect(await empty(1)).toContain("No events in the next day");
+    expect(await empty(5)).toContain("No events in the next 5 days");
+  });
+
   it("nav: the current view is active, a tap navigates through HA", async () => {
     const { el, root } = await mount("nav", { position: "inline", items: [{ navigation_path: location.pathname, name: "Home", icon: "mdi:home" }, { navigation_path: "/rooms", name: "Rooms" }] });
     const links = [...root.querySelectorAll<HTMLAnchorElement>("a")];

@@ -154,7 +154,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
             },
           },
         },
-        { name: "entity", selector: { entity: {} } },
+        { name: "entity", helper: "title_entity", selector: { entity: {} } },
         { name: "tap_action", selector: { ui_action: {} } },
         advanced([], { haptics: false }),
         appearance({ effects: false, layout: "screen", accent: false }),

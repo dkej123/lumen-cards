@@ -2,7 +2,7 @@
 
 # `lumen-bar-card`
 
-Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, locks, buttons) as cells in one frame
+Lumen · Bar: Several cards (doors, alarms, locks, buttons) as small tiles in one glass bar
 
 - YAML: `type: custom:lumen-bar-card`
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
@@ -13,7 +13,7 @@ Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, lock
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
-| `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `cards` |  | object |  |  | Cards | The cards inside, as in a vertical stack |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |

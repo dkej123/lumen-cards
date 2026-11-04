@@ -18,10 +18,10 @@ Lumen · Button: Runs a script, scene or button, optionally waiting for the devi
 | `icon` |  | icon |  |  | Icon |  |
 | `color` |  | ui_color |  |  | Colour |  |
 | `secondary_info` |  | select | `auto` (Auto (last use)), `state` (State), `last-triggered` (Last run), `last-changed` (Last change), `none` (None) | `auto` | Second line |  |
-| `last_used_entity` |  | entity (domain: input_datetime, sensor) |  |  | Last use (input_datetime) |  |
+| `last_used_entity` |  | entity (domain: input_datetime, sensor) |  |  | Last use (helper or sensor) | A date-and-time helper or a timestamp sensor. Your automation updates it; the card only reads the time |
 | `feedback` |  | group: expandable |  |  | Device response | Without it the card only runs the action |
 | `feedback.status_entity` |  | entity (domain: sensor) |  |  | Response code sensor |  |
-| `feedback.success_state` |  | text |  |  | Success code |  |
+| `feedback.success_state` |  | text |  |  | Success code | Default: 200 |
 | `feedback.success_text` |  | text |  |  | Text on success |  |
 | `feedback.message_entity` |  | entity (domain: sensor) |  |  | Response text sensor |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
@@ -30,7 +30,7 @@ Lumen · Button: Runs a script, scene or button, optionally waiting for the devi
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_icon` |  | boolean |  | `true` | Show icon |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |

@@ -17,18 +17,18 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `arm_modes` |  | select[] | `armed_home` (Home), `armed_away` (Away), `armed_night` (Night), `armed_vacation` (Vacation), `armed_custom_bypass` (Custom) |  | Arm modes | Nothing selected = every mode the alarm supports |
-| `arming_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Exit delay | Length of the countdown bars when the alarm does not report it (arming_time / delay attributes) |
-| `pending_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Entry delay | Length of the countdown bars when the alarm does not report it (arming_time / delay attributes) |
+| `arming_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Exit delay | Seconds. Only used when the alarm does not report this time itself; sets the length of the countdown bar |
+| `pending_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Entry delay | Seconds. Only used when the alarm does not report this time itself; sets the length of the countdown bar |
 | `banner` |  | boolean |  | `true` | Banner when triggered |  |
 | `screen_ring` |  | boolean |  | `true` | Red screen ring when triggered |  |
 | `banner_text` |  | text |  |  | Banner text |  |
-| `disarmed_color` |  | ui_color |  |  | Disarmed colour | Neutral by default; e.g. red as in the Dom panel |
+| `disarmed_color` |  | ui_color |  |  | Disarmed colour | Neutral by default; choose e.g. red to make “disarmed” stand out |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
 | `show_buttons` |  | boolean |  | `true` | Buttons |  |
-| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
+| `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one (the light card can show 2); the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |

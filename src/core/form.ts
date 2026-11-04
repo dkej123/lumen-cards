@@ -119,7 +119,6 @@ const LABELS: Record<string, string> = {
   show_modes: "editor.show_modes",
   show_fan_modes: "editor.show_fan_modes",
   show_color_button: "editor.show_color_button",
-  show_greeting_name: "editor.show_greeting_name",
   sub_buttons: "editor.sub_buttons",
   styles: "editor.styles",
   edit_note: "editor.edit_note",
@@ -225,6 +224,17 @@ const HELPERS: Record<string, string> = {
   fab_sheet_cards: "editor.help.fab_sheet_cards",
   volume_remote: "editor.help.volume_remote",
   volume_step: "editor.help.volume_step",
+  value: "editor.help.value",
+  align: "editor.help.align",
+  align_row: "editor.help.align_row",
+  card_width: "editor.help.card_width",
+  show_controls: "editor.help.show_controls",
+  busy_entity: "editor.help.busy_entity",
+  success_state: "editor.help.success_state",
+  title_entity: "editor.help.title_entity",
+  state: "editor.help.state",
+  footer: "editor.help.footer",
+  last_used_entity: "editor.help.last_used_entity",
 };
 
 /** A field's own `title` wins over the shared label of its name (e.g. `hours` of the weather card). */

@@ -2,12 +2,12 @@
 
 # `lumen-purifier-card`
 
-Lumen · Air purifier: Purifier and humidifier in one tile
+Lumen · Air purifier: Air purifier on a fan entity: modes, speed, air quality, filters and optional humidifying
 
 - YAML: `type: custom:lumen-purifier-card`
 - `layout: auto` is compact when: never (only `layout: compact`)
 - Default `grid_options`: `{"columns":12,"min_columns":6,"rows":"auto"}`
-- Config error with no options: "The entity field is missing"
+- Config error with no options: "Pick a purifier (fan.*)"
 - Starting config: `{"entity":"fan.air_purifier"}`
 - A control that calls a service goes in `service_controls`. One written in `controls` keeps working; the editor shows the service fields of `controls` only then.
 
@@ -17,8 +17,8 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `layout` |  | select | `wide` (Full), `compact` (Compact) | `wide` | Layout | A wide card or a compact row |
-| `hours` |  | number (min: 6; max: 48; step: 6; unit: h) |  | `24` | Chart range (h) |  |
-| `stale_hours` |  | number (min: 0; max: 48; unit: h) |  | `2` | Data outdated after (h) |  |
+| `hours` |  | number (min: 6; max: 48; step: 6; unit: h) |  | `24` | Chart range |  |
+| `stale_hours` |  | number (min: 0; max: 48; unit: h) |  | `2` | Data outdated after |  |
 | `preset_modes` |  | select[] | `auto` (Auto), `allergen` (Allergen), `sleep` (Sleep), `manual` (Manual), `bacteria` (Bacteria), `night` (Night) |  | Presets | Which modes to show and in what order. Empty = all the device has |
 | `speeds` |  | object[] |  |  | Speed names | Empty = buttons follow the device's speed step and are numbered |
 | `speeds[].percentage` | yes | number (min: 1; max: 100; unit: %) |  |  | Percent |  |

@@ -2,7 +2,7 @@
 
 # `lumen-fab-sheet-card`
 
-Lumen · Floating panel: A floating button that opens a sheet with any cards, e.g. all thermostats
+Lumen · Floating panel: A floating button that opens a panel with any cards, e.g. all thermostats
 
 - YAML: `type: custom:lumen-fab-sheet-card`
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
@@ -15,8 +15,8 @@ Lumen · Floating panel: A floating button that opens a sheet with any cards, e.
 |---|---|---|---|---|---|---|
 | `icon` |  | icon |  |  | Icon |  |
 | `title` |  | text |  |  | Title |  |
-| `cards` |  | object |  |  | Cards (YAML) | Cards inside the panel (YAML list); climate cards show as compact thermostat rows |
-| `narrow_only` |  | boolean |  | `true` | Only on a narrow screen | Below 1024 px a button in the corner, wider a row in the grid |
+| `cards` |  | object |  |  | Cards | Cards inside the panel; climate cards show as compact thermostat rows |
+| `narrow_only` |  | boolean |  | `true` | Only on a narrow screen | Below 1024 px a button in the corner, wider a row in the grid. Off: the button on every screen |
 | `fab_side` |  | select | `right` (Right), `left` (Left (left-handed)) | `right` | Button side | Which screen edge the floating button sits at. Each side has its own stack of buttons |
 | `badge_entities` |  | entity[] |  |  | Number on the button | How many of the chosen entities are active (e.g. heating, on, open). Empty: how many thermostats in the panel are heating |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |

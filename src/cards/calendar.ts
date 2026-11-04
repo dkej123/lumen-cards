@@ -128,7 +128,7 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
       : this._error
       ? html`<div role="alert" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650;color:var(--lumen-danger)">${icon("mdi:alert-circle-outline", "font-size:18px")}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${t("card.calendar.error")}</span></div>`
       : !days.length
-      ? html`<div style="font-size:13px;font-weight:650;color:var(--lumen-text-3)">${una ? t("common.unavailable") : t("card.calendar.empty", { n: Number(c.days ?? 7) })}</div>`
+      ? html`<div style="font-size:13px;font-weight:650;color:var(--lumen-text-3)">${una ? t("common.unavailable") : (Number(c.days ?? 7) === 1 ? t("card.calendar.empty_one") : t("card.calendar.empty", { n: Number(c.days ?? 7) }))}</div>`
       : days.map(
           (d) => html`<div role="group" aria-label=${d.label} style="display:flex;flex-direction:column;gap:8px">
             <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3);padding-top:2px">${d.label}</div>

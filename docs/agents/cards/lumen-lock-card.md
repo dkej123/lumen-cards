@@ -16,7 +16,7 @@ Lumen · Lock: Lock state with Lock / Unlock (and Open) buttons, code and confir
 | `entity` | yes | entity (domain: lock) |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
-| `busy_entity` |  | entity (domain: input_boolean, binary_sensor, switch) |  |  | “In progress” flag (optional) |  |
+| `busy_entity` |  | entity (domain: input_boolean, binary_sensor, switch) |  |  | “In progress” flag (optional) | On while the lock is working; the card waits for it before showing the result |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |

@@ -434,7 +434,7 @@ describe("purifier card", () => {
 
   it("shows errors for a missing entity and another domain", async () => {
     const a = await mount("purifier", {}, mockHass());
-    expect(texts(a)).toContain("entity");
+    expect(texts(a)).toContain("fan");
     const b = await mount("purifier", { entity: "light.x" }, mockHass());
     expect(texts(b)).toContain("fan");
     a.remove();
