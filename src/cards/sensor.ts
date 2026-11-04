@@ -12,7 +12,7 @@ import { colorOr, glass } from "../core/styles";
 import { requireEntity } from "../core/validate";
 import type { HassEntity, HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
-import { num, stateText, temp } from "../logic/format";
+import { num, stateText } from "../logic/format";
 import { ageMs, formatAgo, formatNumber } from "../logic/time";
 
 export interface SensorConfig extends BaseConfig {
@@ -41,13 +41,21 @@ export function validateSensor(c: Partial<SensorConfig>): void {
   requireEntity(c, { msg: "card.sensor.error.entity" });
 }
 
-/** Temperatures as "22.3°", other numbers as value + unit, text states as HA formats them. */
+/**
+ * HA's own text wherever it has one (its precision, locale and unit). Temperatures keep the card's
+ * style: HA's number with a bare degree ("21,5°"). Text states as HA formats them, "—" without data.
+ */
 export function sensorValue(e: HassEntity | undefined, hass?: HassLike): string {
   const v = num(e);
   const unit: string = e?.attributes.unit_of_measurement ?? "";
-  if (e?.attributes.device_class === "temperature" || unit === "°C" || unit === "°F") return temp(v);
-  if (v === null) return isUnavailable(e) ? "—" : stateText(hass, e, e!.state);
-  return `${formatNumber(v)}${unit ? ` ${unit}` : ""}`;
+  const temperature = e?.attributes.device_class === "temperature" || unit === "°C" || unit === "°F";
+  if (v === null) return temperature || isUnavailable(e) ? "—" : stateText(hass, e, e!.state);
+  // Without a formatter the number keeps the decimals it came with.
+  const decimals = e!.state.split(".")[1]?.length ?? 0;
+  const text = hass?.formatEntityState?.(e!) ?? formatNumber(v, decimals);
+  if (temperature) return `${(unit ? text.replace(unit, "") : text).trim()}°`;
+  // A formatter that leaves the unit out (the demo's mock).
+  return unit && !text.includes(unit) ? `${text} ${unit}` : text;
 }
 
 /** No reading (reported, even if unchanged) for longer than `hours`. */

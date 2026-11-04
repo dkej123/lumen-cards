@@ -690,3 +690,48 @@ describe("unknown: No data, and the actions stay", () => {
     el.remove();
   });
 });
+
+describe("sensor value: Home Assistant's own formatting", () => {
+  const ha = (out: string) => ({ formatEntityState: () => out }) as never;
+
+  it("uses HA's text when it has one (precision, locale, unit)", async () => {
+    const { sensorValue } = await import("../src/cards/sensor");
+    expect(sensorValue(ent("sensor.p", "1500.04", { unit_of_measurement: "W" }), ha("1,500 W"))).toBe("1,500 W");
+    expect(sensorValue(ent("sensor.h", "55", { unit_of_measurement: "%" }), ha("55%"))).toBe("55%");
+  });
+
+  it("keeps the card's own temperature style on HA's number", async () => {
+    const { sensorValue } = await import("../src/cards/sensor");
+    expect(sensorValue(ent("sensor.t", "21.46", { unit_of_measurement: "°C", device_class: "temperature" }), ha("21,5 °C"))).toBe("21,5°");
+    expect(sensorValue(ent("sensor.t", "21", { unit_of_measurement: "°C" }), ha("21 °C"))).toBe("21°");
+    expect(sensorValue(ent("sensor.t", "unknown", { unit_of_measurement: "°C" }), ha("Unknown"))).toBe("—");
+  });
+
+  it("a rough formatter that drops the unit (the demo's mock) still shows it", async () => {
+    const { sensorValue } = await import("../src/cards/sensor");
+    const rough = { formatEntityState: (e: { state: string }) => e.state } as never;
+    expect(sensorValue(ent("sensor.p", "1500", { unit_of_measurement: "W" }), rough)).toBe("1500 W");
+    expect(sensorValue(ent("sensor.n", "3"), rough)).toBe("3");
+    expect(sensorValue(ent("sensor.t", "21.5", { unit_of_measurement: "°C" }), rough)).toBe("21.5°");
+  });
+
+  it("without a formatter the number keeps its own decimals", async () => {
+    const { sensorValue } = await import("../src/cards/sensor");
+    expect(sensorValue(ent("sensor.p", "1500", { unit_of_measurement: "W" }))).toBe("1500 W");
+    expect(sensorValue(ent("sensor.k", "0.123", { unit_of_measurement: "kWh" }))).toBe("0.123 kWh");
+    expect(sensorValue(ent("sensor.t", "21", { unit_of_measurement: "°C" }))).toBe("21°");
+    expect(sensorValue(ent("sensor.t", "21.5", { unit_of_measurement: "°C" }))).toBe("21.5°");
+  });
+
+  it("wide, compact and the accessible name read the same", async () => {
+    const h = mockHass([ent("sensor.p", "1500", { unit_of_measurement: "W" })]);
+    h.formatEntityState = () => "1.5 kW";
+    for (const layout of ["wide", "compact"]) {
+      const el = await mountCard("sensor", { entity: "sensor.p", layout }, h);
+      const tile = el.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!;
+      expect(tile.textContent).toContain("1.5 kW");
+      expect(tile.getAttribute("aria-label")).toContain("1.5 kW");
+      el.remove();
+    }
+  });
+});
