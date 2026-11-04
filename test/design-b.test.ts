@@ -643,3 +643,53 @@ describe("alarm and lock going offline", () => {
     expect(root(el).querySelectorAll(".subbtns > [aria-disabled]").length).toBe(2);
   });
 });
+
+describe("15 general states: loading and the card picker", () => {
+  it("cards that may show nothing, or only text, have no loading block", async () => {
+    for (const type of ["title", "greeting", "spacer", "popup", "fab-sheet", "reminder"]) {
+      const el = await mount(type, type === "reminder" ? { entity: "input_boolean.r" } : {});
+      expect(root(el).querySelector('[aria-busy="true"]'), type).toBeNull();
+      el.remove();
+    }
+    const alarm = await mount("alarm", { entity: "alarm_control_panel.a" });
+    expect(root(alarm).querySelector('[aria-busy="true"]')).not.toBeNull();
+  });
+
+  it("in the card picker a card without such an entity is an example, not an error; on a dashboard the error stays", async () => {
+    const picker = document.createElement("hui-card-picker");
+    document.body.append(picker);
+    const h = hass();
+    (h as unknown as { callApi: () => Promise<unknown> }).callApi = vi.fn(async () => []);
+    for (const [type, entity] of [["light", "light.example"], ["cover", "cover.example"], ["fan", "fan.example"], ["number", "input_number.example"], ["select", "input_select.example"], ["entity", "binary_sensor.front_door"], ["button", "script.open_gate"], ["person", "person.example"], ["media", "media_player.example"], ["calendar", "calendar.example"], ["reminder", "input_boolean.reminder"]]) {
+      const el = document.createElement(`lumen-${type}-card`) as Card;
+      el.setConfig({ type: `custom:lumen-${type}-card`, entity });
+      el.preview = true;
+      picker.append(el);
+      el.hass = h;
+      await el.updateComplete;
+      expect(root(el).querySelector('[role="alert"]'), type).toBeNull();
+      expect(root(el).textContent, type).toContain("Example");
+      el.remove();
+    }
+    expect((h as unknown as { callApi: unknown }).callApi).not.toHaveBeenCalled();
+    picker.remove();
+    const real = await mount("light", { entity: "light.example" }, h);
+    expect(root(real).querySelector('[role="alert"]')).not.toBeNull();
+  });
+
+  it("the alarm's masonry size is one row, also compact", async () => {
+    const h = hass(ent("alarm_control_panel.a", "disarmed"));
+    for (const layout of ["wide", "compact"]) {
+      const el = (await mount("alarm", { entity: "alarm_control_panel.a", layout }, h)) as Card & { getCardSize(): number };
+      expect(el.getCardSize(), layout).toBe(1);
+    }
+  });
+
+  it("starter configs are in the user's language", async () => {
+    setLanguage("pl");
+    const nav = customElements.get("lumen-nav-card") as unknown as { getStubConfig(): { items: { name: string }[] } };
+    const popup = customElements.get("lumen-popup-card") as unknown as { getStubConfig(): { name: string } };
+    expect(nav.getStubConfig().items.map((i) => i.name)).toEqual(["Dom", "Pokoje", "Klimat", "Kamery"]);
+    expect(popup.getStubConfig().name).toBe("Salon");
+  });
+});

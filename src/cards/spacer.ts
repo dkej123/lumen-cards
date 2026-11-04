@@ -16,6 +16,7 @@ const CLEARANCE = 16;
 /** Empty space: by default as tall as the floating buttons on screen, so nothing stays under them. */
 export class LumenSpacerCard extends LumenBaseCard<SpacerConfig> {
   protected static grid = GRID.full;
+  protected static skeletonHeight = 0;
   private unwatch?: () => void;
 
   protected entityIds() {

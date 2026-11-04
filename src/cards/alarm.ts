@@ -352,10 +352,6 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     </div>`;
   }
 
-  getCardSize() {
-    return this.compact ? 2 : 1;
-  }
-
   static getStubConfig = entityStub("alarm_control_panel", "alarm_control_panel.home");
 
   static getConfigForm() {

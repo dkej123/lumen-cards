@@ -55,6 +55,7 @@ const ORANGE = "var(--lumen-orange)";
  * 52 px row in the grid that opens the same sheet.
  */
 export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
+  protected static skeletonHeight = 0;
   private sheet = new Sheet(this, () => this.sheet.hide());
   private idsFor?: unknown;
   private idsCache: string[] = [];

@@ -63,6 +63,7 @@ export function validateReminder(c: Partial<ReminderConfig>): void {
  */
 export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
   protected static grid = GRID.half;
+  protected static skeletonHeight = 0;
   static properties = { ...LumenBaseCard.properties, _open: { state: true } };
   private _open = false;
   /** Occurrence already shown since the last entry (key from `alertToShow`). */

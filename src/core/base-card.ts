@@ -68,6 +68,12 @@ export const GRID = {
 export const WIDE_PX = 1024;
 const wideQuery: MediaQueryList | undefined = typeof matchMedia === "undefined" ? undefined : matchMedia(`(min-width: ${WIDE_PX}px)`);
 
+/** Picker preview of a card with no sample of its own: says "No data" rather than invent a device's values. */
+const exampleEntity = (id: string): HassEntity => {
+  const now = new Date().toISOString();
+  return { entity_id: id, state: "unknown", attributes: { friendly_name: t("common.example") }, last_changed: now, last_updated: now };
+};
+
 /** CSS max-width from `max_width` (+ unit): 320 → 320px, 80 + "%" → 80%, "80%" / "320px" as written; % is capped at 100. */
 export function maxWidthCss(v: unknown, unit?: string): string | undefined {
   const m = /^\s*(\d+(?:[.,]\d+)?)\s*(px|%)?\s*$/.exec(String(v ?? ""));
@@ -117,7 +123,7 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
 
   /**
    * Sample entity for the card picker preview when the entity of the stub config does not exist
-   * (section 15, "Example" badge). Cards with an `entity` field override it.
+   * (section 15, "Example" badge). Without one the preview is a nameless entity without data.
    */
   protected static sample?: (entityId: string) => HassEntity | undefined;
 
@@ -265,8 +271,9 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
   }
 
   private sampleFor(id: string): HassEntity | undefined {
+    if (!this.inCardPicker) return undefined;
     const make = (this.constructor as typeof LumenBaseCard).sample;
-    return make && this.inCardPicker ? make(id) : undefined;
+    return make ? make(id) : exampleEntity(id);
   }
 
   set hass(hass: HassLike) {

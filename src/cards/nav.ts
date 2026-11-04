@@ -138,10 +138,10 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
   static getStubConfig() {
     return {
       items: [
-        { navigation_path: "home", name: "Home", icon: "mdi:home-variant" },
-        { navigation_path: "rooms", name: "Rooms", icon: "mdi:sofa-outline" },
-        { navigation_path: "climate", name: "Climate", icon: "mdi:thermometer" },
-        { navigation_path: "cameras", name: "Cameras", icon: "mdi:cctv" },
+        { navigation_path: "home", name: t("card.nav.stub.home"), icon: "mdi:home-variant" },
+        { navigation_path: "rooms", name: t("card.nav.stub.rooms"), icon: "mdi:sofa-outline" },
+        { navigation_path: "climate", name: t("card.nav.stub.climate"), icon: "mdi:thermometer" },
+        { navigation_path: "cameras", name: t("card.nav.stub.cameras"), icon: "mdi:cctv" },
       ],
     };
   }

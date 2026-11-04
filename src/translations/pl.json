@@ -758,5 +758,10 @@
   "editor.device_class.power": "Zasilanie",
   "editor.help.layout_manual": "Auto: pełny wygląd w każdym rozmiarze. Kompaktowy tylko po wybraniu",
   "editor.help.arm_modes": "Nic nie zaznaczone = każdy tryb obsługiwany przez alarm",
-  "editor.help.preset_modes": "Nic nie zaznaczone = każdy preset urządzenia"
+  "editor.help.preset_modes": "Nic nie zaznaczone = każdy preset urządzenia",
+  "card.nav.stub.cameras": "Kamery",
+  "card.nav.stub.climate": "Klimat",
+  "card.nav.stub.home": "Dom",
+  "card.nav.stub.rooms": "Pokoje",
+  "card.popup.stub_name": "Salon"
 }

@@ -32,6 +32,7 @@ export interface PopupConfig extends ContainerConfig {
  */
 export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}`];
+  protected static skeletonHeight = 0;
   private sheetView = new Sheet(this, () => this.close());
   private autoTimer?: number;
 
@@ -149,7 +150,7 @@ export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
   }
 
   static getStubConfig() {
-    return { hash: "#living-room", name: "Living room", show_trigger: true, cards: [] };
+    return { hash: "#living-room", name: t("card.popup.stub_name"), show_trigger: true, cards: [] };
   }
 
   static getConfigForm() {

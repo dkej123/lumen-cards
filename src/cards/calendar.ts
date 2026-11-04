@@ -89,7 +89,8 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
     if (!c || !h || this.loading) return;
     const e = this.entity(c.entity);
     if (this.fetchedAt && e === this.fetchedFor && Date.now() - this.fetchedAt < REFRESH_MS) return;
-    if (typeof h.callApi !== "function") {
+    // No such calendar (a picker preview): nothing to ask for.
+    if (typeof h.callApi !== "function" || !h.states[c.entity]) {
       this._events ??= [];
       return;
     }

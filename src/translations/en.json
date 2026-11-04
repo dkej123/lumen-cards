@@ -758,5 +758,10 @@
   "editor.device_class.power": "Power",
   "editor.help.layout_manual": "Auto: the full look at any size. Compact only when you choose it",
   "editor.help.arm_modes": "Nothing selected = every mode the alarm supports",
-  "editor.help.preset_modes": "Nothing selected = every preset of the device"
+  "editor.help.preset_modes": "Nothing selected = every preset of the device",
+  "card.nav.stub.cameras": "Cameras",
+  "card.nav.stub.climate": "Climate",
+  "card.nav.stub.home": "Home",
+  "card.nav.stub.rooms": "Rooms",
+  "card.popup.stub_name": "Living room"
 }

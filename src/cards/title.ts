@@ -53,6 +53,7 @@ const OVERLINE = "font-size:12px;font-weight:700;letter-spacing:.06em;text-trans
  */
 export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
   protected static grid = GRID.full;
+  protected static skeletonHeight = 0;
   protected entityIds() {
     return [...this.items().map((x) => x.entity), this._config.entity];
   }
