@@ -682,7 +682,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
       { name: "preset_modes", helper: "purifier_preset_modes", selector: { select: { multiple: true, custom_value: true, reorder: true, mode: "list", options: modes } } },
       { name: "speeds", helper: "purifier_speeds", selector: { object: { multiple: true, label_field: "name", description_field: "percentage", fields: { percentage: { label: lab("speed_percentage"), required: true, selector: { number: { min: 1, max: 100, mode: "box", unit_of_measurement: "%" } } }, name: { label: t("editor.name"), selector: text } } } } },
       {
-        name: "", type: "expandable", flatten: true, title: "card.purifier.editor.humidifier_group", icon: "mdi:water-percent",
+        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.humidifier_group"), icon: "mdi:water-percent",
         schema: [
           { name: "show_humidifier", default: true, selector: { boolean: {} } },
           { name: "humidifier_entity", selector: { entity: { domain: "humidifier" } } },
@@ -692,14 +692,14 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
         ],
       },
       {
-        name: "", type: "expandable", flatten: true, title: "card.purifier.editor.filters_group", icon: "mdi:air-filter",
+        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.filters_group"), icon: "mdi:air-filter",
         schema: [
           { name: "show_filters", default: true, selector: { boolean: {} } },
           { name: "filters", helper: "purifier_filters", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { name: { label: t("editor.name"), selector: text }, entity: { label: t("editor.entity"), selector: { entity: { domain: "sensor" } } }, attribute: { label: lab("attribute"), selector: text }, unit: { label: lab("unit"), selector: { select: { mode: "dropdown", options: ["%", "h", "d"] } } } } } } },
         ],
       },
       {
-        name: "", type: "expandable", flatten: true, title: "card.purifier.editor.controls_group", icon: "mdi:tune-variant",
+        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.controls_group"), icon: "mdi:tune-variant",
         schema: [
           { name: "controls", helper: "purifier_controls", selector: { object: { multiple: true, label_field: "name", description_field: "entity", fields: { name: { label: t("editor.name"), selector: text }, icon: { label: t("editor.icon"), selector: { icon: {} } }, entity: { label: t("editor.entity"), selector: { entity: { domain: ["switch", "light", "input_boolean", "select", "input_select", "number", "input_number"] } } }, attribute: { label: lab("attribute"), selector: text }, service: { label: lab("service"), selector: text }, field: { label: lab("field"), selector: text }, kind: { label: lab("kind"), selector: select([["switch", "card.purifier.editor.kind_switch"], ["segment", "card.purifier.editor.kind_segment"], ["stepper", "card.purifier.editor.kind_stepper"]]) }, options: { label: lab("options"), selector: { object: {} } }, min: { label: lab("min"), selector: { number: { mode: "box" } } }, max: { label: lab("max"), selector: { number: { mode: "box" } } }, step: { label: lab("step"), selector: { number: { mode: "box" } } }, min_label: { label: lab("min_label"), selector: text } } } } },
           { name: "confirm_timeout", helper: "purifier_confirm_timeout", default: 45, selector: { number: { min: 5, max: 300, mode: "box", unit_of_measurement: "s" } } },
@@ -707,7 +707,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
         ],
       },
       {
-        name: "", type: "expandable", flatten: true, title: "card.purifier.editor.sensors_group", icon: "mdi:gauge",
+        name: "", type: "expandable", flatten: true, title: t("card.purifier.editor.sensors_group"), icon: "mdi:gauge",
         schema: [
           sensor("pm25_entity"), sensor("temperature_entity"), sensor("humidity_entity"), sensor("target_humidity_entity"), sensor("water_level_entity"),
           { name: "water_empty_entity", selector: { entity: { domain: "binary_sensor" } } },

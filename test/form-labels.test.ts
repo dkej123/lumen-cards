@@ -34,4 +34,22 @@ describe("visual editors", () => {
     expect(missing).toEqual([]);
     setLanguage("en");
   });
+
+  // HA prints an expandable's `title` as it stands, without computeLabel.
+  it.each(["pl", "en"])("every group has a translated title (%s)", (lang) => {
+    setLanguage(lang);
+    const bad: string[] = [];
+    const cards = (window as unknown as { customCards: { type: string }[] }).customCards;
+    for (const { type } of cards) {
+      const walk = (list: Field[]) => {
+        for (const f of list) {
+          if (f.type === "expandable" && (!f.title || /^[a-z_]+(\.[a-z_]+)+$/.test(f.title))) bad.push(`${type}: ${f.title}`);
+          if (f.schema) walk(f.schema);
+        }
+      };
+      walk((customElements.get(type) as unknown as { getConfigForm?: () => Form }).getConfigForm?.().schema ?? []);
+    }
+    expect(bad).toEqual([]);
+    setLanguage("en");
+  });
 });
