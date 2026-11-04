@@ -5,7 +5,7 @@ import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { Tweens } from "../core/controllers/tween";
 import { deviceStore } from "../core/device-store";
 import { icon } from "../core/lumen-icon";
-import { appearance, entityStub, fabFields, form, hapticsField, nameIcon } from "../core/form";
+import { appearance, entityStub, fabFields, form, hapticsField, hide, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { WFX } from "../core/parts";
@@ -610,7 +610,12 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   static getStubConfig = entityStub("climate", "climate.example");
 
   static getConfigForm() {
-    return form([
+    return form((c) => {
+      // Which looks the card can have: the full card, the compact row, the floating button's dialog.
+      const compact = c?.layout === "compact";
+      const alwaysFab = !!c?.fab && c.fab_narrow_only === false;
+      const card = !compact && !alwaysFab;
+      return hide(c, [
       { name: "entity", required: true, selector: { entity: { domain: "climate" } } },
       nameIcon(),
       {
@@ -684,7 +689,13 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
         ],
       },
       appearance({ layout: "width" }),
-    ]);
+      ], [
+        [!c?.fab, ["fab_narrow_only", "fab_side"]],
+        [!card && !c?.fab, ["hvac_modes", "fan_modes", "show_modes", "show_fan_modes"]],
+        [!card, ["preset_modes", "show_presets", "show_swing", "show_action", "show_range"]],
+        [alwaysFab, ["show_battery", "battery_entity", "battery_low"]],
+      ]);
+    });
   }
 }
 

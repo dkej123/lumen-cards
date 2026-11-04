@@ -4,7 +4,7 @@ import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { cssColor } from "../core/styles";
-import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, hide, nameIcon } from "../core/form";
 import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
@@ -280,7 +280,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
 
   static getConfigForm() {
     return form(
-      [
+      (config) => hide(config, [
         { name: "entity", required: true, selector: { entity: {} } },
         nameIcon(),
         { name: "color", selector: { ui_color: {} } },
@@ -314,7 +314,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
         actions(),
         advanced([["show_name"], ["show_icon"], ["show_state"]], { subButtons: true }),
         appearance({ layout: "width" }),
-      ],
+      ], [[(config?.secondary_info ?? "auto") !== "auto", ["last_used_entity"]]]),
       (c) => {
         const fb = c.feedback as ButtonFeedback | undefined;
         if (fb !== undefined && typeof fb !== "object") throw new Error("feedback");

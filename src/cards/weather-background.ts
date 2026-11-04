@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { findAncestor } from "../core/dom";
-import { appearance, firstOf, form, stub } from "../core/form";
+import { appearance, firstOf, form, hide, stub } from "../core/form";
 import { icon } from "../core/lumen-icon";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -190,12 +190,13 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
   }
 
   static getConfigForm() {
-    return form([
+    // Width, layout and accent only shape the per-device switches; the rest of the card is a full-screen layer.
+    return form((c) => hide(c, [
       { name: "weather_entity", required: true, selector: { entity: { domain: "weather" } } },
       { name: "sun_entity", selector: { entity: { domain: "sun" } } },
       { name: "show_controls", selector: { boolean: {} } },
       appearance({ effects: false, layout: "screen" }),
-    ]);
+    ], [[!c?.show_controls, ["layout", "accent_color", "max_width", "max_width_unit"]]]));
   }
 }
 

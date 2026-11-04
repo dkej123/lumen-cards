@@ -3,7 +3,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
-import { advanced, appearance, firstOf, form, nameIcon, select, stub } from "../core/form";
+import { advanced, appearance, firstOf, form, hide, nameIcon, select, stub } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { dialogScrim } from "../core/parts";
@@ -199,7 +199,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
   }
 
   static getConfigForm() {
-    return form([
+    return form((c) => hide(c, [
       { name: "entity", required: true, selector: { entity: {} } },
       { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", selector: select([["info", "tone.info"], ["ok", "common.ok"], ["warning", "tone.warning"], ["danger", "tone.danger"]]) }] },
       nameIcon(),
@@ -225,7 +225,10 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       },
       advanced(),
       appearance({ layout: false }),
-    ]);
+    ], [
+      [c?.dialog === false, ["title", "message", "done"]],
+      [c?.dialog === false || !c?.done, ["done_action"]],
+    ]));
   }
 }
 

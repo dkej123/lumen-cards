@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { handleAction } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
-import { appearance, form, hapticsField, type Schema } from "../core/form";
+import { appearance, form, hapticsField, hide, type Schema } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
@@ -162,7 +162,7 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
         },
       },
     };
-    return form([
+    return form((c) => hide(c, [
       items,
       {
         name: "",
@@ -175,7 +175,7 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
       },
       hapticsField,
       appearance({ layout: false, effects: false }),
-    ]);
+    ], [[c?.position === "inline", ["narrow_only"]]]));
   }
 }
 

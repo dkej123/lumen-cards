@@ -5,7 +5,7 @@ import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
 import { deviceStore } from "../core/device-store";
-import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, hide, nameIcon } from "../core/form";
 import { SubButtons, subButtonEntities } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -338,7 +338,9 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   static getStubConfig = entityStub("alarm_control_panel", "alarm_control_panel.home");
 
   static getConfigForm() {
-    return form([
+    // Banner: only the compact card has one. The state line and buttons: only the full card.
+    return form((c) =>
+      hide(c, [
       { name: "entity", required: true, selector: { entity: { domain: "alarm_control_panel" } } },
       nameIcon(),
       { name: "arm_modes", selector: { select: { multiple: true, mode: "list", options: ["armed_home", "armed_away", "armed_night", "armed_vacation", "armed_custom_bypass"].map((value) => ({ value, label: modeLabel(value) })) } } },
@@ -356,7 +358,12 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       actions(),
       advanced([["show_state"], ["show_buttons"]], { subButtons: true }),
       appearance({ layout: "width" }),
-    ]);
+      ], [
+        [c?.layout === "wide" || c?.banner === false, ["banner_text"]],
+        [c?.layout === "wide", ["banner"]],
+        [c?.layout === "compact", ["show_state", "show_buttons"]],
+      ]),
+    );
   }
 }
 

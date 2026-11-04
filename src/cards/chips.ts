@@ -4,7 +4,7 @@ import { handleAction, type ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
-import { advanced, appearance, fabFields, form } from "../core/form";
+import { advanced, appearance, fabFields, form, hide } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_MAIN, FAB_ORDER, FabController, fabInset, fabSideOf, LayerController } from "../core/layer";
 import { WFX } from "../core/parts";
@@ -261,7 +261,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
       { value: "light", label: t("card.chips.type.light") },
     ];
     return form(
-      [
+      (c) => hide(c, [
         {
           name: "chips",
           selector: {
@@ -306,7 +306,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
         },
         advanced(),
         appearance({ layout: "screen" }),
-      ],
+      ], [[!c?.fab, ["fab_narrow_only", "fab_side", "fab_icon", "title"]]]),
       (c) => assertChips(c as Partial<ChipsConfig>),
     );
   }

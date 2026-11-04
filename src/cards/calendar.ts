@@ -2,7 +2,7 @@ import { html, nothing } from "lit";
 import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
-import { actions, advanced, appearance, entityStub, form } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, hide } from "../core/form";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
 import { WFX } from "../core/parts";
@@ -155,23 +155,27 @@ export class LumenCalendarCard extends LumenBaseCard<CalendarConfig> {
   static getStubConfig = entityStub("calendar", "calendar.home");
 
   static getConfigForm() {
-    return form([
-      { name: "entity", required: true, selector: { entity: { domain: "calendar" } } },
-      {
-        name: "",
-        type: "grid",
-        flatten: true,
-        schema: [
-          { name: "name", selector: { text: {} } },
-          { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
-          { name: "days", default: 7, selector: { number: { min: 1, max: 60, step: 1, mode: "box" } } },
-          { name: "max_events", default: 5, selector: { number: { min: 1, max: 30, step: 1, mode: "box" } } },
-        ],
-      },
-      actions(true, false),
-      advanced([["show_title"]]),
-      appearance({ layout: false, accent: false }),
-    ]);
+    // Name, icon and actions live on the header row: no header, nothing to set.
+    return form((c) =>
+      hide(c, [
+        { name: "entity", required: true, selector: { entity: { domain: "calendar" } } },
+        { name: "show_title", default: true, selector: { boolean: {} } },
+        {
+          name: "",
+          type: "grid",
+          flatten: true,
+          schema: [
+            { name: "name", selector: { text: {} } },
+            { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
+            { name: "days", default: 7, selector: { number: { min: 1, max: 60, step: 1, mode: "box" } } },
+            { name: "max_events", default: 5, selector: { number: { min: 1, max: 30, step: 1, mode: "box" } } },
+          ],
+        },
+        actions(true, false),
+        advanced(),
+        appearance({ layout: false, accent: false }),
+      ], [[c?.show_title === false, ["name", "icon", "tap_action", "hold_action"]]]),
+    );
   }
 }
 

@@ -206,13 +206,13 @@ Lumen · Calendar: Upcoming events of a calendar, grouped by day
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity (domain: calendar) |  |  | Entity |  |
+| `show_title` |  | boolean |  | `true` | Title |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `days` |  | number (min: 1; max: 60; step: 1) |  | `7` | Days ahead | How many days of the calendar to show |
 | `max_events` |  | number (min: 1; max: 30; step: 1) |  | `5` | Max events |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
-| `show_title` |  | boolean |  | `true` | Title |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |

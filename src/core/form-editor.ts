@@ -3,7 +3,10 @@ import type { Schema } from "./form";
 
 /** What a card's getConfigForm() returns (see form() in form.ts). */
 export interface CardForm {
+  /** Every field: what the docs, the catalog and the defaults read. */
   schema: Schema[];
+  /** The fields that apply to this config; without it the form always shows `schema`. */
+  schemaFor?: (config: Record<string, unknown>) => Schema[];
   computeLabel?: (s: Schema) => string | undefined;
   computeHelper?: (s: Schema) => string | undefined;
   assertConfig?: (c: Record<string, unknown>) => void;
@@ -47,6 +50,7 @@ export class LumenFormEditor extends LitElement {
   hass?: unknown;
   form!: CardForm;
   private _config: Record<string, unknown> = {};
+  private shown?: { key: string; schema: Schema[] };
 
   setConfig(config: Record<string, unknown>) {
     // Throwing makes HA switch to the YAML editor (same contract as assertConfig).
@@ -58,6 +62,14 @@ export class LumenFormEditor extends LitElement {
     return formDefaults(this.form.schema);
   }
 
+  /** The fields of the current config; the same array until they change, so ha-form is not rebuilt on every key. */
+  private get schema(): Schema[] {
+    const schema = this.form.schemaFor?.(this._config) ?? this.form.schema;
+    const key = JSON.stringify(schema);
+    if (this.shown?.key !== key) this.shown = { key, schema };
+    return this.shown.schema;
+  }
+
   private changed(e: CustomEvent<{ value: Record<string, unknown> }>) {
     e.stopPropagation();
     const config = withoutDefaults(e.detail.value, this.defaults, this._config);
@@ -67,7 +79,7 @@ export class LumenFormEditor extends LitElement {
 
   render() {
     if (!this.form) return nothing;
-    return html`<ha-form .hass=${this.hass} .data=${withDefaults(this._config, this.defaults)} .schema=${this.form.schema}
+    return html`<ha-form .hass=${this.hass} .data=${withDefaults(this._config, this.defaults)} .schema=${this.schema}
       .computeLabel=${this.form.computeLabel} .computeHelper=${this.form.computeHelper} @value-changed=${this.changed}></ha-form>`;
   }
 }

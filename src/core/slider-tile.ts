@@ -27,6 +27,8 @@ export interface SlideOpts {
   tap?: () => void;
   /** 500 ms press without a move. */
   hold?: () => void;
+  /** Whether a hold counts now (default: always). */
+  holdEnabled?: () => boolean;
   /** A tap sets the value under the finger (thin bars). */
   tapSets?: boolean;
   /** Arrow keys (±1) and Page Up / Down (big). */
@@ -95,13 +97,17 @@ export class SlideDrag implements ReactiveController {
     this.frac = null;
   }
 
+  private get holds(): boolean {
+    return !!this.opts.hold && (this.opts.holdEnabled?.() ?? true);
+  }
+
   readonly handlers = {
     down: (e: PointerEvent) => {
       if (e.button !== 0) return;
       const el = e.currentTarget as HTMLElement;
       this.press = { x0: e.clientX, y0: e.clientY, rect: el.getBoundingClientRect(), el, id: e.pointerId, dragging: false, held: false, moved: false };
       window.clearTimeout(this.holdTimer);
-      if (this.opts.hold)
+      if (this.holds)
         this.holdTimer = window.setTimeout(() => {
           const p = this.press;
           if (!p || p.moved) return;
@@ -169,9 +175,9 @@ export class SlideDrag implements ReactiveController {
     key: (e: KeyboardEvent) => {
       if (e.target !== e.currentTarget || e.repeat) return;
       const o = this.opts;
-      if (o.hold && (e.key === "ContextMenu" || (e.key === "Enter" && e.shiftKey))) {
+      if (this.holds && (e.key === "ContextMenu" || (e.key === "Enter" && e.shiftKey))) {
         e.preventDefault();
-        o.hold();
+        o.hold!();
       } else if ((e.key === "Enter" || e.key === " ") && o.tap) {
         e.preventDefault();
         this.haptic();

@@ -3,7 +3,7 @@ import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
-import { actions, advanced, appearance, firstOf, form, nameIcon, stub } from "../core/form";
+import { actions, advanced, appearance, firstOf, form, hide, nameIcon, stub } from "../core/form";
 import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
@@ -148,14 +148,15 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   }
 
   static getConfigForm() {
-    return form([
+    // The sensor type only changes the look of a binary sensor.
+    return form((c) => hide(c, [
       { name: "entity", required: true, selector: { entity: {} } },
       nameIcon(),
       { name: "device_class", selector: { select: { mode: "dropdown", options: ["door", "garage_door", "window", "opening", "moisture", "smoke", "motion", "occupancy"].map((value) => ({ value, label: t(`editor.device_class.${value}`) })) } } },
       actions(),
       advanced([["show_name"], ["show_icon"], ["show_state"]], { subButtons: true }),
       appearance({ layout: "width" }),
-    ]);
+    ], [[!String(c?.entity ?? "").startsWith("binary_sensor."), ["device_class"]]]));
   }
 }
 

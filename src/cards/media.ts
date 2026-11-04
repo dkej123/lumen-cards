@@ -2,7 +2,7 @@ import { css, html, nothing, unsafeCSS } from "lit";
 import type { ActionConfig } from "../core/actions";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { callOrToast, entityName } from "../core/call";
-import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, hide, nameIcon } from "../core/form";
 import { t } from "../core/i18n";
 import { icon } from "../core/lumen-icon";
 import { WFX } from "../core/parts";
@@ -67,6 +67,9 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     tapSets: true,
     threshold: 3,
     ends: true,
+    // The whole `volume_only` tile holds like the other slider tiles; the thin bar of the full card is only a bar.
+    hold: () => this.holdAction(this._config, this._config.entity)(),
+    holdEnabled: () => !!this._config?.volume_only,
     live: (f) => this.followFinger(f),
     commit: (f) => (this.keysOnly ? this.keys.to(f) : this.call("volume_set", { volume_level: Math.round(f * 100) / 100 })),
     step: (d, big) => this.keysOnly ? this.call(d > 0 ? "volume_up" : "volume_down") : this.call("volume_set", { volume_level: Math.max(0, Math.min(1, Math.round(((volumeLevel(this.player) ?? 0) + d * (big ? 0.1 : 0.05)) * 100) / 100)) }),
@@ -247,6 +250,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
         una,
         compact: this.compact,
         label: `${t("card.media.volume")} · ${name}`,
+        keys: "ArrowLeft ArrowRight Shift+Enter",
         slider: { now: Math.round(vf * 100), text: muted ? `${t("card.media.muted")}, ${percent}` : percent },
         trailing: off ? undefined : html`<div style="flex:none;display:flex;align-items:center;gap:6px">${buttons}</div>`,
       },
@@ -328,18 +332,27 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   static getStubConfig = entityStub("media_player", "media_player.example");
 
   static getConfigForm() {
-    return form([
-      { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
-      nameIcon(),
-      actions(true, false),
-      advanced([["volume_only", false], ["show_playback"], ["show_progress"], ["show_volume"], ["show_source"]], {
-        extra: [
-          { name: "volume_remote", helper: "volume_remote", selector: { entity: { domain: "remote" } } },
-          { name: "volume_step", helper: "volume_step", selector: { number: { min: 1, max: 25, step: 1, mode: "box", unit_of_measurement: "%" } } },
+    return form((c) =>
+      hide(
+        c,
+        [
+          { name: "entity", required: true, selector: { entity: { domain: "media_player" } } },
+          nameIcon(),
+          actions(true, false),
+          advanced([["volume_only", false], ["show_playback"], ["show_progress"], ["show_volume"], ["show_source"]], {
+            extra: [
+              { name: "volume_remote", helper: "volume_remote", selector: { entity: { domain: "remote" } } },
+              { name: "volume_step", helper: "volume_step", selector: { number: { min: 1, max: 25, step: 1, mode: "box", unit_of_measurement: "%" } } },
+            ],
+          }),
+          appearance({ layout: "width" }),
         ],
-      }),
-      appearance({ layout: "width" }),
-    ]);
+        [
+          [!!c?.volume_only, ["tap_action", "show_progress", "show_volume", "show_source"]],
+          [!c?.volume_only, ["show_playback", "volume_remote", "volume_step"]],
+        ],
+      ),
+    );
   }
 }
 

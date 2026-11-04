@@ -5,6 +5,7 @@ import { subButtonsField } from "./sub-buttons";
 // they change every release (HA 2026.4–2026.7 renamed several). Labels go through t().
 
 export type Schema = Record<string, unknown>;
+export type FormConfig = Record<string, unknown>;
 
 /** Field labels by field name (translation keys); a field's own `title` wins (computeLabel). */
 const LABELS: Record<string, string> = {
@@ -350,8 +351,28 @@ export const nameIcon = (): Schema => ({
  * Editor form. `assertConfig` throws only for configs the form cannot show (HA then falls back to
  * the YAML editor) – never for a field that is just empty while the user edits.
  */
-export function form(schema: Schema[], assertConfig?: (c: Record<string, unknown>) => void) {
-  return { schema, computeLabel, computeHelper, assertConfig };
+export function form(schema: Schema[] | ((config?: FormConfig) => Schema[]), assertConfig?: (c: Record<string, unknown>) => void) {
+  const build = typeof schema === "function" ? schema : () => schema;
+  return { schema: build(), schemaFor: (config: FormConfig) => build(config), computeLabel, computeHelper, assertConfig };
+}
+
+/**
+ * Fields of `schema` without those that do not apply now: `rules` are [does not apply, field names].
+ * Without a config (docs, catalog, tests) every field stays; a field holding a value stays too, so it
+ * can be cleared. Rows and flattened groups left empty go; a named group (e.g. `feedback`) is left alone.
+ */
+export function hide(config: FormConfig | undefined, schema: Schema[], rules: [boolean, string[]][]): Schema[] {
+  if (!config) return schema;
+  const names = new Set(rules.flatMap(([off, list]) => (off ? list : [])));
+  const walk = (list: Schema[]): Schema[] =>
+    list.flatMap((f) => {
+      if (Array.isArray(f.schema) && (f.flatten || !f.name)) {
+        const inner = walk(f.schema as Schema[]);
+        return inner.length ? [{ ...f, schema: inner }] : [];
+      }
+      return names.has(f.name as string) && config[f.name as string] === undefined ? [] : [f];
+    });
+  return walk(schema);
 }
 
 /**
