@@ -649,3 +649,62 @@ describe("light chip: entities it reads", () => {
     el.remove();
   });
 });
+
+describe("the floating list of action chips", () => {
+  const items = () => [...layer()!.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')];
+  const press = (b: HTMLElement) => {
+    b.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+    b.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+  };
+  const open = async (chips: unknown[], states: ReturnType<typeof ent>[]) => {
+    const h = mockHass(states);
+    const el = await mount("chips", { fab: true, fab_narrow_only: false, chips }, h);
+    await settle(el);
+    layer()!.querySelector<HTMLElement>(".acfab")!.click();
+    await settle(el);
+    return { h, el };
+  };
+
+  it("an unavailable chip is disabled and does not run", async () => {
+    const { h, el } = await open([{ type: "action", entity: "scene.a" }], [ent("scene.a", "unavailable")]);
+    expect(items()[0].disabled).toBe(true);
+    press(items()[0]);
+    items()[0].click();
+    expect(h.calls).toEqual([]);
+    el.remove();
+  });
+
+  it("the active choice shows like in the row", async () => {
+    const { el } = await open([{ type: "action", entity: "input_select.m", active_value: "eco", tap_action: { action: "none" } }, { type: "action", entity: "input_select.m", active_value: "boost", tap_action: { action: "none" } }], [ent("input_select.m", "eco")]);
+    expect(items().map((b) => b.getAttribute("aria-pressed"))).toEqual(["true", "false"]);
+    el.remove();
+  });
+
+  it("a press runs it once; hold and double tap work", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = mockHass([ent("script.a", "off"), ent("script.b", "off")]);
+      const el = await mount("chips", { fab: true, fab_narrow_only: false, chips: [{ type: "action", entity: "script.a", hold_action: { action: "navigate", navigation_path: "/h" } }, { type: "action", entity: "script.b", double_tap_action: { action: "navigate", navigation_path: "/d" } }] }, h);
+      await vi.advanceTimersByTimeAsync(0);
+      layer()!.querySelector<HTMLElement>(".acfab")!.click();
+      await vi.advanceTimersByTimeAsync(0);
+      const fired: string[] = [];
+      el.addEventListener("hass-action", (e) => fired.push((e as CustomEvent).detail.action));
+      const [a, b] = items();
+      press(a);
+      a.dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+      expect(h.calls.length).toBe(1);
+      a.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+      vi.advanceTimersByTime(600);
+      a.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+      expect(fired).toEqual(["hold"]);
+      press(b);
+      press(b);
+      expect(fired).toEqual(["hold", "double_tap"]);
+      expect(h.calls.length).toBe(1);
+      el.remove();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

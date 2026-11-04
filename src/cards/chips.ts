@@ -173,11 +173,16 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     return this._config.accent_color ? { bg: "var(--lumen-accent)", fg: "var(--lumen-on-accent)" } : { bg: "var(--lumen-text-1)", fg: "var(--lumen-bg)" };
   }
 
-  /** Catalog chip: 44 px pill, glyph 18 + name. A scene has no on state, so no chip stays highlighted. */
-  private actionChip(s: ActionChip) {
+  /** Same in the row and in the floating list. */
+  private chipState(s: ActionChip) {
     const off = isUnavailable(this.entity(s.entity));
     const chosen = this._chosen?.entity === s.entity ? this._chosen : null;
-    const active = !off && (chosen ? chosen === s : chipActive(s, this.entity(s.entity)));
+    return { off, active: !off && (chosen ? chosen === s : chipActive(s, this.entity(s.entity))) };
+  }
+
+  /** Catalog chip: 44 px pill, glyph 18 + name. A scene has no on state, so no chip stays highlighted. */
+  private actionChip(s: ActionChip) {
+    const { off, active } = this.chipState(s);
     return html`<div data-fx class="press" ${pressable(off ? undefined : this.chipHandlers(s))} aria-disabled=${off} aria-pressed=${s.active_value !== undefined ? active : nothing} aria-label=${this.chipName(s)}
       style="display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 12px;box-sizing:border-box;border-radius:999px;border:1px solid ${active ? "color-mix(in srgb, var(--lumen-accent) 40%, transparent)" : "var(--lumen-border)"};background:${active ? "var(--lumen-accent-soft)" : "var(--lumen-surface)"};color:${active ? "var(--lumen-accent)" : "var(--lumen-text-1)"};box-shadow:none;font:700 13px var(--lumen-font);white-space:nowrap;cursor:${off ? "not-allowed" : "pointer"};opacity:${off ? 0.5 : 1};user-select:none;touch-action:pan-y;${glass};transition:background-color 400ms, color 400ms, border-color 400ms, transform 220ms var(--lumen-ease-spring);animation:${this._pulse === s ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}">${WFX}
       ${icon(this.chipIcon(s), "font-size:18px")}${this.chipName(s)}
@@ -195,14 +200,22 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
       <div role=${open ? "dialog" : nothing} aria-label=${title} style="position:absolute;${side}:calc(${fabInset(side)} - 4px);bottom:calc(${bottom} + ${FAB_MAIN + 12}px);z-index:7;width:200px;max-height:calc(100% - ${FAB_MAIN + 60}px);overflow:auto;padding:10px;box-sizing:border-box;border-radius:22px;background:var(--lumen-surface-solid);box-shadow:var(--lumen-shadow-2);display:flex;flex-direction:column;gap:2px;transform-origin:bottom ${side};transform:${open ? "none" : "translateY(16px) scale(.92)"};opacity:${open ? 1 : 0};pointer-events:${open ? "auto" : "none"};visibility:${open ? "visible" : "hidden"};transition:transform 460ms var(--lumen-ease-spring), opacity 220ms var(--lumen-ease-out), visibility 0s ${open ? "0s" : "460ms"}">
         <div style="padding:4px 8px 6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3)">${title}</div>
         ${items.map(
-          (s) => html`<button @click=${() => {
-            this.haptic();
-            this.run(s);
-            window.clearTimeout(this.fabTimer);
-            this.fabTimer = window.setTimeout(() => (this._fab = false), 450);
-          }} style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:14px;background:transparent;color:var(--lumen-text-1);font:700 13px var(--lumen-font);text-align:left;cursor:pointer">
+          (s) => {
+            const { off, active } = this.chipState(s);
+            const pick = () => {
+              this.run(s);
+              window.clearTimeout(this.fabTimer);
+              this.fabTimer = window.setTimeout(() => (this._fab = false), 450);
+            };
+            // Presses handle the pointer and the keys; a click without a pointer (assistive tech) has detail 0.
+            return html`<button ?disabled=${off} aria-pressed=${s.active_value !== undefined ? active : nothing} ${pressable(off ? undefined : this.actions(`chiplist:${items.indexOf(s)}`, s, s.entity, { tap: pick }))} @click=${(e: MouseEvent) => {
+              if (e.detail !== 0 || off) return;
+              this.haptic();
+              pick();
+            }} style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;border-radius:14px;background:${active ? "var(--lumen-accent-soft)" : "transparent"};color:var(--lumen-text-1);font:700 13px var(--lumen-font);text-align:left;cursor:pointer">
             ${icon(this.chipIcon(s), `font-size:18px;flex:none;animation:${this._pulse === s ? "lumenPop 560ms var(--lumen-ease-bounce)" : "none"}`)}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${this.chipName(s)}</span>
-          </button>`,
+          </button>`;
+          },
         )}
       </div>
       <button class="acfab" @click=${() => {
