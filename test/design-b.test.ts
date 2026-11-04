@@ -391,3 +391,69 @@ describe("15 general states: a list that is not a list", () => {
     expect(root(el).textContent).not.toBe(en);
   });
 });
+
+describe("05 alarm: commands", () => {
+  const press = (el: HTMLElement) => {
+    el.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+    el.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+  };
+  const cell = (el: Card) => root(el).querySelector<HTMLElement>('[role="button"]')!;
+
+  it("compact, unavailable: the cell is disabled, a tap and a hold send nothing", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = hass(ent("alarm_control_panel.h", "unavailable"));
+      const el = await mount("alarm", { entity: "alarm_control_panel.h", layout: "compact", tap_action: { action: "perform-action", perform_action: "script.x" } }, h);
+      const fired: unknown[] = [];
+      el.addEventListener("hass-action", (e) => fired.push(e));
+      el.addEventListener("hass-more-info", (e) => fired.push(e));
+      expect(cell(el).getAttribute("aria-disabled")).toBe("true");
+      press(cell(el));
+      cell(el).dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+      vi.advanceTimersByTime(600);
+      cell(el).dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+      (el as unknown as { primary(): void }).primary();
+      expect(h.calls).toEqual([]);
+      expect(fired).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a refused command without a code pad shows the error in a toast", async () => {
+    const h = hass(ent("alarm_control_panel.h", "armed_home", { supported_features: 7 }));
+    h.fail = () => true;
+    const el = await mount("alarm", { entity: "alarm_control_panel.h" }, h);
+    button(root(el), "Disarm")!.click();
+    await settle(el);
+    expect(h.calls.length).toBe(1);
+    expect(document.querySelector("lumen-cards-toaster")).not.toBeNull();
+  });
+
+  it("tap_action none keeps the default: more-info, no spinner", async () => {
+    const h = hass(ent("alarm_control_panel.h", "disarmed", { supported_features: 7 }));
+    for (const layout of ["wide", "compact"]) {
+      const el = await mount("alarm", { entity: "alarm_control_panel.h", layout, tap_action: { action: "none" } }, h);
+      const info: string[] = [];
+      el.addEventListener("hass-more-info", (e) => info.push((e as CustomEvent).detail.entityId));
+      press(root(el).querySelector<HTMLElement>('[role="button"]')!);
+      await el.updateComplete;
+      expect(info).toEqual(["alarm_control_panel.h"]);
+      expect((el as unknown as { pending: { active: boolean } }).pending.active).toBe(false);
+    }
+  });
+
+  it("the spinner shows only when a command went out", async () => {
+    const h = hass(ent("alarm_control_panel.h", "disarmed", { supported_features: 7 }));
+    const pending = async (tap_action: Record<string, unknown>) => {
+      const el = await mount("alarm", { entity: "alarm_control_panel.h", tap_action }, h);
+      press(root(el).querySelector<HTMLElement>('[role="button"]')!);
+      await el.updateComplete;
+      return (el as unknown as { pending: { active: boolean } }).pending.active;
+    };
+    expect(await pending({ action: "navigate", navigation_path: "/x" })).toBe(false);
+    expect(await pending({ action: "url", url_path: "https://example.com" })).toBe(false);
+    expect(await pending({ action: "perform-action", perform_action: "script.toggle_alarm" })).toBe(true);
+    expect(await pending({ action: "toggle" })).toBe(true);
+  });
+});

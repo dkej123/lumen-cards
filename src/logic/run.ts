@@ -6,3 +6,7 @@ export const RUN: Record<string, [string, string]> = {
   input_button: ["input_button", "press"],
   automation: ["automation", "trigger"],
 };
+
+/** Actions that send a command to a device (others only open or navigate): worth a spinner until the entity answers. */
+const COMMANDS = new Set(["toggle", "perform-action", "call-service"]);
+export const sendsCommand = (action: string | undefined): boolean => !!action && COMMANDS.has(action);

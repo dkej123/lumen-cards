@@ -15,8 +15,10 @@ import { alarmBanner, alarmRing, compactCell } from "../core/status-row";
 import { icon } from "../core/lumen-icon";
 import { cssColor, tone } from "../core/styles";
 import { codePad, countdown, type Look, type PadMode, rowFrame, rowIcon, rowText, type Seg, segs, toneLook, unavailableLook, unplugged, WFX } from "../core/parts";
+import { toast } from "../core/toast";
 import { requireEntity } from "../core/validate";
 import type { HassEntity } from "../hass/types";
+import { sendsCommand } from "../logic/run";
 import { ARMED_ICON, alarmBarIcon, alarmStatus, armModes, isArmed, modeLabel, type Status } from "../logic/status";
 
 export interface AlarmConfig extends BaseConfig {
@@ -26,7 +28,7 @@ export interface AlarmConfig extends BaseConfig {
   icon?: string;
   /**
    * Own action (e.g. a script that toggles the alarm): the row tap and the Arm / Disarm buttons run
-   * it instead of the built-in code pad. more-info / none keep the built-in pad.
+   * it instead of the built-in code pad. more-info keeps the built-in pad, none means the default.
    */
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
@@ -153,17 +155,24 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     return !!a && a !== "more-info" && a !== "none";
   }
 
+  /** A tap action that does something; `none` leaves the default. */
+  private get hasTapAction() {
+    const a = this._config.tap_action?.action;
+    return !!a && a !== "none";
+  }
+
   private runTap() {
     const c = this._config;
-    this.pending.set(true);
+    // Only a command gets the spinner: navigating or opening a page never changes the alarm.
+    if (sendsCommand(c.tap_action?.action)) this.pending.set(true);
     handleAction(this, c.tap_action, c.entity, "tap");
   }
 
   /** Row / tile tap: the own action, else more-info (wide) or the main command (tiles). */
   tap() {
     const c = this._config;
-    if (c.tap_action) {
-      if (c.tap_action.action === "more-info") this.moreInfo(c.entity);
+    if (this.hasTapAction) {
+      if (c.tap_action!.action === "more-info") this.moreInfo(c.entity);
       else this.runTap();
       return;
     }
@@ -174,6 +183,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   /** The state's main command: arm when disarmed, else disarm (enter the code). */
   primary() {
     const st = this.alarm?.state;
+    if (!st || st === "unavailable") return;
     if (st === "disarmed") this.arm();
     else this.disarm();
   }
@@ -215,7 +225,9 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     } catch (err) {
       const msg = (err as Error)?.message ?? String(err);
       this.haptic("failure");
-      this.pad.failed(/code/i.test(msg) || code ? t("pad.wrong_code") : msg);
+      // No pad open (no code needed): the toast is the only place to say it.
+      if (this.pad.state) this.pad.failed(/code/i.test(msg) || code ? t("pad.wrong_code") : msg);
+      else toast(this, { icon: "mdi:alert-circle", tone: "danger", title: t("common.error"), text: msg });
     }
   }
 
@@ -295,10 +307,14 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     if (this.compact) {
       // Catalog correction 2026-10-30: hold 500 ms = the main command (arm / cancel / the
       // disarm pad), a tap = the tap action or more-info.
-      const cell = this.actions(`alarmcell:${c.entity}`, c, c.entity, { tap: c.tap_action ? () => this.tap() : undefined, hold: () => this.primary() });
+      // Unavailable: nothing to send, the cell is disabled like the lock's.
+      const una = s.tone === "unavailable";
+      const cell = una
+        ? this.presses.handlers(`alarmcell:${c.entity}`)
+        : this.actions(`alarmcell:${c.entity}`, c, c.entity, { tap: this.hasTapAction ? () => this.tap() : () => this.moreInfo(c.entity), hold: () => this.primary() });
       const anim = s.alert ? "lumenShake 900ms ease-in-out infinite" : s.busy ? "lumenBreath 2400ms ease-in-out infinite" : "none";
       const off = e?.state === "disarmed" ? cssColor(c.disarmed_color) : undefined;
-      return compactCell({ title: `${this.name} · ${s.label}`, color: off ?? tone(s.tone), handlers: cell, alert: s.alert, unavailable: s.tone === "unavailable", extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
+      return compactCell({ title: `${this.name} · ${s.label}`, color: off ?? tone(s.tone), handlers: cell, alert: s.alert, disabled: una, unavailable: una, extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }), body: icon(alarmBarIcon(e, c.icon), `display:block;animation:${anim}`) });
     }
     const l = this.look(s, e, false);
     const cd = alarmCountdown(e, c);
