@@ -5,7 +5,7 @@ import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { cssColor } from "../core/styles";
 import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
-import { SubButtons, subButtonLimit } from "../core/sub-buttons";
+import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
@@ -94,7 +94,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
 
   protected entityIds() {
     const c = this._config;
-    return [c.entity, c.feedback?.status_entity, c.feedback?.message_entity, c.last_used_entity, ...(c.sub_buttons ?? []).map((b) => b.entity)];
+    return [c.entity, c.feedback?.status_entity, c.feedback?.message_entity, c.last_used_entity, ...subButtonEntities(c.sub_buttons)];
   }
 
   protected validate(c: ButtonConfig) {

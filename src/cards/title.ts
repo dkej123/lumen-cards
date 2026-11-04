@@ -6,6 +6,7 @@ import { advanced, appearance, form } from "../core/form";
 import { t } from "../core/i18n";
 import { activate } from "../core/press";
 import { registerCard } from "../core/register";
+import { listOf } from "../core/validate";
 import { temp } from "../logic/format";
 import { sensorValue } from "./sensor";
 
@@ -62,7 +63,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
   }
 
   private items(): TitleBadge[] {
-    return (this._config.badges ?? []).map((x) => (typeof x === "string" ? { entity: x } : x));
+    return listOf<TitleBadge | string>(this._config.badges).map((x) => (typeof x === "string" ? { entity: x } : x));
   }
 
   private meta(): string {

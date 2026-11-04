@@ -7,6 +7,7 @@ import { Presses, pressable } from "./press";
 import type { Schema } from "./form";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
+import { listOf } from "./validate";
 
 /** Small extra button on the right of a card (Bubble Card `sub_button`, Mushroom template chips). */
 export interface SubButton {
@@ -18,6 +19,9 @@ export interface SubButton {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
 }
+
+/** The entities of a `sub_buttons` list, for `entityIds()`. */
+export const subButtonEntities = (list: unknown): (string | undefined)[] => listOf<SubButton>(list).map((b) => b.entity);
 
 const TOGGLE = new Set(["switch", "input_boolean", "light", "fan", "cover", "siren", "valve", "media_player", "lock", "group"]);
 
@@ -59,11 +63,12 @@ export class SubButtons {
    * unavailable = opacity .38 without actions. Presses never reach the card underneath.
    */
   render(list: SubButton[] | undefined, opts: SubButtonsOptions = {}) {
-    if (!Array.isArray(list) || !list.length) return nothing;
+    const items = listOf<SubButton>(list);
+    if (!items.length) return nothing;
     const hass = this.host.hass;
     const max = Math.max(0, opts.max ?? 4);
-    const shown = list.slice(0, max);
-    const hidden = list.length - shown.length;
+    const shown = items.slice(0, max);
+    const hidden = items.length - shown.length;
     const size = opts.compact ? 30 : 36;
     const stop = (e: Event) => e.stopPropagation();
     // Only the editor (card preview / dashboard edit mode) says that some do not fit.

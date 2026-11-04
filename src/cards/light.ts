@@ -4,7 +4,7 @@ import { actions, advanced, appearance, entityStub, form, nameIcon } from "../co
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { COMPACT_H } from "../core/status-row";
-import { SubButtons, subButtonLimit, subButtonsField, type SubButton } from "../core/sub-buttons";
+import { SubButtons, subButtonEntities, subButtonLimit, subButtonsField, type SubButton } from "../core/sub-buttons";
 import { requireEntity } from "../core/validate";
 import { LightsController, relaysOf, type LightItem } from "../lights/controller";
 import { groupMembers } from "../logic/light";
@@ -40,7 +40,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
   protected entityIds() {
     // Group members too: a mixed group shows how many of them are on.
     const c = this._config;
-    return [c.entity, ...relaysOf(c), ...groupMembers(this.entity(c.entity)), ...(c.sub_buttons ?? []).map((b) => b.entity)];
+    return [c.entity, ...relaysOf(c), ...groupMembers(this.entity(c.entity)), ...subButtonEntities(c.sub_buttons)];
   }
 
   protected validate(c: LightTileConfig) {
@@ -55,7 +55,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
     const wide = !this._width || this._width >= 170;
     // Several relays: one button each (the relay's own icon), unless the card lists its own.
     const relays = relaysOf(c);
-    const buttons = c.sub_buttons ?? (relays.length > 1 ? relays.map((entity) => ({ entity, icon: this.entity(entity)?.attributes.icon ?? "mdi:lightbulb-outline" })) : undefined);
+    const buttons = (Array.isArray(c.sub_buttons) ? c.sub_buttons : undefined) ?? (relays.length > 1 ? relays.map((entity) => ({ entity, icon: this.entity(entity)?.attributes.icon ?? "mdi:lightbulb-outline" })) : undefined);
     const extra = this.subs.render(buttons, { tint: this.lights.light(c).col, compact: this.compact, max: this.compact ? (wide ? 2 : 1) : subButtonLimit(false, this._width) });
     return this.compact ? this.lights.tile(c, 0, c.height ?? COMPACT_H, true, !buttons?.length && (!this._width || this._width >= 120), extra) : this.lights.tile(c, 0, c.height ?? 64, false, true, extra);
   }

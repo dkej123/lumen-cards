@@ -13,6 +13,7 @@ import type { LumenStackEditor } from "../core/stack-editor";
 import "../core/stack-editor";
 import { glass, ink } from "../core/styles";
 import { toast } from "../core/toast";
+import { listOf } from "../core/validate";
 import type { HassLike } from "../hass/types";
 import { badgeCount, bulkSegment, cardEntities, panelSummary, panelWarning, type Bulk } from "../logic/fab-sheet";
 import { innerConfig } from "../logic/popup";
@@ -80,8 +81,8 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
   }
 
   protected entityIds() {
-    const batteries = (this._config.cards ?? []).map((c) => (typeof c?.battery_entity === "string" ? c.battery_entity : undefined));
-    return [...this.ids, ...(this._config.badge_entities ?? []), ...batteries];
+    const batteries = listOf<CardConfig>(this._config.cards).map((c) => (typeof c.battery_entity === "string" ? c.battery_entity : undefined));
+    return [...this.ids, ...listOf<string>(this._config.badge_entities), ...batteries];
   }
 
   protected validate(c: FabSheetConfig) {

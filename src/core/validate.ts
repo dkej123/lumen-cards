@@ -1,5 +1,8 @@
 import { t } from "./i18n";
 
+/** A list from the config: anything else (a hand-written typo in YAML) counts as empty, empty items are dropped. */
+export const listOf = <T>(v: unknown): T[] => (Array.isArray(v) ? v.filter((x) => x !== null && x !== undefined) : []);
+
 /**
  * The card's `entity` (or `key`) must be an entity id – of one of `domains` when given; else the
  * card shows `msg` (default "pick an entity").

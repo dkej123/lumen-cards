@@ -296,7 +296,8 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
       prev.formatEntityState !== next.formatEntityState
     )
       return true;
-    if (!this._config) return false;
+    // The error card reads no entities (and a broken config may not have the lists entityIds() expects).
+    if (!this._config || this._configError) return false;
     return this.entityIds().some((id) => id && prev.states[id] !== next.states[id]);
   }
 

@@ -11,6 +11,7 @@ import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
 import { Sheet } from "../core/sheet";
 import { glass, stop } from "../core/styles";
+import { listOf } from "../core/validate";
 import { isUnavailable, type HassEntity } from "../hass/types";
 import { AIR_LEVELS, PM25, pm25Level } from "../logic/air";
 import { formatTemp } from "../logic/format";
@@ -153,8 +154,8 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
     const c = this._config;
     return [
       c.entity, c.pm25_entity, c.temperature_entity, c.humidity_entity, c.target_humidity_entity, c.water_level_entity, c.water_empty_entity, c.humidifier_entity, c.index?.entity,
-      ...(c.filters ?? []).map((f) => f.entity),
-      ...(c.controls ?? []).map((x) => x.entity),
+      ...listOf<{ entity?: string }>(c.filters).map((f) => f.entity),
+      ...listOf<{ entity?: string }>(c.controls).map((x) => x.entity),
       ...this.device,
       ...["pm2_5", "temperature", "humidity", "target_humidity", "water_level"].map((s) => `sensor.${c.entity?.split(".")[1]}_${s}`),
     ];
@@ -239,7 +240,8 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
   private get filters(): FilterReading[] {
     const c = this._config;
     if (c.show_filters === false || !this._hass) return [];
-    const list = c.filters?.length ? c.filters : findFilters(this._hass.states, c.entity, this.device);
+    const own = listOf<PurifierFilter>(c.filters);
+    const list = own.length ? own : findFilters(this._hass.states, c.entity, this.device);
     return list.flatMap((x) => {
       const e = this.entity(x.entity);
       const raw = x.attribute ? this.fan?.attributes[x.attribute] : e?.state;
@@ -339,7 +341,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
 
   /** The configured controls in one shape. */
   private controls(): Control[] {
-    return (this._config.controls ?? []).flatMap((x, i): Control[] => {
+    return listOf<PurifierControl>(this._config.controls).flatMap((x, i): Control[] => {
       const key = `control:${i}`;
       const base = { key, icon: x.icon, min: Number(x.min ?? 0), max: Number(x.max ?? 100), step: Number(x.step ?? 1), minLabel: x.min_label };
       const options = (x.options ?? []).map((o) => (typeof o === "object" ? { value: o.value, label: o.label ?? String(o.value), icon: o.icon } : { value: o, label: String(o) }));

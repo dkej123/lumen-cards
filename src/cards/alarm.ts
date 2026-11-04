@@ -6,7 +6,7 @@ import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
 import { deviceStore } from "../core/device-store";
 import { actions, advanced, appearance, entityStub, form, nameIcon } from "../core/form";
-import { SubButtons } from "../core/sub-buttons";
+import { SubButtons, subButtonEntities } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { pressable, spinnerStyle } from "../core/press";
@@ -114,7 +114,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   );
 
   protected entityIds() {
-    return [this._config.entity, ...(this._config.sub_buttons ?? []).map((b) => b.entity)];
+    return [this._config.entity, ...subButtonEntities(this._config.sub_buttons)];
   }
 
   protected validate(c: AlarmConfig) {

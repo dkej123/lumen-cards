@@ -354,3 +354,40 @@ describe("15 general states: an error is never hidden", () => {
     expect(layer()?.querySelector(".acfab") ?? null).toBeNull();
   });
 });
+
+describe("15 general states: a list that is not a list", () => {
+  const next = (h: ReturnType<typeof hass>) => ({ ...h, states: { ...h.states, "binary_sensor.a": ent("binary_sensor.a", "off") } });
+
+  it("a new hass never throws, with or without a validation error", async () => {
+    const h = hass(ent("binary_sensor.a", "on"), ent("script.a", "off"), ent("person.a", "home"), ent("alarm_control_panel.a", "disarmed"), ent("light.a", "on"), ent("fan.a", "on"));
+    const configs: [string, Record<string, unknown>][] = [
+      ["chips", { chips: "oops" }],
+      ["chips", { chips: [null] }],
+      ["chips", { chips: { type: "action" } }],
+      ["title", { badges: "oops" }],
+      ["fab-sheet", { cards: "oops" }],
+      ["fab-sheet", { badge_entities: "oops" }],
+      ["purifier", { entity: "fan.a", filters: "oops", controls: "oops" }],
+      ...(["entity", "button", "alarm", "light", "person"] as const).flatMap((type): [string, Record<string, unknown>][] => {
+        const entity = { entity: "binary_sensor.a", button: "script.a", alarm: "alarm_control_panel.a", light: "light.a", person: "person.a" }[type];
+        return [[type, { entity, sub_buttons: "oops" }], [type, { entity, sub_buttons: [null] }]];
+      }),
+    ];
+    for (const [type, cfg] of configs) {
+      const el = await mount(type, cfg, h);
+      await settle(el);
+      expect(() => (el.hass = next(h)), `${type} ${JSON.stringify(cfg)}`).not.toThrow();
+      await settle(el);
+      el.remove();
+    }
+  });
+
+  it("an error card still follows the language of a new hass", async () => {
+    const h = hass();
+    const el = await mount("chips", { chips: "oops" }, h);
+    const en = root(el).textContent;
+    el.hass = { ...h, language: "pl", locale: { language: "pl" } };
+    await settle(el);
+    expect(root(el).textContent).not.toBe(en);
+  });
+});

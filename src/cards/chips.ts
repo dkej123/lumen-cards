@@ -12,6 +12,7 @@ import { pressable } from "../core/press";
 import { registerCard } from "../core/register";
 import { glass } from "../core/styles";
 import { toast } from "../core/toast";
+import { listOf } from "../core/validate";
 import type { HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { LightsController, type LightItem } from "../lights/controller";
@@ -98,15 +99,19 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   }
 
   protected entityIds() {
-    return (this._config.chips ?? []).flatMap((x) => (x.type === "light" ? [x.entity, x.power_entity] : [x.entity]));
+    return this.chipList.flatMap((x) => (x.type === "light" ? [x.entity, x.power_entity] : [x.entity]));
   }
 
   protected validate(c: ChipsConfig) {
     validateChips(c);
   }
 
+  private get chipList() {
+    return listOf<Chip>(this._config.chips);
+  }
+
   private of<T extends Chip["type"]>(type: T) {
-    return (this._config.chips ?? []).filter((x) => x.type === type) as Extract<Chip, { type: T }>[];
+    return this.chipList.filter((x) => x.type === type) as Extract<Chip, { type: T }>[];
   }
 
   private floating = new FabController(this, FAB_ORDER.scenes, () => this.useFab, () => fabSideOf(this._config));
@@ -154,7 +159,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   }
 
   private chipHandlers(s: ActionChip) {
-    return this.actions(`chip:${(this._config.chips ?? []).indexOf(s)}`, s, s.entity, { tap: () => this.run(s) });
+    return this.actions(`chip:${this.chipList.indexOf(s)}`, s, s.entity, { tap: () => this.run(s) });
   }
 
   /** Strong fill of the FAB: inverted by default, the accent when accent_color is set. */
@@ -217,7 +222,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
 
   private shown(): Chip[] {
     const fab = this.useFab;
-    return (this._config.chips ?? []).filter((x) => x.type !== "action" || !fab);
+    return this.chipList.filter((x) => x.type !== "action" || !fab);
   }
 
   protected renderCard() {

@@ -4,7 +4,7 @@ import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { icon } from "../core/lumen-icon";
 import { actions, advanced, appearance, firstOf, form, nameIcon, stub } from "../core/form";
-import { SubButtons, subButtonLimit } from "../core/sub-buttons";
+import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import { compactCell } from "../core/status-row";
@@ -89,7 +89,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
   private subs = new SubButtons(this);
 
   protected entityIds() {
-    return [this._config.entity, ...(this._config.sub_buttons ?? []).map((b) => b.entity)];
+    return [this._config.entity, ...subButtonEntities(this._config.sub_buttons)];
   }
 
   /** Sub-buttons that fit (catalog C3). */

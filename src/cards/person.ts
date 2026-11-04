@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import { actions, advanced, appearance, entityStub, form } from "../core/form";
-import { SubButtons, subButtonLimit } from "../core/sub-buttons";
+import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
@@ -43,7 +43,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
   private subs = new SubButtons(this);
 
   protected entityIds() {
-    return [this._config.entity, this._config.presence_entity, ...(this._config.sub_buttons ?? []).map((b) => b.entity)];
+    return [this._config.entity, this._config.presence_entity, ...subButtonEntities(this._config.sub_buttons)];
   }
 
   protected validate(c: PersonConfig) {
