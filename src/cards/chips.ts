@@ -307,7 +307,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
           icon: "mdi:gesture-tap-button",
           schema: [...fabFields(), { name: "", type: "grid", flatten: true, schema: [{ name: "fab_icon", selector: { icon: {} } }, { name: "title", selector: { text: {} } }] }],
         },
-        advanced(),
+        advanced([], { ticks: true }),
         appearance({ glow: true, layout: "screen" }),
       ], [[!c?.fab, ["fab_narrow_only", "fab_side", "fab_icon", "title"]]]),
       (c) => assertChips(c as Partial<ChipsConfig>),

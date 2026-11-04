@@ -71,7 +71,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
       { name: "height", helper: "light_height", selector: { number: { min: 40, max: 200, step: 2, mode: "box", unit_of_measurement: "px" } } },
       subButtonsField(),
       actions(),
-      advanced([["show_state"], ["show_color_button"]]),
+      advanced([["show_state"], ["show_color_button"]], { ticks: true }),
       appearance({ glow: true, layout: "width" }),
     ]);
   }

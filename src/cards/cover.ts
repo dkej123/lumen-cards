@@ -182,7 +182,7 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
       { name: "entity", required: true, selector: { entity: { domain: "cover" } } },
       nameIcon(),
       actions(true, false),
-      advanced([["show_state"], ["show_buttons"], ["show_tilt"]]),
+      advanced([["show_state"], ["show_buttons"], ["show_tilt"]], { ticks: true }),
       appearance({ layout: "width" }),
     ]);
   }

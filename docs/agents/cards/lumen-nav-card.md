@@ -17,7 +17,8 @@ Lumen · Navigation bar: Bottom navigation bar between dashboard views
 | `position` |  | select | `bottom` (Bottom of the screen), `inline` (In the grid) | `bottom` | Position | Bottom: fixed over the screen edge, the card itself leaves a spacer (put it last); In the grid: a normal card |
 | `narrow_only` |  | boolean |  | `false` | Only on a narrow screen |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |

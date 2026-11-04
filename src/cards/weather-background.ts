@@ -1,7 +1,7 @@
 import { html, nothing } from "lit";
 import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { findAncestor } from "../core/dom";
-import { appearance, firstOf, form, hide, stub } from "../core/form";
+import { advanced, appearance, firstOf, form, hide, stub } from "../core/form";
 import { icon } from "../core/lumen-icon";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
@@ -195,6 +195,7 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
       { name: "weather_entity", required: true, selector: { entity: { domain: "weather" } } },
       { name: "sun_entity", selector: { entity: { domain: "sun" } } },
       { name: "show_controls", selector: { boolean: {} } },
+      advanced([], { haptics: false }),
       appearance({ effects: false, layout: "screen" }),
     ], [[!c?.show_controls, ["layout", "accent_color", "max_width", "max_width_unit"]]]));
   }

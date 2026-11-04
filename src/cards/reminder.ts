@@ -226,7 +226,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
         selector: { select: { mode: "dropdown", options: [["start", "align.start"], ["center", "align.center"], ["end", "align.end"]].map(([value, label]) => ({ value, label: t(label) })) } },
       },
       advanced(),
-      appearance({ layout: false }),
+      appearance({ layout: false, effects: false }),
     ], [
       [c?.dialog === false, ["title", "message", "done"]],
       [c?.dialog === false || !c?.done, ["done_action"]],

@@ -2,7 +2,7 @@ import { html, nothing, type PropertyValues } from "lit";
 import { type BaseConfig } from "../core/base-card";
 import { assertCards, LumenContainerCard } from "../core/container-card";
 import { PENDING_MS } from "../core/controllers/pending";
-import { appearance, fabSideField, form, hapticsField } from "../core/form";
+import { advanced, appearance, fabSideField, form } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { icon } from "../core/lumen-icon";
@@ -299,7 +299,7 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
       { name: "narrow_only", helper: "narrow_only_fab", default: true, selector: { boolean: {} } },
       fabSideField,
       { name: "badge_entities", selector: { entity: { multiple: true } } },
-      hapticsField,
+      advanced(),
       appearance({ layout: false, effects: false }),
     ];
   }

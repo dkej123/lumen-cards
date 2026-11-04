@@ -16,6 +16,8 @@ Lumen · Weather background: Sky, rain, fog and wind behind the view's cards plu
 | `weather_entity` | yes | entity (domain: weather) |  |  | Weather entity |  |
 | `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
 | `show_controls` |  | boolean |  |  | “On this device” switches |  |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |

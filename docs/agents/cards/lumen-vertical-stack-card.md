@@ -18,6 +18,8 @@ Lumen · Vertical stack: Cards one under another, like HA's vertical stack, with
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 
 ## Reading the table
 

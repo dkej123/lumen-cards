@@ -37,7 +37,7 @@ Lumen · Climate: Air conditioner or thermostat: temperature, mode and fan; opti
 | `battery_entity` |  | entity (domain: sensor, binary_sensor) |  |  | Battery sensor | A % sensor or a battery binary sensor. Empty = Better Thermostat's battery info on the thermostat itself |
 | `battery_low` |  | number (min: 1; max: 99; step: 1; unit: %) |  | `15` | Low battery below |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |

@@ -1,7 +1,7 @@
 import { css, html, nothing } from "lit";
 import { LumenBaseCard } from "../core/base-card";
 import { assertCards, LumenContainerCard, type ContainerConfig } from "../core/container-card";
-import { form, maxWidthField, select } from "../core/form";
+import { advanced, form, maxWidthField, select } from "../core/form";
 import { t } from "../core/i18n";
 import { registerCard } from "../core/register";
 import type { LumenStackEditor } from "../core/stack-editor";
@@ -34,6 +34,7 @@ const fields = (row = false) => [
       ...(row ? [{ name: "card_width", default: "equal", selector: select([["equal", "editor.card_width.equal"], ["content", "editor.card_width.content"]]) }] : []),
     ],
   },
+  advanced([], { haptics: false }),
 ];
 
 /**

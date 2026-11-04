@@ -58,7 +58,7 @@ export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
       { name: "show_date", default: true, selector: { boolean: {} } },
       { name: "name", selector: { text: {} } },
       { name: "sun_entity", selector: { entity: { domain: "sun" } } },
-      advanced(),
+      advanced([], { haptics: false }),
       appearance({ effects: false, layout: "screen", accent: false }),
     ]);
   }

@@ -1,7 +1,7 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { LumenBaseCard } from "../core/base-card";
 import { LumenContainerCard, type ContainerConfig } from "../core/container-card";
-import { appearance, form, hapticsField, type Schema } from "../core/form";
+import { advanced, appearance, form, type Schema } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { registerCard } from "../core/register";
@@ -172,7 +172,7 @@ export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
         ],
       },
       ...cards,
-      hapticsField,
+      advanced(),
       appearance({ layout: false, effects: false, accent: false }),
     ];
   }

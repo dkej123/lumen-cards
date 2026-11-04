@@ -1,7 +1,7 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { LumenBaseCard } from "../core/base-card";
 import { LumenContainerCard, type ContainerConfig } from "../core/container-card";
-import { appearance, form } from "../core/form";
+import { advanced, appearance, form } from "../core/form";
 import { t } from "../core/i18n";
 import { WFX } from "../core/parts";
 import { registerCard } from "../core/register";
@@ -48,7 +48,7 @@ export class LumenBarCard extends LumenContainerCard<BarConfig> {
   }
 
   private static fields() {
-    return [appearance({ layout: false, accent: false })];
+    return [advanced([], { haptics: false }), appearance({ layout: false, accent: false })];
   }
 
   /** The look above HA's own stack editor for the cards (tabs, card picker). The bar has no title. */

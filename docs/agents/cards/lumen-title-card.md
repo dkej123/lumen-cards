@@ -20,8 +20,6 @@ Lumen · Section title: Heading: overline, section or room title, with entity va
 | `badges[].name` |  | text |  |  | Label before the value |  |
 | `entity` |  | entity |  |  | Entity |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
-| `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |

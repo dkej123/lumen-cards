@@ -126,7 +126,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
       { name: "entity", required: true, selector: { entity: { domain: "fan" } } },
       nameIcon(),
       actions(true, false),
-      advanced([["show_state"], ["icon_animation"]]),
+      advanced([["show_state"], ["icon_animation"]], { ticks: true }),
       appearance({ layout: "width" }),
     ]);
   }

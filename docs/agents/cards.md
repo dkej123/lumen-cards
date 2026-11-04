@@ -71,7 +71,6 @@ Lumen · Air quality: Air quality (PM2.5 / PM10 / AQI) in 6 levels with a 24 h c
 | `show_values` |  | boolean |  | `true` | Show values |  |
 | `show_bar` |  | boolean |  | `true` | Show level bar |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
@@ -117,7 +116,6 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 | `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
@@ -141,6 +139,8 @@ Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, lock
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
@@ -184,7 +184,6 @@ Lumen · Button: Runs a script, scene or button, optionally waiting for the devi
 | `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
@@ -215,7 +214,6 @@ Lumen · Calendar: Upcoming events of a calendar, grouped by day
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
@@ -301,7 +299,7 @@ Lumen · Climate: Air conditioner or thermostat: temperature, mode and fan; opti
 | `battery_entity` |  | entity (domain: sensor, binary_sensor) |  |  | Battery sensor | A % sensor or a battery binary sensor. Empty = Better Thermostat's battery info on the thermostat itself |
 | `battery_low` |  | number (min: 1; max: 99; step: 1; unit: %) |  | `15` | Low battery below |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
@@ -373,7 +371,6 @@ Lumen · Entity: Small state tile, e.g. a door contact (closed / open); a narrow
 | `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
@@ -403,7 +400,8 @@ Lumen · Floating panel: A floating button that opens a sheet with any cards, e.
 | `fab_side` |  | select | `right` (Right), `left` (Left (left-handed)) | `right` | Button side | Which screen edge the floating button sits at. Each side has its own stack of buttons |
 | `badge_entities` |  | entity[] |  |  | Number on the button | How many of the chosen entities are active (e.g. heating, on, open). Empty: how many thermostats in the panel are heating |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
@@ -454,8 +452,6 @@ Lumen · Greeting: Date and a greeting by time of day
 | `show_date` |  | boolean |  | `true` | Show date |  |
 | `name` |  | text |  |  | Name |  |
 | `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
-| `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
@@ -482,6 +478,8 @@ Lumen · Horizontal stack: Cards side by side with equal widths, like HA's horiz
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
 | `card_width` |  | select | `equal` (Equal), `content` (Fit content) | `equal` | Card width |  |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 
 ## `lumen-light-card`
 
@@ -548,7 +546,6 @@ Lumen · Lock: Lock state with Lock / Unlock (and Open) buttons, code and confir
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
@@ -611,7 +608,8 @@ Lumen · Navigation bar: Bottom navigation bar between dashboard views
 | `position` |  | select | `bottom` (Bottom of the screen), `inline` (In the grid) | `bottom` | Position | Bottom: fixed over the screen edge, the card itself leaves a spacer (put it last); In the grid: a normal card |
 | `narrow_only` |  | boolean |  | `false` | Only on a narrow screen |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
@@ -680,7 +678,6 @@ Lumen · Person: Household member with avatar, presence dot and since when
 | `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
@@ -710,7 +707,8 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 | `auto_close` |  | number (min: 0; max: 600; step: 5; unit: s) |  | `0` | Close after | Seconds; 0 keeps it open |
 | `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
@@ -803,7 +801,6 @@ Lumen · Air purifier: Purifier and humidifier in one tile
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
@@ -839,14 +836,12 @@ Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g
 | `done_action` |  | ui_action |  |  | “Done” action |  |
 | `alignment` |  | select | `start` (Left), `center` (Centre), `end` (Right) | `start` | Alignment |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
-| `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
 
 ## `lumen-select-card`
 
@@ -868,7 +863,6 @@ Lumen · Select: input_select / select with a drop-down list
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
@@ -903,7 +897,6 @@ Lumen · Sensor: Sensor tile (e.g. temperature) with a chart of the last hours
 | `show_name` |  | boolean |  | `true` | Show name |  |
 | `show_graph` |  | boolean |  | `true` | Show chart |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: the full look at any size. Compact only when you choose it |
@@ -945,8 +938,6 @@ Lumen · Section title: Heading: overline, section or room title, with entity va
 | `badges[].name` |  | text |  |  | Label before the value |  |
 | `entity` |  | entity |  |  | Entity |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
-| `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
@@ -972,6 +963,8 @@ Lumen · Vertical stack: Cards one under another, like HA's vertical stack, with
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 
 ## `lumen-weather-background-card`
 
@@ -989,6 +982,8 @@ Lumen · Weather background: Sky, rain, fog and wind behind the view's cards plu
 | `weather_entity` | yes | entity (domain: weather) |  |  | Weather entity |  |
 | `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
 | `show_controls` |  | boolean |  |  | “On this device” switches |  |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
@@ -1018,7 +1013,6 @@ Lumen · Weather: Current weather as a line or a card with hours; tap for detail
 | `show_hours` |  | boolean |  | `true` | Show hours |  |
 | `show_warnings` |  | boolean |  | `true` | Show warnings |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |

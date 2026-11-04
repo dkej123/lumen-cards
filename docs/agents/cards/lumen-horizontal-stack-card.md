@@ -19,6 +19,8 @@ Lumen · Horizontal stack: Cards side by side with equal widths, like HA's horiz
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `align` |  | select | `center` (Centre), `start` (Left), `end` (Right) | `center` | Position |  |
 | `card_width` |  | select | `equal` (Equal), `content` (Fit content) | `equal` | Card width |  |
+| `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
+| `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 
 ## Reading the table
 

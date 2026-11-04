@@ -22,7 +22,6 @@ Lumen · Lock: Lock state with Lock / Unlock (and Open) buttons, code and confir
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `show_state` |  | boolean |  | `true` | Show state |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |

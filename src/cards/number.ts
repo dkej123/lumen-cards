@@ -115,7 +115,7 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
       { name: "entity", required: true, selector: { entity: { domain: ["input_number", "number"] } } },
       nameIcon(),
       actions(true, false),
-      advanced([["show_state"]]),
+      advanced([["show_state"]], { ticks: true }),
       appearance({ layout: "width" }),
     ]);
   }

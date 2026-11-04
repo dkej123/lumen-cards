@@ -5,7 +5,7 @@ import { PENDING_MS, Pending } from "../core/controllers/pending";
 import { Tweens } from "../core/controllers/tween";
 import { deviceStore } from "../core/device-store";
 import { icon } from "../core/lumen-icon";
-import { appearance, entityStub, fabFields, form, hapticsField, hide, nameIcon } from "../core/form";
+import { appearance, entityStub, fabFields, form, hapticsField, hide, nameIcon, notesFields } from "../core/form";
 import { t } from "../core/i18n";
 import { FAB_ORDER, FabController, fabSideOf, LayerController } from "../core/layer";
 import { WFX } from "../core/parts";
@@ -684,8 +684,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
               { name: "battery_low", default: BATTERY_LOW, selector: { number: { min: 1, max: 99, step: 1, mode: "box", unit_of_measurement: "%" } } },
             ],
           },
-          hapticsField,
-          { name: "styles", selector: { text: { multiline: true } } },
+          hapticsField(),
+          ...notesFields(),
         ],
       },
       appearance({ layout: "width" }),

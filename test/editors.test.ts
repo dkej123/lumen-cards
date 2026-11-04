@@ -353,3 +353,32 @@ describe("help texts", () => {
     expect(help("climate", "fab")).not.toMatch(/right/);
   });
 });
+
+describe("advanced fields only where they do something", () => {
+  const ALL = ((window as unknown as { customCards: { type: string }[] }).customCards).map((c) => c.type.replace(/^lumen-|-card$/g, ""));
+  const fields = (card: string) => names(formOf(card).schema);
+
+  it("drag ticks only on cards with a slider", () => {
+    expect(ALL.filter((c) => fields(c).includes("haptic_tick")).sort()).toEqual(["chips", "cover", "fan", "light", "media", "number"]);
+  });
+
+  it("vibration not on cards that never vibrate", () => {
+    const none = ALL.filter((c) => !fields(c).includes("haptics")).sort();
+    expect(none).toEqual(["bar", "greeting", "horizontal-stack", "spacer", "title", "vertical-stack", "weather-background"]);
+  });
+
+  it("every card but the spacer has a note for edit mode and custom CSS", () => {
+    for (const card of ALL.filter((c) => c !== "spacer")) expect(fields(card), card).toEqual(expect.arrayContaining(["edit_note", "styles"]));
+  });
+
+  it("no weather effects switch on a card that draws none", () => {
+    expect(fields("reminder")).not.toContain("weather_effects");
+  });
+
+  it("the editors with HA's stack editor have the notes too", () => {
+    for (const card of ["bar", "popup", "fab-sheet", "vertical-stack"]) {
+      const ed = (customElements.get(`lumen-${card}-card`) as unknown as { getConfigElement(): { form: Form } }).getConfigElement();
+      expect(names(ed.form.schema), card).toContain("edit_note");
+    }
+  });
+});

@@ -292,7 +292,7 @@ export const maxWidthField = (unit = "px"): Schema => ({
  * "Advanced" section (Bubble Card style extras): visibility switches of the card's parts,
  * sub-buttons where the card has room, and custom CSS.
  */
-export const advanced = (shows: [string, boolean?][] = [], opts: { subButtons?: boolean; extra?: Schema[] } = {}): Schema => ({
+export const advanced = (shows: [string, boolean?][] = [], opts: { subButtons?: boolean; extra?: Schema[]; haptics?: boolean; ticks?: boolean } = {}): Schema => ({
   name: "",
   type: "expandable",
   flatten: true,
@@ -302,21 +302,30 @@ export const advanced = (shows: [string, boolean?][] = [], opts: { subButtons?: 
     ...(shows.length ? [{ name: "", type: "grid", flatten: true, schema: shows.map(([name, def = true]) => ({ name, default: def, selector: { boolean: {} } })) }] : []),
     ...(opts.extra ?? []),
     ...(opts.subButtons ? [subButtonsField()] : []),
-    hapticsField,
-    { name: "edit_note", selector: { text: {} } },
-    { name: "styles", selector: { text: { multiline: true } } },
+    ...(opts.haptics === false ? [] : [hapticsField(opts.ticks)]),
+    ...notesFields(),
   ],
 });
 
-/** Vibration feedback (taps, holds, drag ticks); on by default. */
-export const hapticsField: Schema = {
-  name: "",
-  type: "grid",
-  flatten: true,
-  schema: [
-    { name: "haptics", default: true, selector: { boolean: {} } },
-    { name: "haptic_tick", default: "selection", selector: select(["selection", "light", "medium", "heavy", "success", "warning", "failure"].map((k): [string, string] => [k, `editor.haptic_tick.${k}`])) },
-  ],
+/** Own note in edit mode and custom CSS: the base class reads them on every card. */
+export const notesFields = (): Schema[] => [
+  { name: "edit_note", selector: { text: {} } },
+  { name: "styles", selector: { text: { multiline: true } } },
+];
+
+/** Vibration feedback, on by default; `ticks`: the card has a slider, so also the drag ticks. */
+export const hapticsField = (ticks = false): Schema => {
+  const haptics = { name: "haptics", default: true, selector: { boolean: {} } };
+  if (!ticks) return haptics;
+  return {
+    name: "",
+    type: "grid",
+    flatten: true,
+    schema: [
+      haptics,
+      { name: "haptic_tick", default: "selection", selector: select(["selection", "light", "medium", "heavy", "success", "warning", "failure"].map((k): [string, string] => [k, `editor.haptic_tick.${k}`])) },
+    ],
+  };
 };
 
 /** Side of the floating button (left for left-handed use). */

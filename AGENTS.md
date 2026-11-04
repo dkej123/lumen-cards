@@ -349,6 +349,7 @@ No theme variable sets the accent. Use `accent_color` per card, despite the `lum
 - Pure decisions go in `src/logic/`.
 - User-visible text only through `t("card.<name>.…")`. `test/i18n.test.ts` requires every key in both files, equal placeholders, and no Polish text in `src/`.
 - The editor is Home Assistant's `ha-form` via `getConfigForm()`, built with `form()`, `nameIcon()`, `actions()`, `advanced()`, `appearance()`.
+- A field that does not apply in the current mode: `form((c) => hide(c, schema, [[condition, ["field"]]]))`. `getConfigForm().schema` still has every field for the docs and the catalog, and a field holding a value stays so it can be cleared.
 - **Every editor field needs a label.** Add its name to `LABELS` in `src/core/form.ts`, or give it a `title` (a nested list field: `label`). Help text goes in `HELPERS`, or `helper: "<key>"` on the field. All of them need keys in `en.json` and `pl.json`. `test/form-labels.test.ts` enforces labels.
 - A new config key not in the form (YAML only) goes in `SUPPLEMENT` in `test/agent-docs.test.ts`.
 
