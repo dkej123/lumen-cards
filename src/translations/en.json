@@ -704,7 +704,7 @@
   "editor.styles": "Custom CSS",
   "editor.sub_buttons": "Sub-buttons",
   "editor.sub_buttons_hidden": "{n} sub-button(s) not shown: this card has room for {max}",
-  "editor.sub_tap_action": "Tap action (default: run, toggle or details)",
+  "editor.sub_tap_action": "Tap action (default: toggle or details)",
   "editor.success_state": "Success code",
   "editor.success_text": "Text on success",
   "editor.sun_entity": "Sun",

@@ -704,7 +704,7 @@
   "editor.styles": "Własny CSS",
   "editor.sub_buttons": "Dodatkowe przyciski",
   "editor.sub_buttons_hidden": "Nie pokazano dodatkowych przycisków: {n}. Karta mieści {max}",
-  "editor.sub_tap_action": "Akcja dotknięcia (domyślnie uruchom, przełącz lub szczegóły)",
+  "editor.sub_tap_action": "Akcja dotknięcia (domyślnie przełącz lub szczegóły)",
   "editor.success_state": "Kod sukcesu",
   "editor.success_text": "Tekst po sukcesie",
   "editor.sun_entity": "Słońce",

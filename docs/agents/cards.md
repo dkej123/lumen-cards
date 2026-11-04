@@ -114,7 +114,7 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
 | `sub_buttons[].show_state` |  | boolean |  |  | Show state |  |
-| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: run, toggle or details) |  |
+| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
@@ -180,7 +180,7 @@ Lumen · Button: Runs a script, scene or button, optionally waiting for the devi
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
 | `sub_buttons[].show_state` |  | boolean |  |  | Show state |  |
-| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: run, toggle or details) |  |
+| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
@@ -368,7 +368,7 @@ Lumen · Entity: Small state tile, e.g. a door contact (closed / open); a narrow
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
 | `sub_buttons[].show_state` |  | boolean |  |  | Show state |  |
-| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: run, toggle or details) |  |
+| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
@@ -504,7 +504,7 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
 | `sub_buttons[].show_state` |  | boolean |  |  | Show state |  |
-| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: run, toggle or details) |  |
+| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
@@ -674,7 +674,7 @@ Lumen · Person: Household member with avatar, presence dot and since when
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
 | `sub_buttons[].show_state` |  | boolean |  |  | Show state |  |
-| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: run, toggle or details) |  |
+| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
 | `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |

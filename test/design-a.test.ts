@@ -436,7 +436,7 @@ describe("default tap: the same on a button, a chip and a sub-button", () => {
     ]);
   });
 
-  it("a sub-button: a lock opens details, a climate toggles, a script runs", async () => {
+  it("a sub-button: a lock and a script open details, a climate toggles", async () => {
     const h = h0();
     const el = await mountCard("entity", { entity: "binary_sensor.d", layout: "wide", sub_buttons: [{ entity: "lock.front" }, { entity: "climate.c" }, { entity: "script.gate" }] }, h);
     const seen = watch(el);
@@ -444,9 +444,10 @@ describe("default tap: the same on a button, a chip and a sub-button", () => {
     expect(seen).toEqual([
       ["action", { action: "more-info" }],
       ["action", { action: "toggle" }],
-      ["action", { action: "perform-action", perform_action: "script.turn_on", target: { entity_id: "script.gate" } }],
+      ["action", { action: "more-info" }],
     ]);
     expect(JSON.stringify(seen)).not.toContain("unlock");
+    expect(h.calls).toEqual([]);
   });
 });
 

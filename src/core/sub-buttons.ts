@@ -53,11 +53,8 @@ export class SubButtons {
 
   private tap(b: SubButton) {
     if (b.tap_action) handleAction(this.host, b.tap_action, b.entity, "tap");
-    else if (b.entity) {
-      const d = defaultTap(b.entity);
-      const action: ActionConfig = d.kind === "run" ? { action: "perform-action", perform_action: `${d.domain}.${d.service}`, target: { entity_id: b.entity } } : { action: d.kind };
-      handleAction(this.host, action, b.entity, "tap");
-    }
+    // A small button next to the card must not start a script or open a gate by accident: running one takes an explicit tap action.
+    else if (b.entity) handleAction(this.host, { action: defaultTap(b.entity).kind === "toggle" ? "toggle" : "more-info" }, b.entity, "tap");
   }
 
   /**
