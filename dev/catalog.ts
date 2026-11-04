@@ -46,6 +46,7 @@ const SECTIONS = lang === "pl" ? SECTIONS_PL : translated(SECTIONS_PL);
 const GUIDE = lang === "pl" ? GUIDE_PL : GUIDE_EN;
 if (lang === "pl") {
   document.title = "Karty Lumen: szklane karty do Home Assistant";
+  document.querySelector(".lumen-morph")?.setAttribute("aria-label", "Dashboard Lumen Cards przechodzi z układu na komputer do układu na telefon i z powrotem");
   document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((n) => (n.innerHTML = PAGE_PL[n.dataset.i18n!]));
 }
 delete document.documentElement.dataset.translating;
@@ -416,20 +417,6 @@ for (const [path, text] of Object.entries(CARD_DOCS).sort(([a], [b]) => (a < b ?
   const row = fold(file.replace(/\.md$/, ""), "", mdBox(`docs/agents/cards/${file}`, text));
   row.id = `agent-${file.replace(/\.md$/, "")}`;
   agentList.append(row);
-}
-
-// hero: a small dashboard
-const hero = document.getElementById("hero-cards")!;
-for (const [card, cfg, span] of [
-  ["greeting", { layout: "compact" }, 12],
-  ["light", { entity: "light.sofa", icon: "mdi:sofa" }, 6],
-  ["person", { entity: "person.alex", avatar_color: "light-blue" }, 6],
-  ["climate", { entity: "climate.th_bathroom", layout: "compact" }, 12],
-  ["weather", { entity: "weather.home", layout: "compact" }, 12],
-] as const) {
-  const c = makeCard(card, cfg);
-  c.style.gridColumn = `span ${span}`;
-  hero.append(c);
 }
 
 // gallery with a group filter

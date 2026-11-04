@@ -1,0 +1,13 @@
+.lumen-morph{position:relative;width:100%;aspect-ratio:1140/760;overflow:hidden;background:#0a0c12;border-radius:2.2% / 3.4%;contain:layout paint;opacity:0;transition:opacity .4s}
+.lumen-morph.lm-ready{opacity:1}
+.lm-stage{position:absolute;left:0;top:0;width:1140px;height:760px;transform-origin:0 0;overflow:hidden}
+.lm-sky,.lm-layer,.lm-hold,.lm-bar,.lm-line,.lm-corner{position:absolute;left:0;top:0;transform-origin:0 0;display:block;pointer-events:none;will-change:transform,opacity}
+.lm-layer{opacity:0}
+.lm-hold{opacity:0;will-change:opacity}
+.lm-bar{width:1140px;height:760px;background:#0a0c12}
+.lm-line{background:rgba(255,255,255,.22)}
+.lm-h{width:1px;height:1.5px}.lm-v{width:1.5px;height:1px}
+.lm-corner{width:30px;height:30px;transform-origin:15px 15px}.lm-corner svg{display:block}
+.lm-toggle{position:absolute;right:6px;bottom:6px;display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(20,22,30,.82);font:600 11px/1 system-ui,sans-serif}
+.lm-toggle button{border:0;border-radius:999px;padding:6px 10px;background:transparent;color:#e8e6e1;font:inherit;cursor:pointer}
+.lm-toggle button[aria-pressed=true]{background:#f2f0ec;color:#121110}
