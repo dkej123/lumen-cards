@@ -2,6 +2,7 @@ import { LumenBaseCard, type BaseConfig } from "./base-card";
 import { t } from "./i18n";
 import { InnerCards, type CardConfig } from "./sheet";
 import type { HassLike } from "../hass/types";
+import { withScheme } from "../logic/popup";
 
 /** Config of a card that holds other cards. */
 export interface ContainerConfig extends BaseConfig {
@@ -22,7 +23,7 @@ export abstract class LumenContainerCard<C extends ContainerConfig> extends Lume
   /** Each inner card in HA's hui-card wrapper (visibility conditions, edit mode), as HA's stacks do. */
   protected static wrapCards = false;
 
-  protected inner = new InnerCards(this, (c) => this.prepare(c), { wrap: (this.constructor as typeof LumenContainerCard).wrapCards });
+  protected inner = new InnerCards(this, (c) => withScheme(this.prepare(c), this._config?.color_scheme), { wrap: (this.constructor as typeof LumenContainerCard).wrapCards });
 
   /** The config an inner card is built with. */
   protected prepare(c: CardConfig): CardConfig {
@@ -57,7 +58,10 @@ export abstract class LumenContainerCard<C extends ContainerConfig> extends Lume
   }
 
   setConfig(config: C): void {
+    const scheme = this._config?.color_scheme;
     super.setConfig(config);
+    // The same list with another scheme: the inner cards are built again.
+    if (scheme !== this._config.color_scheme) this.inner.invalidate(undefined);
     if (this.inner.invalidate(this._config.cards) && this.cardsShown) this.buildCards();
   }
 

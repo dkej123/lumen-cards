@@ -33,3 +33,9 @@ export function innerConfig<T extends Record<string, unknown>>(c: T): T {
   const type = typeof c.type === "string" ? c.type : "";
   return type.startsWith("custom:lumen-") && c.weather_effects === undefined ? { ...c, weather_effects: false } : c;
 }
+
+/** A container's `color_scheme` reaches its inner Lumen cards, unless they set their own. */
+export function withScheme<T extends Record<string, unknown>>(c: T, scheme: unknown): T {
+  const type = typeof c.type === "string" ? c.type : "";
+  return (scheme === "light" || scheme === "dark") && type.startsWith("custom:lumen-") && c.color_scheme === undefined ? { ...c, color_scheme: scheme } : c;
+}

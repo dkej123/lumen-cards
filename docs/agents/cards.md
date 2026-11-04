@@ -403,7 +403,6 @@ Lumen · Floating panel: A floating button that opens a sheet with any cards, e.
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
-| `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 

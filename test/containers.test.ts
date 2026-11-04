@@ -708,3 +708,44 @@ describe("the floating list of action chips", () => {
     }
   });
 });
+
+describe("a container's color_scheme", () => {
+  it("withScheme: Lumen cards without their own scheme take it", async () => {
+    const { withScheme } = await import("../src/logic/popup");
+    const c = { type: "custom:lumen-light-card" };
+    expect(withScheme(c, "dark")).toEqual({ ...c, color_scheme: "dark" });
+    expect(withScheme({ ...c, color_scheme: "light" }, "dark").color_scheme).toBe("light");
+    expect(withScheme({ ...c, color_scheme: "auto" }, "dark").color_scheme).toBe("auto");
+    expect(withScheme(c, "auto")).toEqual(c);
+    expect(withScheme(c, undefined)).toEqual(c);
+    expect(withScheme({ type: "entities" }, "dark")).toEqual({ type: "entities" });
+  });
+
+  const theme = (host: ParentNode) => [...host.querySelectorAll("lumen-entity-card")].map((x) => x.getAttribute("data-lumen-theme"));
+
+  it("reaches the inner cards of a bar and a sheet, and follows a change of the option", async () => {
+    const h = mockHass([ent("binary_sensor.a", "off")]);
+    const cards = [{ type: "custom:lumen-entity-card", entity: "binary_sensor.a" }];
+    const bar = await mount("bar", { color_scheme: "dark", cards }, h);
+    await tick();
+    await settle(bar);
+    await settle(bar.shadowRoot!.querySelector("lumen-entity-card") as never);
+    expect(theme(bar.shadowRoot!)).toEqual(["dark"]);
+
+    bar.setConfig({ type: "custom:lumen-bar-card", color_scheme: "light", cards });
+    await tick();
+    await settle(bar);
+    await settle(bar.shadowRoot!.querySelector("lumen-entity-card") as never);
+    expect(theme(bar.shadowRoot!)).toEqual(["light"]);
+    bar.remove();
+
+    const sheet = await mount("fab-sheet", { color_scheme: "dark", narrow_only: false, cards }, h);
+    await settle(sheet);
+    layer()!.querySelector<HTMLElement>(".acfab")!.click();
+    await tick();
+    await settle(sheet);
+    await settle(layer()!.querySelector("lumen-entity-card") as never);
+    expect(theme(layer()!)).toEqual(["dark"]);
+    sheet.remove();
+  });
+});

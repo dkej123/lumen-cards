@@ -415,3 +415,10 @@ describe("climate card while unavailable or off", () => {
     el.remove();
   });
 });
+
+describe("floating panel options", () => {
+  it("does not offer an accent colour it has no use for", async () => {
+    const cls = customElements.get("lumen-fab-sheet-card") as unknown as { getConfigForm(): { schema: unknown[] } };
+    expect(JSON.stringify(cls.getConfigForm().schema)).not.toContain("accent_color");
+  });
+});

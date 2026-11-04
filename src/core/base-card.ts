@@ -28,7 +28,7 @@ export interface BaseConfig {
   color_scheme?: "auto" | "light" | "dark";
   /** Glow / fill of lit lights: HA colour name, hex or RGB triple. Default: from the light. */
   glow_color?: string | [number, number, number];
-  /** Accent (scenes FAB, AC cool, focus ring). */
+  /** Accent (scenes FAB, AC dry and fan modes, focus ring). */
   accent_color?: string | [number, number, number];
   /** Weather effects drawn on this card (needs a lumen-weather-background-card card in the view). */
   weather_effects?: boolean;

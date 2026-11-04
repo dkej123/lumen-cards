@@ -300,7 +300,7 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
       fabSideField,
       { name: "badge_entities", selector: { entity: { multiple: true } } },
       advanced(),
-      appearance({ layout: false, effects: false }),
+      appearance({ layout: false, effects: false, accent: false }),
     ];
   }
 
