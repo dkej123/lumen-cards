@@ -6,6 +6,8 @@ import { t } from "../core/i18n";
 import { WFX } from "../core/parts";
 import { registerCard } from "../core/register";
 import { type CardConfig } from "../core/sheet";
+import type { LumenStackEditor } from "../core/stack-editor";
+import "../core/stack-editor";
 import { glass } from "../core/styles";
 
 /** Cards in the bar, side by side (Lumen cards show their compact access-bar cell). */
@@ -42,7 +44,20 @@ export class LumenBarCard extends LumenContainerCard<BarConfig> {
   }
 
   static getConfigForm() {
-    return form([{ name: "cards", selector: { object: {} } }, appearance({ layout: false, accent: false })]);
+    return form([{ name: "cards", selector: { object: {} } }, ...this.fields()]);
+  }
+
+  private static fields() {
+    return [appearance({ layout: false, accent: false })];
+  }
+
+  /** The look above HA's own stack editor for the cards (tabs, card picker). The bar has no title. */
+  static getConfigElement() {
+    const el = document.createElement("lumen-stack-editor") as LumenStackEditor;
+    el.titleKey = null;
+    el.form = form(this.fields());
+    el.fallback = this.getConfigForm();
+    return el;
   }
 }
 

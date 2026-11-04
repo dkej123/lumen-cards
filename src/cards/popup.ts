@@ -1,11 +1,13 @@
 import { css, html, nothing, unsafeCSS } from "lit";
 import { LumenBaseCard } from "../core/base-card";
 import { LumenContainerCard, type ContainerConfig } from "../core/container-card";
-import { appearance, form, hapticsField } from "../core/form";
+import { appearance, form, hapticsField, type Schema } from "../core/form";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { registerCard } from "../core/register";
 import { Sheet, type CardConfig } from "../core/sheet";
+import type { LumenStackEditor } from "../core/stack-editor";
+import "../core/stack-editor";
 import { SlideDrag, TILE_CSS, sliderTile } from "../core/slider-tile";
 import { hashMatches, innerConfig, normalizeHash } from "../logic/popup";
 
@@ -151,23 +153,37 @@ export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
   }
 
   static getConfigForm() {
-    return form([
+    return form(this.fields(true, [{ name: "cards", selector: { object: {} } }]));
+  }
+
+  /** The pop-up's fields; `name` is left to HA's stack editor, whose title field it fills. */
+  private static fields(withName: boolean, cards: Schema[] = []): Schema[] {
+    return [
       { name: "hash", required: true, selector: { text: {} } },
       {
         name: "",
         type: "grid",
         flatten: true,
         schema: [
-          { name: "name", selector: { text: {} } },
+          ...(withName ? [{ name: "name", selector: { text: {} } }] : []),
           { name: "icon", selector: { icon: {} } },
           { name: "show_trigger", default: false, selector: { boolean: {} } },
           { name: "auto_close", selector: { number: { min: 0, max: 600, step: 5, mode: "box", unit_of_measurement: "s" } } },
         ],
       },
-      { name: "cards", selector: { object: {} } },
+      ...cards,
       hapticsField,
       appearance({ layout: false, effects: false, accent: false }),
-    ]);
+    ];
+  }
+
+  /** The pop-up's fields above HA's own stack editor: its title is the pop-up's name, plus the cards (tabs, card picker). */
+  static getConfigElement() {
+    const el = document.createElement("lumen-stack-editor") as LumenStackEditor;
+    el.titleKey = "name";
+    el.form = form(this.fields(false));
+    el.fallback = this.getConfigForm();
+    return el;
   }
 }
 

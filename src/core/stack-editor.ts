@@ -32,6 +32,11 @@ export class LumenStackEditor extends LitElement {
   /** Fields above the cards, and the fallback form (with `cards`) when HA's editor is missing. */
   form!: CardForm;
   fallback!: CardForm;
+  /**
+   * The card's key behind the title field of HA's stack editor: `name` on the pop-up. `null`: the
+   * card has no title, HA's field is taken away (where its schema can be reached) and nothing is written.
+   */
+  titleKey: string | null = "title";
   private _config?: Config;
   private _stack?: StackEditor | null;
   private fields?: LumenFormEditor;
@@ -44,7 +49,8 @@ export class LumenStackEditor extends LitElement {
 
   /** What HA's stack editor accepts: type, cards and an optional title, nothing else. */
   private stackConfig(c?: Config) {
-    return { type: "vertical-stack", cards: c?.cards ?? [], ...(typeof c?.title === "string" && c.title ? { title: c.title } : {}) };
+    const title = this.titleKey ? c?.[this.titleKey] : undefined;
+    return { type: "vertical-stack", cards: c?.cards ?? [], ...(typeof title === "string" && title ? { title } : {}) };
   }
 
   connectedCallback() {
@@ -57,9 +63,12 @@ export class LumenStackEditor extends LitElement {
         ev.stopPropagation();
         const stack = (ev as CustomEvent<{ config?: Config }>).detail?.config;
         if (!Array.isArray(stack?.cards) || !this._config) return;
-        const { title: _old, ...rest } = this._config;
-        this.emit({ ...rest, ...(stack.title ? { title: stack.title } : {}), cards: stack.cards });
+        const key = this.titleKey;
+        if (!key) return this.emit({ ...this._config, cards: stack.cards });
+        const { [key]: _old, ...rest } = this._config;
+        this.emit({ ...rest, ...(stack.title ? { [key]: stack.title } : {}), cards: stack.cards });
       });
+      if (!this.titleKey && "_schema" in el) (el as unknown as { _schema: unknown[] })._schema = [];
       el.setConfig(this.stackConfig(this._config));
       this._stack = el;
     });
@@ -77,8 +86,9 @@ export class LumenStackEditor extends LitElement {
       el.addEventListener("config-changed", (ev) => {
         ev.stopPropagation();
         const config = (ev as CustomEvent<{ config: Config }>).detail.config;
-        // the fields form does not hold `cards` / `title`: keep the current ones
-        this.emit(form === this.fallback ? config : { ...config, cards: this._config?.cards, ...(this._config?.title ? { title: this._config.title } : {}) });
+        // the fields form does not hold `cards` / the title: keep the current ones
+        const key = this.titleKey;
+        this.emit(form === this.fallback ? config : { ...config, cards: this._config?.cards, ...(key && this._config?.[key] ? { [key]: this._config[key] } : {}) });
       });
       this.fields = el;
       if (this._config) el.setConfig(this._config);

@@ -814,7 +814,7 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 |---|---|---|
 | `hash` | Link, który go otwiera, np. `#salon` | – |
 | `name`, `icon` | Nagłówek okna | brak |
-| `cards` | Karty w środku (dowolne karty Home Assistanta, edytowane w YAML) | – |
+| `cards` | Karty w środku (dowolne karty Home Assistanta) | – |
 | `show_trigger` | Pokazuj na dashboardzie wiersz, który otwiera pop-up (inaczej karta jest niewidoczna) | wył. |
 | `auto_close` | Zamknij samo po tylu sekundach (0 = nigdy) | 0 |
 

@@ -58,11 +58,12 @@ type Supplement = { yaml?: Extra[]; notes?: string[] };
 
 const CARDS_KEY_NOTE = "`cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.";
 const STACK_NOTES = [CARDS_KEY_NOTE, "Editor: own `getConfigElement`: `title` and `cards` are edited in HA's stack editor, the other fields above it.", "Inner cards keep their own `visibility`."];
+const CARDS_EDITOR = (title: string) => `Editor: own \`getConfigElement\`: \`cards\` ${title} edited in HA's stack editor, the other fields above it.`;
 
 const SUPPLEMENT: Record<string, Supplement> = {
   "lumen-air-quality-card": { yaml: [{ key: "levels", type: "{title?, hint?}[]", note: "Own texts of the six levels, best to worst" }] },
   "lumen-bar-card": {
-    notes: [CARDS_KEY_NOTE, "Inner Lumen cards always get `layout: compact`, and `weather_effects: false` unless they set it."],
+    notes: [CARDS_KEY_NOTE, CARDS_EDITOR("are"), "Inner Lumen cards always get `layout: compact`, and `weather_effects: false` unless they set it."],
   },
   "lumen-chips-card": {
     yaml: [
@@ -81,7 +82,7 @@ const SUPPLEMENT: Record<string, Supplement> = {
   "lumen-horizontal-stack-card": { notes: STACK_NOTES },
   "lumen-light-card": { yaml: [{ key: "height", type: "number", note: "Tile height in px, at least 40", default: "64; compact 44" }] },
   "lumen-popup-card": {
-    notes: [CARDS_KEY_NOTE, "Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: \"#living-room\"`."],
+    notes: [CARDS_KEY_NOTE, CARDS_EDITOR("and the title (`name`) are"), "Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: \"#living-room\"`."],
   },
   "lumen-title-card": { notes: ["An item of `badges` may also be a plain entity id string."] },
   "lumen-vertical-stack-card": { notes: STACK_NOTES },

@@ -135,6 +135,7 @@ Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, lock
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
 - Starting config: `{"cards":[]}`
 - `cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.
+- Editor: own `getConfigElement`: `cards` are edited in HA's stack editor, the other fields above it.
 - Inner Lumen cards always get `layout: compact`, and `weather_effects: false` unless they set it.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
@@ -695,6 +696,7 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
 - Starting config: `{"hash":"#living-room","name":"Living room","show_trigger":true,"cards":[]}`
 - `cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.
+- Editor: own `getConfigElement`: `cards` and the title (`name`) are edited in HA's stack editor, the other fields above it.
 - Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: "#living-room"`.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |

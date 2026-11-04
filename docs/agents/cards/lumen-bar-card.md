@@ -8,6 +8,7 @@ Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, lock
 - Default `grid_options`: `{"columns":12,"rows":"auto","min_columns":3}`
 - Starting config: `{"cards":[]}`
 - `cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.
+- Editor: own `getConfigElement`: `cards` are edited in HA's stack editor, the other fields above it.
 - Inner Lumen cards always get `layout: compact`, and `weather_effects: false` unless they set it.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |

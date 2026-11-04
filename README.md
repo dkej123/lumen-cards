@@ -822,7 +822,7 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 |---|---|---|
 | `hash` | The link that opens it, for example `#living-room` | – |
 | `name`, `icon` | Heading of the window | none |
-| `cards` | The cards inside (any Home Assistant cards, edited as YAML) | – |
+| `cards` | The cards inside (any Home Assistant cards) | – |
 | `show_trigger` | Show a row on the dashboard that opens the pop-up (otherwise the card is invisible) | off |
 | `auto_close` | Close by itself after this many seconds (0 = never) | 0 |
 

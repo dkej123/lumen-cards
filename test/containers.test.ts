@@ -81,6 +81,69 @@ describe("Lumen stack editor", () => {
     expect(out.at(-1)).toEqual({ type: "custom:lumen-vertical-stack-card", max_width: 50, title: "B", cards: [] });
     ed.remove();
   });
+
+  const open = async (card: string, cfg: Record<string, unknown>) => {
+    const ctor = customElements.get(`lumen-${card}-card`) as unknown as { getConfigElement(): LumenStackEditor };
+    const ed = ctor.getConfigElement();
+    expect(ed.localName).toBe("lumen-stack-editor");
+    ed.setConfig(cfg);
+    const out: Record<string, unknown>[] = [];
+    ed.addEventListener("config-changed", (e) => out.push((e as CustomEvent).detail.config));
+    document.body.append(ed);
+    await tick();
+    await tick();
+    await ed.updateComplete;
+    const stack = ed.shadowRoot!.querySelector("fake-stack-editor") as Fake;
+    const change = (config: unknown) => stack.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+    const fields = ed.shadowRoot!.querySelector("lumen-form-editor") as HTMLElement & { form: { schema: unknown[] } };
+    return { ed, out, stack, change, fields };
+  };
+
+  it("the bar gets the cards from HA's editor and never writes a title", async () => {
+    const cards = [{ type: "tile", entity: "sun.sun" }];
+    const { ed, out, stack, change, fields } = await open("bar", { type: "custom:lumen-bar-card", cards, color_scheme: "dark" });
+    expect(stack.config).toEqual({ type: "vertical-stack", cards });
+    change({ type: "vertical-stack", title: "Typed", cards: [] });
+    expect(out.at(-1)).toEqual({ type: "custom:lumen-bar-card", color_scheme: "dark", cards: [] });
+    fields.dispatchEvent(new CustomEvent("config-changed", { detail: { config: { type: "custom:lumen-bar-card", color_scheme: "light" } }, bubbles: true, composed: true }));
+    expect(out.at(-1)).toEqual({ type: "custom:lumen-bar-card", color_scheme: "light", cards: [] });
+    ed.remove();
+  });
+
+  it("HA's title field is taken away on the bar", async () => {
+    const proto = customElements.get("fake-stack-editor")!.prototype as { _schema?: unknown };
+    proto._schema = [{ name: "title" }];
+    const { ed, stack } = await open("bar", { type: "custom:lumen-bar-card", cards: [] });
+    expect((stack as unknown as { _schema: unknown })._schema).toEqual([]);
+    delete proto._schema;
+    ed.remove();
+  });
+
+  it("the pop-up's name is HA's title; hash and its other fields stay above and are kept", async () => {
+    const cards = [{ type: "tile", entity: "sun.sun" }];
+    const cfg = { type: "custom:lumen-popup-card", hash: "#room", name: "Room", auto_close: 5, cards };
+    const { ed, out, stack, change, fields } = await open("popup", cfg);
+    expect(stack.config).toEqual({ type: "vertical-stack", cards, title: "Room" });
+    const own = JSON.stringify(fields.form.schema);
+    for (const k of ["hash", "icon", "show_trigger", "auto_close"]) expect(own).toContain(`"name":"${k}"`);
+    expect(own).not.toContain('"name":"name"');
+    expect(own).not.toContain('"name":"cards"');
+    change({ type: "vertical-stack", title: "Lounge", cards: [] });
+    expect(out.at(-1)).toEqual({ type: "custom:lumen-popup-card", hash: "#room", auto_close: 5, name: "Lounge", cards: [] });
+    expect(out.at(-1)).not.toHaveProperty("title");
+    change({ type: "vertical-stack", cards: [] });
+    expect(out.at(-1)).not.toHaveProperty("name");
+    fields.dispatchEvent(new CustomEvent("config-changed", { detail: { config: { type: "custom:lumen-popup-card", hash: "#other" } }, bubbles: true, composed: true }));
+    expect(out.at(-1)).toEqual({ type: "custom:lumen-popup-card", hash: "#other", cards: [] });
+    ed.remove();
+  });
+
+  it("without HA's editor the bar and the pop-up fall back to the full form", () => {
+    for (const card of ["bar", "popup"]) {
+      const ed = (customElements.get(`lumen-${card}-card`) as unknown as { getConfigElement(): LumenStackEditor }).getConfigElement();
+      expect(JSON.stringify(ed.fallback.schema)).toContain('"name":"cards"');
+    }
+  });
 });
 
 describe("scene chips", () => {
