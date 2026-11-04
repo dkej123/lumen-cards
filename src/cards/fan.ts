@@ -80,7 +80,10 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
   private setPct(v: number) {
     const s = fanSpeed(this.fan);
     const pct = v < s.step / 2 ? 0 : Math.max(s.step, snap(v, 0, 100, s.step));
-    callOrToast(this, this._hass, "fan", pct === 0 ? "turn_off" : "set_percentage", pct === 0 ? {} : { percentage: Math.round(pct) }, this._config.entity).then(() => this.requestUpdate());
+    callOrToast(this, this._hass, "fan", pct === 0 ? "turn_off" : "set_percentage", pct === 0 ? {} : { percentage: Math.round(pct) }, this._config.entity).then((ok) => {
+      if (!ok) this.drag.clear();
+      this.requestUpdate();
+    });
   }
 
   protected renderCard() {

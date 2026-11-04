@@ -230,9 +230,10 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     this.tweens.to("set", this.acTarget ?? reported);
   }
 
-  private call(domain: string, service: string, data: Record<string, unknown>, entity?: string) {
+  private call(domain: string, service: string, data: Record<string, unknown>, entity?: string, onFail?: () => void) {
     return this._hass?.callService(domain, service, data, entity ? { entity_id: entity } : undefined).catch((err: Error) => {
       this.pending.clear();
+      onFail?.();
       toast(this, { icon: "mdi:alert-circle", tone: "danger", title: t("common.error"), text: err.message ?? String(err) });
     });
   }
@@ -286,7 +287,14 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     this.acTimer = window.setTimeout(() => {
       this.acQueued = false;
       this.acSentAt = Date.now();
-      this.call("climate", "set_temperature", data, entity);
+      this.call("climate", "set_temperature", data, entity, () => {
+        // Refused: the device's setpoint again, unless a newer tap is waiting to go out.
+        if (this.acQueued) return;
+        this.acTarget = null;
+        this.rangeTarget = null;
+        this.acSentAt = 0;
+        this.requestUpdate();
+      });
     }, SETPOINT_DEBOUNCE_MS);
   }
 

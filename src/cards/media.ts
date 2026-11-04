@@ -86,7 +86,9 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   private sendKeys(dir: 1 | -1, count: number) {
     const remote = this._config.volume_remote;
     if (!remote) return this.call(dir > 0 ? "volume_up" : "volume_down");
-    return callOrToast(this, this._hass, "remote", "send_command", { command: dir > 0 ? "VOLUME_UP" : "VOLUME_DOWN", num_repeats: count, delay_secs: 0 }, remote);
+    return callOrToast(this, this._hass, "remote", "send_command", { command: dir > 0 ? "VOLUME_UP" : "VOLUME_DOWN", num_repeats: count, delay_secs: 0 }, remote).then((ok) => {
+      if (!ok) this.vol.clear();
+    });
   }
 
   private get keysOnly(): boolean {
@@ -139,7 +141,13 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
   }
 
   private call(service: string, data: Record<string, unknown> = {}) {
-    return callOrToast(this, this._hass, "media_player", service, data, this._config.entity).then(() => this.requestUpdate());
+    return callOrToast(this, this._hass, "media_player", service, data, this._config.entity).then((ok) => {
+      if (!ok) {
+        this.vol.clear();
+        this.seek.clear();
+      }
+      this.requestUpdate();
+    });
   }
 
   private playPause() {

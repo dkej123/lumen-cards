@@ -18,7 +18,7 @@ export class StepChaser implements ReactiveController {
   private stopped = false;
 
   constructor(
-    host: ReactiveControllerHost,
+    private host: ReactiveControllerHost,
     private send: (dir: 1 | -1, count: number) => Promise<unknown> | undefined,
     private read: () => number | null,
     private stepSize: () => number,
@@ -46,7 +46,11 @@ export class StepChaser implements ReactiveController {
     this.target = target;
     if (this.loop) return;
     if (Date.now() - this.lastSent > TRUST_READING_MS) this.level = this.read() ?? target;
-    this.loop = this.run().finally(() => (this.loop = undefined));
+    this.loop = this.run().finally(() => {
+      this.loop = undefined;
+      // `pending` is over: the card shows the level again.
+      this.host.requestUpdate();
+    });
   }
 
   private async run(): Promise<void> {

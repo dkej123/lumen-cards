@@ -529,3 +529,44 @@ describe("09 climate: entities it reads", () => {
     expect(root(el).textContent).toContain("5%");
   });
 });
+
+describe("09 climate: a refused setpoint", () => {
+  type Ac = Card & { step(d: number): void; acTarget: number | null; rangeTarget: unknown; acQueued: boolean };
+
+  it("drops the target at once; a change of mode that fails keeps a queued setpoint", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = hass(ent("climate.c", "heat", { temperature: 20, hvac_modes: ["heat", "off"], target_temp_step: 1 }));
+      h.fail = () => true;
+      const el = (await mount("climate", { entity: "climate.c" }, h)) as Ac;
+      el.step(1);
+      expect(el.acTarget).toBe(21);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(h.calls.at(-1)?.[1]).toBe("set_temperature");
+      expect(el.acTarget).toBeNull();
+
+      el.step(1);
+      button(root(el), "Off")!.click();
+      await vi.advanceTimersByTimeAsync(10);
+      expect(el.acTarget).toBe(21);
+      expect(el.acQueued).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a low / high range rolls back too", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = hass(ent("climate.r", "heat_cool", { target_temp_low: 18, target_temp_high: 24, hvac_modes: ["heat_cool", "off"], target_temp_step: 1 }));
+      h.fail = () => true;
+      const el = (await mount("climate", { entity: "climate.r" }, h)) as Ac;
+      el.step(1);
+      expect(el.rangeTarget).toEqual({ low: 19, high: 24 });
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(el.rangeTarget).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

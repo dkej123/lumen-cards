@@ -84,6 +84,11 @@ export class SlideDrag implements ReactiveController {
     this.opts.commit(f);
   }
 
+  /** The command failed: show the entity's own value again. */
+  clear(): void {
+    this.pend.clear();
+  }
+
   dispose(): void {
     window.clearTimeout(this.holdTimer);
     this.press = null;

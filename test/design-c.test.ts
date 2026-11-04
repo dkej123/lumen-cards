@@ -533,3 +533,88 @@ describe("media volume_only", () => {
     expect(stepsNeeded(0.36, 0.37, 0.04)).toBe(0);
   });
 });
+
+describe("a refused slider command rolls back at once", () => {
+  const wait = () => new Promise((r) => setTimeout(r, 0));
+  /** A drag to `x` % of an element 100 px wide. */
+  const drag = async (el: Card, target: HTMLElement, x: number) => {
+    target.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 40, right: 100, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    const ev = (type: string, clientX: number) => target.dispatchEvent(new PointerEvent(type, { button: 0, clientX, clientY: 0, pointerId: 1, bubbles: true, composed: true }));
+    ev("pointerdown", 50);
+    ev("pointermove", x);
+    ev("pointerup", x);
+    await el.updateComplete;
+  };
+  const tile = (el: Card) => el.shadowRoot!.querySelector<HTMLElement>(".ltile")!;
+  const text = (el: Card) => tile(el).textContent!.replace(/\s+/g, " ");
+
+  const cases: [string, Record<string, unknown>, ReturnType<typeof ent>, string, string][] = [
+    ["number", { entity: "input_number.n" }, ent("input_number.n", "10", { min: 0, max: 100, step: 1 }), "80 of 100", "10 of 100"],
+    ["fan", { entity: "fan.f" }, ent("fan.f", "on", { percentage: 10, supported_features: 1 }), "80%", "10%"],
+    ["cover", { entity: "cover.c", show_buttons: false }, ent("cover.c", "open", { current_position: 10, supported_features: 15 }), "80%", "10%"],
+  ];
+  for (const [type, config, state, sent, back] of cases) {
+    it(`${type}: the old value is back after the error, and stays the new one when accepted`, async () => {
+      const h = mockHass([state]);
+      h.fail = () => true;
+      const el = await mountCard(type, config, h);
+      await drag(el, tile(el), 80);
+      expect(h.calls.length).toBe(1);
+      await wait();
+      await el.updateComplete;
+      expect(text(el)).toContain(back);
+      expect(text(el)).not.toContain(sent);
+
+      h.fail = () => false;
+      await drag(el, tile(el), 80);
+      await wait();
+      await el.updateComplete;
+      expect(text(el)).toContain(sent);
+      el.remove();
+    });
+  }
+
+  it("cover: the slat bar rolls back too", async () => {
+    const h = mockHass([ent("cover.c", "open", { current_position: 50, current_tilt_position: 20, supported_features: 15 | 128 })]);
+    h.fail = () => true;
+    const el = await mountCard("cover", { entity: "cover.c", show_buttons: false }, h);
+    const bar = el.shadowRoot!.querySelector<HTMLElement>('[role="slider"]')!;
+    await drag(el, bar, 80);
+    await wait();
+    await el.updateComplete;
+    expect(bar.getAttribute("aria-valuenow")).toBe("20");
+    el.remove();
+  });
+
+  it("media: the volume bar and the volume_only tile roll back", async () => {
+    const player = ent("media_player.m", "playing", { supported_features: 4 | 8, volume_level: 0.1 });
+    const h = mockHass([player]);
+    h.fail = () => true;
+    const el = await mountCard("media", { entity: "media_player.m", layout: "wide" }, h);
+    const vol = [...el.shadowRoot!.querySelectorAll<HTMLElement>('[role="slider"]')].find((s) => s.getAttribute("aria-label") === "Volume")!;
+    await drag(el, vol, 80);
+    await wait();
+    await el.updateComplete;
+    expect(vol.getAttribute("aria-valuenow")).toBe("10");
+    el.remove();
+
+    const only = await mountCard("media", { entity: "media_player.m", volume_only: true }, h);
+    await drag(only, tile(only), 80);
+    await wait();
+    await only.updateComplete;
+    expect(tile(only).getAttribute("aria-valuenow")).toBe("10");
+    only.remove();
+  });
+
+  it("media: volume keys sent through a remote roll back too", async () => {
+    const h = mockHass([ent("media_player.m", "playing", { supported_features: 1024, volume_level: 0.12 })]);
+    h.fail = () => true;
+    const el = await mountCard("media", { entity: "media_player.m", volume_only: true, volume_remote: "remote.tv" }, h);
+    await drag(el, tile(el), 80);
+    await new Promise((r) => setTimeout(r, 200));
+    await el.updateComplete;
+    expect(h.calls.at(-1)?.[0]).toBe("remote");
+    expect(tile(el).getAttribute("aria-valuenow")).toBe("12");
+    el.remove();
+  });
+});

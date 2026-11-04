@@ -72,7 +72,10 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
 
   private setValue(v: number) {
     const domain = this._config.entity.split(".")[0] === "number" ? "number" : "input_number";
-    callOrToast(this, this._hass, domain, "set_value", { value: v }, this._config.entity).then(() => this.requestUpdate());
+    callOrToast(this, this._hass, domain, "set_value", { value: v }, this._config.entity).then((ok) => {
+      if (!ok) this.drag.clear();
+      this.requestUpdate();
+    });
   }
 
   protected renderCard() {

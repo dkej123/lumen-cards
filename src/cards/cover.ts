@@ -88,7 +88,11 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
   private call(service: string, data: Record<string, unknown> = {}) {
     this.requestUpdate();
     return callOrToast(this, this._hass, "cover", service, data, this._config.entity).then((ok) => {
-      if (!ok) this.target.clear();
+      if (!ok) {
+        this.target.clear();
+        this.pos.clear();
+        this.tilt.clear();
+      }
       this.requestUpdate();
     });
   }
