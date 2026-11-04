@@ -89,7 +89,8 @@ export class LumenSelectCard extends LumenBaseCard<SelectConfig> {
       this.closeMenu(true);
       return;
     }
-    if (isUnavailable(this.sel) || !selectOptions(this.sel).length || this.preview) return;
+    // `unknown` has no current option, but one can be chosen.
+    if (!this.sel || this.sel.state === "unavailable" || !selectOptions(this.sel).length || this.preview) return;
     const pick = this.renderRoot.querySelector<HTMLElement>(".pick");
     const card = this.renderRoot.querySelector<HTMLElement>(".ltile");
     if (!pick || !card) return;

@@ -227,7 +227,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     const name = entityName(c.name, e, c.entity);
     const known = !off && (vl !== null || this.vol.dragging);
     const percent = `${Math.round(vf * 100)}%`;
-    const sub = una ? t("common.unavailable") : off ? t("card.media.off") : known ? percent : "";
+    const sub = una ? t("common.unavailable") : e?.state === "unknown" ? t("common.no_data") : off ? t("card.media.off") : known ? percent : "";
     const b = volumeButtons(e, this._width, c.show_playback !== false);
     const playing = mediaPlaying(e);
     const buttons = [
@@ -270,7 +270,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     const name = entityName(c.name, e, c.entity);
     const hasMedia = !off && !!(e?.attributes.media_title || e?.attributes.media_series_title);
     const info = mediaInfo(e, name);
-    const stateLabel = una ? t("common.unavailable") : off ? t("card.media.off") : stateText(this._hass, e, e!.state);
+    const stateLabel = una ? t("common.unavailable") : e?.state === "unknown" ? t("common.no_data") : off ? t("card.media.off") : stateText(this._hass, e, e!.state);
     const title = hasMedia ? info.title : name;
     const artist = hasMedia ? info.artist : stateLabel;
     const last = String(e?.attributes.app_name || e?.attributes.source || "");

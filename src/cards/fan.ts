@@ -47,7 +47,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
   static styles = [LumenBaseCard.styles, css`${unsafeCSS(TILE_CSS)}`];
 
   private drag = new SlideDrag(this, {
-    enabled: () => !isUnavailable(this.fan) && fanSpeed(this.fan).settable,
+    enabled: () => !this.offline && fanSpeed(this.fan).settable,
     source: () => this.fan,
     commit: (f) => this.setPct(f * 100),
     tap: () => this.tap(),
@@ -70,9 +70,14 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     return this.entity(this._config.entity);
   }
 
+  /** Only `unavailable` blocks the fan (`unknown` is no data, commands still work). */
+  private get offline() {
+    return !this.fan || this.fan.state === "unavailable";
+  }
+
   private tap() {
     const c = this._config;
-    if (isUnavailable(this.fan) && !c.tap_action) return;
+    if (this.offline && !c.tap_action) return;
     handleAction(this, c.tap_action ?? { action: "toggle" }, c.entity, "tap");
   }
 
@@ -101,7 +106,7 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
       {
         title: name,
         sub: c.show_state === false ? "" : value,
-        subColor: una ? "var(--lumen-text-3)" : undefined,
+        subColor: una || isUnavailable(e) ? "var(--lumen-text-3)" : undefined,
         icon: c.icon || (e?.attributes.icon as string | undefined) || (on ? "mdi:fan" : "mdi:fan-off"),
         iconAnim: on && c.icon_animation !== false ? `lumenSpin ${(2.6 - (pct / 100) * 1.6).toFixed(2)}s linear infinite` : "none",
         iconBg: una ? "transparent" : on ? "var(--lumen-accent)" : "var(--lumen-surface-2)",

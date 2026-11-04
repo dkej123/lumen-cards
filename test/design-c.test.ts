@@ -618,3 +618,75 @@ describe("a refused slider command rolls back at once", () => {
     el.remove();
   });
 });
+
+describe("unknown: No data, and the actions stay", () => {
+  const text = (el: Card) => el.shadowRoot!.textContent!.replace(/\s+/g, " ");
+
+  it("media says No data, not Off, in every look", async () => {
+    const h = mockHass([ent("media_player.m", "unknown", { supported_features: 4 })]);
+    for (const cfg of [{ layout: "wide" }, { layout: "compact" }, { volume_only: true }]) {
+      const el = await mountCard("media", { entity: "media_player.m", ...cfg }, h);
+      expect(text(el), JSON.stringify(cfg)).toContain("No data");
+      expect(text(el), JSON.stringify(cfg)).not.toContain("Off");
+      el.remove();
+    }
+  });
+
+  it("climate says No data, not Unavailable, and its mode buttons still work", async () => {
+    const h = mockHass([ent("climate.c", "unknown", { hvac_modes: ["heat", "off"] })]);
+    for (const layout of ["wide", "compact"]) {
+      const el = await mountCard("climate", { entity: "climate.c", layout }, h);
+      expect(text(el), layout).toContain("No data");
+      expect(text(el), layout).not.toContain("Unavailable");
+      el.remove();
+    }
+    const el = await mountCard("climate", { entity: "climate.c", layout: "wide" }, h);
+    [...el.shadowRoot!.querySelectorAll("button")].find((b) => b.textContent!.includes("Heat"))!.click();
+    expect(h.calls.at(-1)).toEqual(["climate", "set_hvac_mode", { hvac_mode: "heat" }, { entity_id: "climate.c" }]);
+    el.remove();
+  });
+
+  it("a sensor says No data in a solid frame; unavailable stays dashed with a dash", async () => {
+    const h = mockHass([ent("sensor.u", "unknown"), ent("sensor.o", "unavailable")]);
+    for (const layout of ["wide", "compact"]) {
+      const u = await mountCard("sensor", { entity: "sensor.u", layout }, h);
+      expect(text(u)).toContain("No data");
+      expect(u.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!.getAttribute("style")).not.toContain("dashed");
+      const o = await mountCard("sensor", { entity: "sensor.o", layout }, h);
+      expect(text(o)).toContain("—");
+      expect(o.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!.getAttribute("style")).toContain("dashed");
+      u.remove();
+      o.remove();
+    }
+  });
+
+  it("a fan keeps its tap; an unavailable one does not", async () => {
+    const h = mockHass([ent("fan.u", "unknown"), ent("fan.o", "unavailable")]);
+    const taps = async (entity: string) => {
+      const el = await mountCard("fan", { entity }, h);
+      const fired: unknown[] = [];
+      el.addEventListener("hass-action", (e) => fired.push(e));
+      el.shadowRoot!.querySelector<HTMLElement>(".ltile")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+      el.remove();
+      return fired.length;
+    };
+    expect(await taps("fan.u")).toBe(1);
+    expect(await taps("fan.o")).toBe(0);
+  });
+
+  it("a select opens its list so an option can be chosen", async () => {
+    const h = mockHass([ent("input_select.s", "unknown", { options: ["a", "b"] })]);
+    const el = await mountCard("select", { entity: "input_select.s" }, h);
+    el.shadowRoot!.querySelector<HTMLElement>(".pick")!.click();
+    await el.updateComplete;
+    expect((el as unknown as { _menu: unknown })._menu).toBeTruthy();
+    el.remove();
+  });
+
+  it("the cover's icon and value use the muted tone", async () => {
+    const el = await mountCard("cover", { entity: "cover.u" }, mockHass([ent("cover.u", "unknown", { supported_features: 15 })]));
+    expect(el.shadowRoot!.querySelector(".ltile")!.innerHTML).toContain("var(--lumen-text-3)");
+    expect(text(el)).toContain("No data");
+    el.remove();
+  });
+});

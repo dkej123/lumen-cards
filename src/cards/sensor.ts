@@ -81,14 +81,15 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
     const sp = this.history.spark(c.entity, Number(c.hours ?? 12), 120, 36, 1);
     const color = colorOr(c.color, "var(--lumen-accent)");
     const name = entityName(c.name, e, c.entity);
-    const value = sensorValue(e, this._hass);
+    const unknown = e?.state === "unknown";
+    const value = unknown ? t("common.no_data") : sensorValue(e, this._hass);
     const h = this.actions(`sensor:${c.entity}`, c, c.entity);
-    const una = isUnavailable(e);
+    const una = !unknown && isUnavailable(e);
     const stale = sensorStale(e, Number(c.stale_after ?? 0));
     const name2 = c.show_name === false ? "" : stale ? `${name} · ${formatAgo(e!.last_reported ?? e!.last_updated)}` : name;
     const label = stale ? `${name} ${value} · ${t("card.sensor.stale", { x: formatAgo(e!.last_reported ?? e!.last_updated) })}` : `${name} ${value}`;
     const border = una || stale ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)";
-    const ink = una || stale ? "var(--lumen-text-3)" : "var(--lumen-text-1)";
+    const ink = una || unknown || stale ? "var(--lumen-text-3)" : "var(--lumen-text-1)";
     const chart = c.show_graph === false || una ? nothing : html`<svg viewBox="0 0 120 36" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:70%;pointer-events:none;opacity:${stale ? 0.4 : 1}"><path d=${sp.area} fill="currentColor" opacity="0.16"></path><path d=${sp.line} fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7" vector-effect="non-scaling-stroke"></path></svg>`;
     const hpx = Number(c.height) > 0 ? Math.max(28, Math.min(200, Number(c.height))) : 0;
     if (this.compact || (hpx && hpx < ONE_LINE_BELOW)) {

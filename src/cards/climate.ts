@@ -315,8 +315,10 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private ac() {
     const cfg = this._config;
     const e = this.entity(cfg.entity);
-    const una = isUnavailable(e);
-    const mode = una ? "off" : e!.state;
+    // `unknown` is no data, not an outage (the commands still work): it only looks switched off.
+    const una = !e || e.state === "unavailable";
+    const unknown = e?.state === "unknown";
+    const mode = una || unknown ? "off" : e!.state;
     const c = MODE_COLOR[mode] ?? "var(--lumen-accent)";
     const busy = this.pending.active;
     const f = this.fahrenheit;
@@ -391,13 +393,13 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     };
     const modeLabel = (m: string) => (MODES[m] ? label(m) : t(MODE_LABEL[m] ?? m));
     const roomPart = cfg.show_current_temp !== false && room !== "—" ? t("card.climate.in_room", { t: room }) : "";
-    const head = una ? t("card.climate.unavailable") : busy ? t("common.sending_command") : off ? t("card.climate.off") : modeLabel(mode);
+    const head = una ? t("card.climate.unavailable") : busy ? t("common.sending_command") : unknown ? t("common.no_data") : off ? t("card.climate.off") : modeLabel(mode);
     const state = [head, roomPart].filter(Boolean).join(" · ");
     const roomLine = t("card.climate.room", { t: room });
     const act = una || off ? undefined : ACTIONS[String(e?.attributes.hvac_action ?? "")];
     const action = act ? { label: t(act[0]), color: act[1], pulse: act[2] } : null;
     // Compact line: what it does now (hvac_action, else the mode) and the room.
-    const short = [una ? t("card.climate.unavailable") : off ? t("card.climate.off") : action?.label ?? modeLabel(mode), cfg.show_current_temp !== false && room !== "—" ? room : ""].filter(Boolean).join(" · ");
+    const short = [una ? t("card.climate.unavailable") : unknown ? t("common.no_data") : off ? t("card.climate.off") : action?.label ?? modeLabel(mode), cfg.show_current_temp !== false && room !== "—" ? room : ""].filter(Boolean).join(" · ");
     const r = this.rangeTarget ?? this.range(e);
     const range = r ? { low: formatTemp(r.low, f), high: formatTemp(r.high, f) } : null;
     const lim = e ? this.limits(e) : null;
@@ -410,7 +412,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const batteryPct = bat?.low && bat.pct !== null ? `${Math.round(bat.pct)}%` : "";
     // The setpoint is on its way: waiting for the debounce, or sent and not confirmed yet.
     const sending = this.acQueued || (!!this.acSentAt && (this.acTarget !== null || this.rangeTarget !== null));
-    return { c, ic, mode, off, una, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, room, action, rangeLine, sel, battery, batteryPct, heatOnly, sending };
+    return { c, ic, mode, off, una, unknown, busy, target: formatTemp(target, f), range, modes, fans, swings, presets, power, state, short, roomLine, room, action, rangeLine, sel, battery, batteryPct, heatOnly, sending };
   }
 
   private get name() {
@@ -510,7 +512,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const tintBg = a.una ? "transparent" : heating || cooling || (!a.off && !a.heatOnly) ? `color-mix(in srgb, ${tint} 16%, transparent)` : "color-mix(in srgb, var(--lumen-text-3) 14%, transparent)";
     const head = a.una
       ? t(a.heatOnly ? "card.climate.thermostat_unavailable" : "card.climate.unavailable")
-      : a.off
+      : a.unknown
+        ? t("common.no_data")
+        : a.off
         ? t(a.heatOnly ? "card.climate.thermostat_off" : "card.climate.off")
         : a.sending
           ? t("card.climate.sending")
