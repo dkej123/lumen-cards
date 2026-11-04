@@ -16,7 +16,7 @@ import { listOf } from "../core/validate";
 import type { HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { LightsController, type LightItem } from "../lights/controller";
-import { RUN } from "../logic/run";
+import { defaultTap } from "../logic/run";
 
 /** How long a tapped chip stays highlighted while the device reports its new state (polled integrations are slow). */
 const CHOSEN_MS = 10_000;
@@ -142,7 +142,9 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     this._pulse = s;
     window.clearTimeout(this.pulseTimer);
     this.pulseTimer = window.setTimeout(() => (this._pulse = null), 600);
-    if (s.active_value !== undefined) {
+    const tap = defaultTap(s.entity);
+    // Opening the details chooses nothing.
+    if (s.active_value !== undefined && (s.tap_action || tap.kind !== "more-info")) {
       this._chosen = s;
       window.clearTimeout(this.chosenTimer);
       this.chosenTimer = window.setTimeout(() => (this._chosen = null), CHOSEN_MS);
@@ -151,8 +153,11 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
       handleAction(this, s.tap_action, s.entity, "tap");
       return;
     }
-    const domain = s.entity.split(".")[0];
-    const [d, service] = RUN[domain] ?? ["homeassistant", "toggle"];
+    if (tap.kind === "more-info") {
+      this.moreInfo(s.entity);
+      return;
+    }
+    const [d, service] = tap.kind === "run" ? [tap.domain, tap.service] : ["homeassistant", "toggle"];
     this._hass?.callService(d, service, {}, { entity_id: s.entity }).catch((err: Error) =>
       toast(this, { icon: "mdi:alert-circle", tone: "danger", title: t("common.error"), text: err.message ?? String(err) }),
     );

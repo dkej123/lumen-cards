@@ -386,3 +386,66 @@ describe("chips sharing one entity", () => {
     expect(chipActive({ active_value: "playing" }, undefined)).toBe(false);
   });
 });
+
+describe("default tap: the same on a button, a chip and a sub-button", () => {
+  const press = (el: HTMLElement) => {
+    el.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+    el.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+  };
+  const h0 = () => mockHass([ent("lock.front", "locked"), ent("sensor.t", "21"), ent("switch.s", "on"), ent("climate.c", "heat"), ent("script.gate", "off"), ent("binary_sensor.d", "off")]);
+  const watch = (el: Card) => {
+    const seen: unknown[] = [];
+    el.addEventListener("hass-more-info", (e) => seen.push(["more-info", (e as CustomEvent).detail.entityId]));
+    el.addEventListener("hass-action", (e) => seen.push(["action", (e as CustomEvent).detail.config.tap_action]));
+    return seen;
+  };
+
+  it("a lock or a sensor on a button opens details and sends nothing", async () => {
+    for (const entity of ["lock.front", "sensor.t"]) {
+      const h = h0();
+      const el = await mountCard("button", { entity, layout: "wide" }, h);
+      const seen = watch(el);
+      press(el.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!);
+      await el.updateComplete;
+      expect(h.calls).toEqual([]);
+      expect(seen).toEqual([["more-info", entity]]);
+    }
+  });
+
+  it("a lock or a sensor on a chip opens details and sends nothing", async () => {
+    for (const entity of ["lock.front", "sensor.t"]) {
+      const h = h0();
+      const el = await mountCard("chips", { chips: [{ type: "action", entity, active_value: "x" }] }, h);
+      const seen = watch(el);
+      press(el.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!);
+      await el.updateComplete;
+      expect(h.calls).toEqual([]);
+      expect(seen).toEqual([["more-info", entity]]);
+      // Details opened, nothing was chosen: no highlight.
+      expect(el.shadowRoot!.querySelector('[role="button"]')!.getAttribute("aria-pressed")).toBe("false");
+    }
+  });
+
+  it("a chip still runs a script and toggles a switch", async () => {
+    const h = h0();
+    const el = await mountCard("chips", { chips: [{ type: "action", entity: "script.gate" }, { type: "action", entity: "switch.s" }] }, h);
+    el.shadowRoot!.querySelectorAll<HTMLElement>('[role="button"]').forEach(press);
+    expect(h.calls).toEqual([
+      ["script", "turn_on", {}, { entity_id: "script.gate" }],
+      ["homeassistant", "toggle", {}, { entity_id: "switch.s" }],
+    ]);
+  });
+
+  it("a sub-button: a lock opens details, a climate toggles, a script runs", async () => {
+    const h = h0();
+    const el = await mountCard("entity", { entity: "binary_sensor.d", layout: "wide", sub_buttons: [{ entity: "lock.front" }, { entity: "climate.c" }, { entity: "script.gate" }] }, h);
+    const seen = watch(el);
+    el.shadowRoot!.querySelectorAll<HTMLElement>(".subbtns > [aria-disabled]").forEach(press);
+    expect(seen).toEqual([
+      ["action", { action: "more-info" }],
+      ["action", { action: "toggle" }],
+      ["action", { action: "perform-action", perform_action: "script.turn_on", target: { entity_id: "script.gate" } }],
+    ]);
+    expect(JSON.stringify(seen)).not.toContain("unlock");
+  });
+});

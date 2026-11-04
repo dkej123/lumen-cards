@@ -7,6 +7,7 @@ import { Presses, pressable } from "./press";
 import type { Schema } from "./form";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
+import { defaultTap } from "../logic/run";
 import { listOf } from "./validate";
 
 /** Small extra button on the right of a card (Bubble Card `sub_button`, Mushroom template chips). */
@@ -22,8 +23,6 @@ export interface SubButton {
 
 /** The entities of a `sub_buttons` list, for `entityIds()`. */
 export const subButtonEntities = (list: unknown): (string | undefined)[] => listOf<SubButton>(list).map((b) => b.entity);
-
-const TOGGLE = new Set(["switch", "input_boolean", "light", "fan", "cover", "siren", "valve", "media_player", "lock", "group"]);
 
 /** Sub-buttons a card shows (catalog C3): 4 in the full look, 2 on a narrow card (6 phone columns), 1 when compact. */
 export function subButtonLimit(compact: boolean, width = 0): number {
@@ -54,8 +53,11 @@ export class SubButtons {
 
   private tap(b: SubButton) {
     if (b.tap_action) handleAction(this.host, b.tap_action, b.entity, "tap");
-    else if (b.entity && TOGGLE.has(b.entity.split(".")[0])) handleAction(this.host, { action: "toggle" }, b.entity, "tap");
-    else if (b.entity) handleAction(this.host, { action: "more-info" }, b.entity, "tap");
+    else if (b.entity) {
+      const d = defaultTap(b.entity);
+      const action: ActionConfig = d.kind === "run" ? { action: "perform-action", perform_action: `${d.domain}.${d.service}`, target: { entity_id: b.entity } } : { action: d.kind };
+      handleAction(this.host, action, b.entity, "tap");
+    }
   }
 
   /**

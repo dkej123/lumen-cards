@@ -23,7 +23,7 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `sub_buttons[].name` |  | text |  |  | Name |  |
 | `sub_buttons[].icon` |  | icon |  |  | Icon |  |
 | `sub_buttons[].show_state` |  | boolean |  |  | Show state |  |
-| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
+| `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: run, toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |

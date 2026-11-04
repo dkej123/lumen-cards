@@ -17,7 +17,7 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `chips[].entity` | yes | entity |  |  | Entity |  |
 | `chips[].name` |  | text |  |  | Name |  |
 | `chips[].icon` |  | icon |  |  | Icon |  |
-| `chips[].tap_action` |  | ui_action |  |  | Tap action (default: run / toggle) |  |
+| `chips[].tap_action` |  | ui_action |  |  | Tap action (default: run / toggle / details) |  |
 | `chips[].active_value` |  | text |  |  | Active when the state is |  |
 | `chips[].active_attribute` |  | text |  |  | Read an attribute instead of the state (optional) |  |
 | `chips[].power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) – only when the bulb sits behind a relay / plug; empty = always powered |  |

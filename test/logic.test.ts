@@ -8,6 +8,7 @@ import { airQuality } from "../src/logic/air";
 import { alertToShow } from "../src/logic/alert";
 import { ctPresets, kelvinRange, lightPower } from "../src/logic/light";
 import { presence } from "../src/logic/presence";
+import { defaultTap } from "../src/logic/run";
 import { alarmBarIcon, alarmStatus } from "../src/logic/status";
 import { formatDuration, formatNumber, formatWhen } from "../src/logic/time";
 
@@ -226,5 +227,14 @@ describe("edit-mode layout preview", () => {
     expect(visibleAt([{ condition: "user", users: ["x"] }], 390)).toBe(true);
     expect(visibleAt([{ condition: "or", conditions: [...narrow, { condition: "state", entity: "a", state: "on" }] }], 1440)).toBe(true);
     expect(visibleAt(undefined, 390)).toBe(true);
+  });
+});
+
+describe("defaultTap", () => {
+  it("runs what runs, toggles what toggles, opens details for anything else", () => {
+    expect(defaultTap("script.a")).toEqual({ kind: "run", domain: "script", service: "turn_on" });
+    expect(defaultTap("automation.a")).toEqual({ kind: "run", domain: "automation", service: "trigger" });
+    for (const id of ["switch.a", "light.a", "climate.a", "humidifier.a", "cover.a"]) expect(defaultTap(id)).toEqual({ kind: "toggle" });
+    for (const id of ["lock.a", "alarm_control_panel.a", "sensor.a", "binary_sensor.a", "weather.a"]) expect(defaultTap(id)).toEqual({ kind: "more-info" });
   });
 });

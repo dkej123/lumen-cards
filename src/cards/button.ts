@@ -16,7 +16,7 @@ import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
 import { waitForResponse, type EntitySource } from "../logic/response";
-import { RUN } from "../logic/run";
+import { RUN, defaultTap } from "../logic/run";
 import { formatWhen } from "../logic/time";
 
 export interface ButtonFeedback {
@@ -55,7 +55,6 @@ export interface ButtonConfig extends BaseConfig {
 /** How long the success line stays before the last use comes back (catalog: 6 s). */
 export const SUCCESS_MS = 6000;
 
-const TOGGLE = new Set(["switch", "input_boolean", "light", "fan", "cover", "siren", "humidifier", "valve", "media_player", "climate", "lock", "group"]);
 const ICONS: Record<string, string> = { script: "mdi:script-text-play", scene: "mdi:palette", button: "mdi:gesture-tap-button", input_button: "mdi:gesture-tap-button", automation: "mdi:robot" };
 
 export function validateButton(c: Partial<ButtonConfig>): void {
@@ -127,9 +126,9 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
       handleAction(this, c.tap_action, c.entity, "tap");
       return Promise.resolve();
     }
-    const run = RUN[this.domain];
-    if (run) return this._hass!.callService(run[0], run[1], {}, { entity_id: c.entity });
-    if (TOGGLE.has(this.domain)) return this._hass!.callService("homeassistant", "toggle", {}, { entity_id: c.entity });
+    const tap = defaultTap(c.entity);
+    if (tap.kind === "run") return this._hass!.callService(tap.domain, tap.service, {}, { entity_id: c.entity });
+    if (tap.kind === "toggle") return this._hass!.callService("homeassistant", "toggle", {}, { entity_id: c.entity });
     this.moreInfo(c.entity);
     return Promise.resolve();
   }
