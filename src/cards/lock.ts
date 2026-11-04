@@ -85,20 +85,16 @@ export const lockPadKind = (format: unknown): "pin" | "text" =>
  * when the command went through.
  */
 export class LumenLockCard extends LumenBaseCard<LockConfig> {
-  // Narrower than the panel column (e.g. half a section): the buttons go under the row.
+  // Half a section is too narrow for three buttons with icons: the labels stay whole.
   static styles = [
     LumenBaseCard.styles,
     css`
       @container (max-width: 319px) {
-        .lockrow {
-          flex-wrap: wrap;
+        .lockbtns.three > button {
+          padding: 0 4px !important;
         }
-        .lockbtns {
-          flex: 1 1 100% !important;
-        }
-        .lockbtns > button {
-          flex: 1;
-          justify-content: center;
+        .lockbtns.three > button > :not(:last-child) {
+          display: none !important;
         }
       }
     `,
@@ -282,7 +278,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
       <div ${pressable(h)} aria-label="${this.name} · ${l.sub}" style="position:relative;display:flex;align-items:center;gap:10px;min-height:34px">
         ${rowIcon(l)}${rowText(this.name, l, this._config.show_state !== false || !!this.busy())}${l.una ? unplugged() : nothing}
       </div>
-      ${segs(this.buttons(), true, "lockbtns")}
+      ${segs(this.buttons(), true, this.canOpen ? "lockbtns three" : "lockbtns")}
     </div>`;
   }
 

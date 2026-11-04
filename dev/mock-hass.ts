@@ -24,14 +24,28 @@ export interface DemoHome {
   setDark(dark: boolean): void;
 }
 
+/** The made-up home speaks the visitor's language: names are written in either one here and looked up on creation. */
+const NAMES_PL: Record<string, string> = {
+  "AC · office": "Klima · biuro", "Alarm · home": "Alarm · dom", "Alarm · text code": "Alarm · kod tekstowy", "Back door": "Drzwi tylne", Balcony: "Balkon", Barrier: "Szlaban",
+  Bathroom: "Łazienka", Bedroom: "Sypialnia", "Bedroom AC": "Klima w sypialni", "Bike battery low": "Niska bateria roweru", Car: "Samochód", Ceiling: "Sufit", Cellar: "Piwnica",
+  "Child lock": "Blokada rodzicielska", "Climate · living room": "Klimat · salon", "Desk strip": "Listwa przy biurku", Evening: "Wieczór", "Front door": "Drzwi wejściowe",
+  "Front door lock": "Zamek drzwi wejściowych", Garage: "Garaż", "Garage gate": "Brama garażowa", "Garden gate": "Furtka", Gate: "Brama", "Gate message": "Komunikat bramy",
+  "Gate status": "Stan bramy", Hall: "Przedpokój", Home: "Dom", House: "Dom", Kitchen: "Kuchnia", "Kitchen · all": "Kuchnia · wszystko", "LED strip": "Taśma LED",
+  "Laundry done": "Pranie gotowe", "Living room": "Salon", Movie: "Film", "Night mode": "Tryb nocny", Outside: "Na zewnątrz", Purifier: "Oczyszczacz", "Radiator · bathroom": "Grzejnik · łazienka",
+  Sconce: "Kinkiet", "Socket · coffee": "Gniazdko · ekspres", "Socket · kettle": "Gniazdko · czajnik", Sofa: "Sofa", Trash: "Śmieci", "Weather warnings": "Ostrzeżenia pogodowe",
+  "Window open": "Otwarte okno", "Zoe key fob": "Brelok Zoe",
+};
+const NAMES_EN: Record<string, string> = { Alergeny: "Allergens", "Kinkiet 1": "Sconce 1", "Kinkiet 2": "Sconce 2", Kinkiety: "Sconces", Oczyszczacz: "Purifier", Wilgotność: "Humidity" };
+
 export function createDemoHome(o: DemoOptions = {}): DemoHome {
   const lang = o.lang ?? "en";
+  const named = (name: unknown) => (typeof name === "string" ? ((lang === "pl" ? NAMES_PL : NAMES_EN)[name] ?? name) : name);
   let dark = !!o.dark;
   const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
   const e = (entity_id: string, state: string, attributes: Record<string, unknown> = {}, min = 30): HassEntity => ({
     entity_id,
     state,
-    attributes,
+    attributes: "friendly_name" in attributes ? { ...attributes, friendly_name: named(attributes.friendly_name) } : attributes,
     last_changed: ago(min),
     last_updated: ago(min),
   });
