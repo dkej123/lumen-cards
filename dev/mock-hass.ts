@@ -13,6 +13,10 @@ export interface DemoOptions {
   alarm?: string;
   /** The car lock asks for a code. */
   code?: boolean;
+  /** More entities; a state with the id of a built-in one replaces it. */
+  extra?: (e: (id: string, state: string, attributes?: Record<string, unknown>, min?: number) => HassEntity) => HassEntity[];
+  /** Answers a service call before the built-in ones; true = handled. */
+  service?: (ctx: DemoCtx, domain: string, service: string, data: Record<string, unknown>, id: string) => boolean;
 }
 
 export interface DemoHome {
@@ -169,6 +173,7 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       e("sensor.window_min", "25", { unit_of_measurement: "min" }),
       e("sensor.bike_battery", "18", { unit_of_measurement: "%" }),
       ...domainStates(e),
+      ...(o.extra?.(e) ?? []),
     ].map((x) => [x.entity_id, x]),
   );
 
@@ -202,7 +207,8 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
         off: ["Off", "Wyłączony"],
       };
       const w = words[x.state];
-      return w ? w[pl ? 1 : 0] : x.state + (x.attributes.unit_of_measurement ? ` ${x.attributes.unit_of_measurement}` : "");
+      const shown = pl && /^-?\d+\.\d+$/.test(x.state) ? x.state.replace(".", ",") : x.state;
+      return w ? w[pl ? 1 : 0] : shown + (x.attributes.unit_of_measurement ? ` ${x.attributes.unit_of_measurement}` : "");
     },
     callService: async (domain, service, data = {}, target): Promise<undefined> => {
       // Several entities at once (the floating panel's "All" segment): one call each.
@@ -212,6 +218,7 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
         return undefined;
       }
       const id = String((target as { entity_id?: string })?.entity_id ?? "");
+      if (o.service?.(ctx, domain, service, data, id)) return undefined;
       if (domainService(ctx, domain, service, data, id)) return undefined;
       if (domain === "light")
         set(id, service === "turn_off" ? "off" : "on", data.brightness_pct ? { brightness: Math.round(Number(data.brightness_pct) * 2.55) } : data.color_temp_kelvin ? { color_temp_kelvin: data.color_temp_kelvin, color_mode: "color_temp" } : data.hs_color ? { hs_color: data.hs_color, color_mode: "hs", rgb_color: undefined } : {});

@@ -4,7 +4,7 @@
 
 **Ładne, „szklane” karty do dashboardu Home Assistant. Każdą kartę ustawisz klikając, bez pisania kodu.**
 
-[English](README.md) · **[Wypróbuj wszystkie karty na żywo](https://dkej123.github.io/lumen-cards/?lang=pl)** · [Dla agentów AI](docs/agents/overview.md)
+[English](README.md) · **[Wypróbuj wszystkie karty na żywo](https://dkej123.github.io/lumen-cards/?lang=pl)** · **[Wypróbuj cały dashboard](https://dkej123.github.io/lumen-cards/demo.html?lang=pl)** · [Dla agentów AI](docs/agents/overview.md)
 
 <p align="center">
   <img src="docs/images/dashboard-desktop.jpg" alt="Dashboard na tablet / komputer zbudowany z Lumen Cards" width="820"><br>

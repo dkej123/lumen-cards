@@ -1,7 +1,7 @@
 // Polish versions of the catalog page's static texts: site/index.html is English, and elements with
 // `data-i18n` get these when the page runs in Polish. Our own constants, so HTML is fine here.
 export const PAGE_PL: Record<string, string> = {
-  navStart: "Jak zacząć", navCards: "Karty", navFaq: "Pytania",
+  navStart: "Jak zacząć", navCards: "Karty", navDemo: "Demo", navFaq: "Pytania",
   heroEyebrow: "Karty do Home Assistant",
   heroTitle: "Dom, który dobrze wygląda na każdym ekranie.",
   heroText: 'Lumen to <span id="count">zestaw</span> kart do dashboardu Home Assistant: światła, alarm, klimatyzacja, pogoda, domownicy i więcej. Ustawiasz je w zwykłym oknie edycji, bez pisania kodu.',

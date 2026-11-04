@@ -320,7 +320,7 @@ No theme variable sets the accent. Use `accent_color` per card.
 | `src/translations/` | `en.json`, `pl.json` |
 | `src/design/` | Design tokens, font list |
 | `src/hass/` | Home Assistant types |
-| `dev/` | Demo (`demo.ts`, `index.html`), mock `hass` (`mock-hass.ts`), catalog (`catalog.ts`, `catalog-data.ts`, `catalog-guide.ts`) |
+| `dev/` | Demo (`demo.ts`, `index.html`), mock `hass` (`mock-hass.ts`), catalog (`catalog.ts`, `catalog-data.ts`, `catalog-guide.ts`), the site's Demo tab (`home-demo.ts`, made-up home in `home-demo-*.json`) |
 | `test/` | vitest. `helpers.ts`: entities, recording `hass` mock, mounting cards |
 | `dist/` | Built bundle and fonts, **committed** |
 | `docs/agents/` | `overview.md`, `cards.md`, `cards/<tag>.md`: **generated** by `test/agent-docs.test.ts`. Do not edit |

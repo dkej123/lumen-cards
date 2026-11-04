@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demo: a whole dashboard · Lumen Cards</title>
+<meta name="description" content="Try a whole Home Assistant dashboard built with Lumen Cards, in a made-up home.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>
+// The same language as the rest of the site: ?lang= wins and is remembered, the default is English.
+(function () {
+  var q = new URLSearchParams(location.search).get("lang"), saved = null;
+  try {
+    saved = localStorage.getItem("lumen-page-lang");
+    if (q === "en" || q === "pl") localStorage.setItem("lumen-page-lang", q);
+  } catch (e) {}
+  if ((q === "en" || q === "pl" ? q : saved) === "pl") {
+    document.documentElement.lang = "pl";
+    document.documentElement.dataset.translating = "";
+  }
+})();
+</script>
+<style>
+:root { color-scheme: dark; }
+html, body { margin: 0; min-height: 100%; background: #0a0c12; color: #f2eee8; font: 500 14px/1.4 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif; scrollbar-color: #3a3c44 transparent; }
+html[data-translating] .bar span, html[data-translating] .bar a { visibility: hidden; }
+.bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px; min-height: 52px; box-sizing: border-box; padding: env(safe-area-inset-top, 0px) 16px 0; background: rgba(18, 17, 16, .82); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(242, 238, 232, .1); }
+.bar a { color: inherit; text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 16px; flex: none; }
+.brand img { display: block; width: 26px; height: 26px; border-radius: 7px; }
+.note { flex: 1; min-width: 0; color: #b4ada3; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.back { flex: none; padding: 8px 10px; border-radius: 9px; font-weight: 650; }
+.back:hover { background: rgba(242, 238, 232, .08); }
+.langs { display: flex; flex: none; padding: 3px; border-radius: 11px; border: 1px solid rgba(242, 238, 232, .16); }
+.langs a { min-width: 32px; padding: 5px 6px; box-sizing: border-box; border-radius: 8px; text-align: center; font-weight: 700; font-size: 13px; color: #b4ada3; }
+html[lang="en"] .langs a[hreflang="en"], html[lang="pl"] .langs a[hreflang="pl"] { background: #f2eee8; color: #121110; }
+@media (max-width: 620px) { .note { display: none; } .brand { flex: 1; } }
+
+#dashboard { position: relative; display: grid; grid-template-columns: repeat(var(--n, 1), minmax(0, 500px)); justify-content: center; align-items: start; gap: 24px 32px; box-sizing: border-box; padding: 24px 32px 96px; }
+hui-section { display: grid; grid-template-columns: repeat(var(--cols, 12), minmax(0, 1fr)); gap: 8px; min-width: 0; }
+hui-section.whole { grid-column: 1 / -1; }
+hui-card { display: block; min-width: 0; }
+[hidden] { display: none !important; }
+.in-grid { display: grid; gap: 8px; }
+.in-stack { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 719px) { #dashboard { padding: 16px 8px 96px; } }
+
+#toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 4; transform: translateX(-50%); max-width: calc(100vw - 32px); box-sizing: border-box; padding: 10px 16px; border-radius: 14px; background: #1a1917; border: 1px solid rgba(242, 238, 232, .16); font-size: 13px; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="index.html"><img src="logo.svg" alt="">Lumen</a>
+  <span class="note" data-pl="Wymyślony dom: to prawdziwe karty, a klikanie niczego nie włącza. Odświeżenie strony przywraca początek.">A made-up home: real cards, and clicking switches nothing on. Reloading starts over.</span>
+  <a class="back" href="index.html#all-cards" data-pl="Wszystkie karty">All cards</a>
+  <div class="langs" role="group" aria-label="Language">
+    <a href="?lang=en" hreflang="en" lang="en">EN</a>
+    <a href="?lang=pl" hreflang="pl" lang="pl">PL</a>
+  </div>
+</header>
+<main id="dashboard"></main>
+<div id="toast" role="status" hidden></div>
+<script type="module" src="home-demo.js"></script>
+</body>
+</html>

@@ -23,9 +23,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Build the catalog page
+      - name: Build the catalog page and the demo
         run: |
           npx vite build --config vite.catalog.config.ts --outDir _site
+          npx vite build --config vite.demo.config.ts --outDir _site
           cp -r site/. _site/
           cp dist/*.woff2 _site/
       - uses: actions/upload-pages-artifact@v4
