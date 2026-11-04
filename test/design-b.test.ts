@@ -304,3 +304,53 @@ describe("13 weather on cards without glass", () => {
     expect(isSolidCard({ backdropFilter: "blur(22px) saturate(1.4)", backgroundColor: "rgba(255, 255, 255, 0.66)" })).toBe(false);
   });
 });
+
+describe("15 general states: an error is never hidden", () => {
+  it("a reminder with a missing entity or an invalid config keeps its error card visible", async () => {
+    const h = hass();
+    for (const cfg of [{ entity: "input_boolean.gone" }, {}]) {
+      const el = await mount("reminder", cfg, h);
+      await settle(el);
+      expect(root(el).querySelector('[role="alert"]')).not.toBeNull();
+      expect(el.style.display).toBe("");
+    }
+  });
+
+  it("a reminder that exists and is not active still takes no space", async () => {
+    const el = await mount("reminder", { entity: "input_boolean.bike" }, hass(ent("input_boolean.bike", "off")));
+    await settle(el);
+    expect(el.style.display).toBe("none");
+  });
+
+  it("climate with a config error or a missing entity floats no button", async () => {
+    const h = hass(ent("light.x", "on"), ent("climate.ac", "cool", { hvac_modes: ["off", "cool"], temperature: 22 }));
+    for (const entity of ["light.x", "climate.gone"]) {
+      const el = await mount("climate", { entity, fab: true, fab_narrow_only: false }, h);
+      await settle(el);
+      expect(root(el).querySelector('[role="alert"]')).not.toBeNull();
+      expect(layer()?.querySelector(".acfab") ?? null).toBeNull();
+      el.remove();
+    }
+    const ok = await mount("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, h);
+    await settle(ok);
+    expect(layer()?.querySelector(".acfab")).toBeTruthy();
+  });
+
+  it("the floating button goes away when the climate entity is removed at runtime", async () => {
+    const ac = ent("climate.ac", "cool", { hvac_modes: ["off", "cool"], temperature: 22 });
+    const el = await mount("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, hass(ac));
+    await settle(el);
+    expect(layer()?.querySelector(".acfab")).toBeTruthy();
+    el.hass = hass();
+    await settle(el);
+    expect(layer()?.querySelector(".acfab") ?? null).toBeNull();
+  });
+
+  it("chips with a config error float no button and show the error", async () => {
+    const el = await mount("chips", { fab: true, fab_narrow_only: false, chips: [{ type: "action", entity: "scene.movie" }, { type: "nope", entity: "scene.movie" }] }, hass(ent("scene.movie", "2026-10-29T10:00:00Z")));
+    await settle(el);
+    expect(root(el).querySelector('[role="alert"]')).not.toBeNull();
+    expect(el.style.display).toBe("");
+    expect(layer()?.querySelector(".acfab") ?? null).toBeNull();
+  });
+});

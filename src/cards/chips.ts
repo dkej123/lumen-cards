@@ -113,7 +113,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
 
   private get useFab() {
     const c = this._config;
-    return !!c && !!this._hass && !!c.fab && (c.fab_narrow_only === false || this.narrowScreen) && !this.preview && this.of("action").length > 0;
+    return !!c && !!this._hass && !this.hasError && !!c.fab && (c.fab_narrow_only === false || this.narrowScreen) && !this.preview && this.of("action").length > 0;
   }
 
   disconnectedCallback(): void {
@@ -212,7 +212,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     // Nothing in the row (all chips in the FAB): take no space – except while the dashboard is
     // being edited, so the card can still be found. Not the `hidden` attribute: HA would take the
     // card out of the page, and its FAB with it.
-    this.style.display = this._config && !this.editMode && !this.preview && this.shown().length === 0 ? "none" : "";
+    this.style.display = this._config && !this.hasError && !this.editMode && !this.preview && this.shown().length === 0 ? "none" : "";
   }
 
   private shown(): Chip[] {

@@ -190,7 +190,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
 
   private get useFab() {
     const c = this._config;
-    return !!c && !!this._hass && !!c.fab && (c.fab_narrow_only === false || this.narrowScreen) && !this.preview;
+    return !!c && !!this._hass && !this.hasError && !!c.fab && (c.fab_narrow_only === false || this.narrowScreen) && !this.preview;
   }
 
   connectedCallback(): void {

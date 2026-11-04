@@ -208,6 +208,13 @@ export abstract class LumenBaseCard<C extends BaseConfig = BaseConfig> extends L
     return typeof id === "string" && id ? id : undefined;
   }
 
+  /** The card shows an error card: an invalid config, or a main entity that does not exist. What lives outside the card (floating buttons) must not show then, and the card must not hide itself. */
+  protected get hasError(): boolean {
+    if (this._configError) return true;
+    const id = this.mainEntity();
+    return !!id && !!this._hass && !this._hass.states[id] && !this.sampleFor(id);
+  }
+
   /** Section 15 states shared by every card, or undefined when the card renders itself. */
   private generalState() {
     if (this._configError) {

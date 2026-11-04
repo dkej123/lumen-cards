@@ -121,7 +121,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     const empty = !this.active || this._config?.show_chip === false;
     // Not the `hidden` attribute: HA would take the card out of the page, and it could not come
     // back (or show its dialog) when the reminder starts.
-    this.style.display = this._config && empty && !this.editMode && !this.preview ? "none" : "";
+    this.style.display = this._config && empty && !this.hasError && !this.editMode && !this.preview ? "none" : "";
   }
 
   /** Pill colour: the card's accent_color when set (any colour), else the `color` tone, else info. */
