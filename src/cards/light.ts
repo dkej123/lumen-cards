@@ -50,8 +50,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
   protected renderCard() {
     if (!this._config || !this._hass) return html``;
     const c = this._config;
-    // Owner 2026-10-29: the catalog's square / icon-only tiles are out; compact is the 44 px tile,
-    // without the colour swatch under 120 px (catalog correction 2026-10-30).
+    // Compact is the 44 px tile, without the colour swatch under 120 px.
     const wide = !this._width || this._width >= 170;
     // Several relays: one button each (the relay's own icon), unless the card lists its own.
     const relays = relaysOf(c);

@@ -1,10 +1,8 @@
 // @ts-nocheck
-/* Weather background and on-card effects – copied from the CC Design prototype
- * (the Lumen design system prototype). Pure Canvas 2D.
- * Changes: drawWeather takes `dt` (elapsed / 40 ms, default 1 = prototype) so
+/* Weather background and on-card effects. Pure Canvas 2D.
+ * drawWeather takes `dt` (elapsed / 40 ms, default 1) so
  * background motion speed is independent of the redraw rate; drawSurf takes a weather level `lv` (0–1, grows with how long the
- * weather has lasted) that scales snow height, drops, dew, flakes and hail.
- * Edit the prototype first if the visuals need to change, then re-copy. */
+ * weather has lasted) that scales snow height, drops, dew, flakes and hail. */
 const KT=[[2200,[255,160,80]],[2700,[255,186,118]],[3200,[255,204,150]],[4000,[255,226,195]],[5000,[250,238,226]],[6500,[232,240,255]]];
 // Lumen: KT extended past 4000 K (cool white bulbs); 2200–4000 K unchanged.
 function warm(k){k=Math.max(2200,Math.min(6500,k||2700));for(let i=0;i<KT.length-1;i++){const[a,ca]=KT[i],[b,cb]=KT[i+1];if(k<=b){const t=(k-a)/(b-a);return'rgb('+ca.map((v,j)=>Math.round(v+(cb[j]-v)*t)).join(',')+')'}}return'rgb(232,240,255)'}

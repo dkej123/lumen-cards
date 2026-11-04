@@ -29,7 +29,7 @@ export function validateWeatherBackground(c: Partial<WeatherBackgroundConfig>): 
 const VIEWS = new Set(["hui-view", "hui-panel-view", "hui-sections-view", "hui-masonry-view"]);
 
 /**
- * Weather background of the design for a whole dashboard view: sky gradient, the
+ * Weather background for a whole dashboard view: sky gradient, the
  * background canvas (clouds, rain, snow, sun, stars, lightning) behind the cards and the
  * floating layer (mist, wind) above them. Also drives the per-card weather surfaces of
  * every Lumen card in the view. One per view; takes no space unless it shows its switches.
@@ -132,7 +132,7 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
       this.ro = new ResizeObserver(() => this.requestUpdate());
       if (this.bgEl.parentElement) this.ro.observe(this.bgEl.parentElement);
     }
-    // Start below the HA toolbar and right of the sidebar, where the view begins (the design's frame).
+    // Start below the HA toolbar and right of the sidebar, where the view begins.
     const r = this.bgEl.parentElement?.getBoundingClientRect();
     const area = { top: Math.max(0, Math.round((r?.top ?? 0) + scrollY)), left: Math.max(0, Math.round(r?.left ?? 0)) };
     this.bgEl.style.top = `${area.top}px`;
@@ -153,7 +153,7 @@ export class LumenWeatherBackgroundCard extends LumenBaseCard<WeatherBackgroundC
     return parent instanceof Element || parent instanceof ShadowRoot ? (parent as Element) : document.body;
   }
 
-  /** Effect switches of the design edit bar (web row style). */
+  /** The three per-device effect switches. */
   private switches() {
     const fx = this._settings;
     const sw = (label: string, on: boolean, toggle: () => void) =>

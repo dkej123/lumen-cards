@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Catalog 2026-10-29, sections 05, 06, 09, 10, 11, 13, 15, 16, 17.
+// Alarm, lock, climate, sensor, air quality, weather surfaces, general states, colours, grid.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ent as entity, layer, mockHass, mount, settle, type Card } from "./helpers";
 import type { HassEntity } from "../src/hass/types";
@@ -221,7 +221,7 @@ describe("10 sensor / 11 air quality", () => {
     expect(root(una).querySelector("svg")).toBeNull();
     const compact = await mount("sensor", { entity: "sensor.balcony", layout: "compact" }, h);
     expect(root(compact).querySelector<HTMLElement>("[data-fx]")!.getAttribute("style")).toContain("height:36px");
-    // Dom mobile: the one-line row keeps the sparkline behind the text.
+    // The one-line row keeps the sparkline behind the text.
     expect(root(compact).querySelector("svg")).not.toBeNull();
     const low = await mount("sensor", { entity: "sensor.balcony", height: 40 }, h);
     expect(root(low).querySelector<HTMLElement>("[data-fx]")!.getAttribute("style")).toContain("height:40px");

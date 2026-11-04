@@ -1,8 +1,7 @@
-// Shared CSS of every card: the host look and the interaction states of the design
-// minus the prototype frame.
+// Shared CSS of every card: the host look and the interaction states.
 
 export const shared = `
-/* Tone tokens of the catalog (section 16) and the accent's ink; a user colour overrides them on the host. */
+/* Tone tokens and the accent's ink; a user colour overrides them on the host. */
 :host { --lumen-tone-k: 78%; --lumen-tone-mix: #000; --lumen-on-tone: #FFFFFF; --lumen-accent-ink: var(--lumen-accent); }
 :host([data-lumen-theme=dark]) { --lumen-tone-k: 82%; --lumen-tone-mix: #fff; --lumen-on-tone: #14110E; }
 @keyframes lumenPendingPulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lumen-orange) 50%, transparent), var(--lumen-shadow-1); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--lumen-orange) 0%, transparent), var(--lumen-shadow-1); } }
@@ -78,7 +77,7 @@ export function cssColor(c: unknown): string | undefined {
   if (c === "none" || c === "state") return undefined;
   if (HA_COLORS.has(c)) return `var(--${c}-color, ${HA_COLORS.get(c)})`;
   if (/^#[0-9a-f]{3,8}$/i.test(c) || /^(rgb|hsl|oklch)a?\([\d\s.,%/-]+\)$/i.test(c)) return c;
-  // Lumen's own tokens (exact Dom tones: var(--lumen-danger), var(--lumen-info)…).
+  // Lumen's own tokens (var(--lumen-danger), var(--lumen-info)…).
   if (/^var\(--lumen-[a-z0-9-]+\)$/.test(c)) return c;
   return undefined;
 }
@@ -89,7 +88,7 @@ export const colorOr = (c: unknown, fallback: string): string => cssColor(c) ?? 
 export const ink = (c: string) => `color-mix(in oklch, ${c} var(--lumen-tone-k), var(--lumen-tone-mix))`;
 
 /**
- * The whole set derived from one user colour C (catalog section 16), the same in both themes:
+ * The whole set derived from one user colour C, the same in both themes:
  * fill C at --lumen-fill-a → --lumen-fill-b, glow C 55 %, icon background C 16 %,
  * shadow 0 10px 30px -14px C 70 %, icon / text ink(C).
  */

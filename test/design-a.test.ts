@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Catalog 2026-10-29, sections 01–04, 07, 08: light, entity, button, person, reminder, chips / FAB.
+// Light, entity, button, person, reminder, chips / FAB.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { chipActive } from "../src/logic/chip";
 import { ent, mockHass, mount as mountCard, type Card } from "./helpers";
@@ -86,7 +86,7 @@ describe("light card", () => {
     expect(text(await mount("light", { entity: "light.gone", layout: "wide" }))).toContain("Unavailable");
   });
 
-  it("compact is the low 44 px tile (catalog correction 2026-10-30)", async () => {
+  it("compact is the low 44 px tile", async () => {
     const el = await mount("light", { entity: "light.c", layout: "compact" });
     expect(text(el)).toContain("Off");
     const tile = el.shadowRoot!.querySelector<HTMLElement>(".tile")!;

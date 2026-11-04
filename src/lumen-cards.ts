@@ -14,7 +14,7 @@ import "./cards/button";
 import "./cards/sensor";
 import "./cards/climate";
 import "./cards/air-quality";
-// Section 14 of the catalog (new domains).
+// Cards for more domains.
 import "./cards/cover";
 import "./cards/media";
 import "./cards/select";
@@ -25,9 +25,9 @@ import "./cards/nav";
 import "./cards/popup";
 // Catalog section 19.
 import "./cards/fab-sheet";
-// Catalog section 20.
+// Weather line and details.
 import "./cards/weather";
-// Dom panel access bar (B7).
+// Access bar.
 import "./cards/bar";
 // Stacks with one width (px / %) for a group of cards.
 import "./cards/stack";

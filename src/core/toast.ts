@@ -13,7 +13,7 @@ export interface Toast {
   action?: { label: string; run: () => void };
 }
 
-/** Page-wide toast stack (design `renderToasts`): max 3, 3.8 s each, top centre. */
+/** Page-wide toast stack: max 3, 3.8 s each, top centre. */
 class LumenToaster extends LitElement {
   static properties = { items: { state: true } };
   items: (Toast & { id: number })[] = [];

@@ -40,7 +40,7 @@ export interface ReminderConfig extends BaseConfig {
 }
 
 const TONES = ["info", "ok", "warning", "danger"];
-/** Glyph colour on the tone circle (catalog: on-tone; dark ink on the light warning yellow). */
+/** Glyph colour on the tone circle (dark ink on the light warning yellow). */
 const ON_TONE: Record<string, string> = { warning: "#2A1C06", accent: "var(--lumen-on-accent)" };
 
 /** `{value}` in the pill text: a number rounded, any other state as text, "—" without data. */

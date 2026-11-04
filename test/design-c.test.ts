@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Catalog section 14 ("Nowe domeny"): cover, media, select, fan, number, calendar, nav, pop-up.
+// Cover, media, select, fan, number, calendar, nav, pop-up.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ent as entity, mockHass, mount as mountCard, type Card } from "./helpers";
 import { setLanguage, setLocale } from "../src/core/i18n";

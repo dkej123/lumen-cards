@@ -41,7 +41,7 @@ const DEFAULT_VOLUME_STEP = 4;
 /** Level commands while dragging: often enough to hear it, not enough to flood a device. */
 const LIVE_SET_MS = 300;
 
-/** Artwork stand-in (design `ART`). */
+/** Artwork stand-in. */
 const ART = "linear-gradient(135deg, oklch(0.64 0.17 35), oklch(0.46 0.16 300))";
 
 export function validateMedia(c: Partial<MediaConfig>): void {
@@ -49,7 +49,7 @@ export function validateMedia(c: Partial<MediaConfig>): void {
 }
 
 /**
- * media_player (catalog section 14): artwork 64 px, title / artist / player, progress, previous ·
+ * media_player: artwork 64 px, title / artist / player, progress, previous ·
  * play/pause · next and a draggable volume bar; compact = one row with a play button. Off and
  * unavailable players dim the controls (play turns the player on when it can).
  */
@@ -206,7 +206,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     }} style="flex:none;width:${size}px;height:${size}px;border:0;border-radius:50%;display:grid;place-items:center;font-size:${size >= 52 ? 26 : 22}px;background:var(--lumen-text-1);color:var(--lumen-bg);padding:0;cursor:pointer">${icon(playing ? "mdi:pause" : "mdi:play", "display:block")}</button>`;
   }
 
-  /** The `volume_only` tile has its own rule: it stays full down to 200 px (design). */
+  /** The `volume_only` tile has its own rule: it stays full down to 200 px. */
   override get compact(): boolean {
     if (!this._config?.volume_only || (this._config.layout ?? "auto") !== "auto") return super.compact;
     return this._width > 0 && this._width < 200;
@@ -221,7 +221,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     }} style="flex:none;width:36px;height:36px;margin-left:${opts.gap ? "6px" : "0"};border:0;border-radius:12px;background:transparent;padding:0;display:grid;place-items:center;font-size:18px;color:${color};opacity:${opts.dim ? 0.38 : 1};cursor:${enabled ? "pointer" : "default"}">${icon(ic, "display:block")}</button>`;
   }
 
-  /** `volume_only` (design section 14): the whole tile is the volume slider, so a tap sets the volume and `tap_action` does not apply; playback buttons on the right. */
+  /** `volume_only`: the whole tile is the volume slider, so a tap sets the volume and `tap_action` does not apply; playback buttons on the right. */
   private volumeTile() {
     const c = this._config;
     const e = this.player;

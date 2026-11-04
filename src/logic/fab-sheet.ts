@@ -1,4 +1,4 @@
-// Floating panel (lumen-fab-sheet-card, catalog section 19): what the FAB, the trigger row and the
+// Floating panel (lumen-fab-sheet-card): what the FAB, the trigger row and the
 // sheet header say about the cards inside – how many heat, the average room temperature, a
 // battery / availability warning and whether the "All" preset segment makes sense.
 

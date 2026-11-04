@@ -37,7 +37,7 @@ export const navItems = (c: Partial<NavConfig>): NavItem[] =>
   (Array.isArray(c.items) ? c.items : []).filter((it) => it && typeof it === "object" && typeof it.navigation_path === "string" && it.navigation_path.trim());
 
 /**
- * Bottom navigation bar between views (catalog section 14). Fixed above the safe area in a body
+ * Bottom navigation bar between views. Fixed above the safe area in a body
  * layer (so transformed dashboard ancestors cannot move it), with a spacer in the grid so the
  * last cards scroll above it; inline in the card editor. The item matching the current URL is
  * highlighted; a tap navigates like HA's own navigate action.

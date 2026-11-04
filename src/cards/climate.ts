@@ -21,7 +21,7 @@ import { formatNumber } from "../logic/time";
 import { BATTERY_LOW, batteryLevel } from "../logic/battery";
 import { formatTemp } from "../logic/format";
 
-/** Low-battery pill next to the hvac_action badge (full card, catalog section 19). */
+/** Low-battery pill next to the hvac_action badge (full card). */
 const batteryBadge = (text: string) =>
   html`<span role="status" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px 4px 7px;border-radius:999px;background:color-mix(in srgb, var(--lumen-warning) 18%, transparent);color:${ink("var(--lumen-warning)")};font:750 12px var(--lumen-font)">${icon("mdi:battery-alert-variant-outline", "font-size:15px")}${text}</span>`;
 
@@ -44,7 +44,7 @@ export interface ClimateConfig extends BaseConfig {
   fab?: boolean;
   /** …only on narrow screens (default); off = always. */
   fab_narrow_only?: boolean;
-  /** Mode buttons (those the entity supports). Default: off, heat, cool – the design set. */
+  /** Mode buttons (those the entity supports). Default: off, heat, cool. */
   hvac_modes?: string[];
   /** Fan buttons (those the entity supports). Default: auto, low, medium, high. */
   fan_modes?: string[];
@@ -75,7 +75,7 @@ export const SETPOINT_DEBOUNCE_MS = 1000;
 /** Last mode per unit (per device): turning on restores it. */
 const acLast = deviceStore("lumen-ac-last:");
 
-/** Modes in the catalog's order. */
+/** Modes in display order. */
 const MODES: Record<string, [string, string]> = {
   auto: ["common.auto", "mdi:thermostat-auto"],
   heat_cool: ["card.climate.mode.heat_cool", "mdi:thermostat-auto"],
@@ -140,7 +140,7 @@ export function validateClimate(c: Partial<ClimateConfig>): void {
   requireEntity(c, { domains: ["climate"], msg: "card.climate.error.entity" });
 }
 
-/** Air conditioner / thermostat of the design: a card, or a FAB + dialog B9. */
+/** Air conditioner / thermostat: a card, or a floating button with a dialog. */
 export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   protected static grid = GRID.full;
   protected static cardSize = 5;
@@ -157,7 +157,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private rangeTarget: { low: number; high: number } | null = null;
   private acSentAt = 0;
   private acTimer?: number;
-  /** A setpoint waits for the debounce (catalog section 19: sent 800 ms after the last tap). */
+  /** A setpoint waits for the debounce: it is sent 1 s after the last tap. */
   private acQueued = false;
   private acHeld = false;
   private tweens = new Tweens(this);
@@ -326,10 +326,10 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const fan = e?.attributes.fan_mode ?? "auto";
     const sel = (a: boolean, color: string) =>
       a ? `background:var(--lumen-surface-solid);color:${color};box-shadow:var(--lumen-shadow-1)` : "background:transparent;color:var(--lumen-text-2);box-shadow:none";
-    // The entity's own modes in the catalog's order; `hvac_modes` narrows them and sets the order.
+    // The entity's own modes in display order; `hvac_modes` narrows them and sets the order.
     const hvac: string[] = e?.attributes.hvac_modes ?? ["off", "heat", "cool"];
     const order = cfg.hvac_modes?.length ? cfg.hvac_modes.filter((k) => MODES[k]) : Object.keys(MODES);
-    // heat_cool reads "Auto" when the device has no separate auto mode (catalog section 09).
+    // heat_cool reads "Auto" when the device has no separate auto mode.
     const label = (k: string) => t(k === "heat_cool" && !hvac.includes("auto") ? "common.auto" : MODES[k][0]);
     const modes = order.filter((k) => hvac.includes(k)).map((k) => ({
       k, label: label(k), ic: MODES[k][1], active: mode === k,
@@ -448,7 +448,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const cfg = this._config;
     const seg = (o: { label: string; ic: string; active: boolean; on: () => void }, color: string, column = false) =>
       html`<button ?disabled=${a.una} aria-pressed=${o.active} @click=${o.on} style="${column ? "flex:1;min-width:0;flex-direction:column;gap:1px;font:700 11px var(--lumen-font);" : "gap:6px;font:700 12px var(--lumen-font);"}min-height:44px;padding:0 4px;display:flex;align-items:center;justify-content:center;border:0;border-radius:12px;${a.sel(o.active, color)};cursor:pointer;white-space:nowrap;transition:background-color 300ms, color 300ms">${icon(o.ic, column ? "font-size:17px;line-height:18px" : "font-size:16px")}<span style="overflow:hidden;text-overflow:ellipsis">${o.label}</span></button>`;
-    // Up to 4 modes in one row, more in a grid of 3 (catalog section 09).
+    // Up to 4 modes in one row, more in a grid of 3.
     const cols = a.modes.length <= 4 ? a.modes.length : 3;
     const fanSelect = html`<label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1}">
       ${icon(a.fans.find((o) => o.active)?.ic ?? "mdi:fan", "font-size:18px;color:var(--lumen-text-2)")}
@@ -488,8 +488,8 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   }
 
   /**
-   * Compact row (under 300 px, and the thermostat row of the floating panel, catalog sections 09
-   * and 19): icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
+   * Compact row (under 300 px, and the thermostat row of the floating panel):
+   * icon, name with the low-battery chip, what it does now · the room, −, setpoint, +.
    */
   private compactRow() {
     const a = this.ac();
@@ -497,8 +497,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const e = this.entity(cfg.entity);
     const value = a.una ? "—" : a.range ? (this._side === "low" ? a.range.low : a.range.high) : a.target;
     // Narrow cells (e.g. 3 columns): drop the name under 240 px (a low battery is then a dot on
-    // the icon), then −/+ under 192 px – the narrowest the icon and −/value/+ fit in (the
-    // catalog says 170; between the two the + would stick out). The icon still opens the details.
+    // the icon), then −/+ under 192 px – the narrowest the icon and −/value/+ fit in. The icon still opens the details.
     const w = this._width;
     const named = !w || w >= 240, stepper = !w || w >= 192;
     const act = String(e?.attributes.hvac_action ?? "");
@@ -541,7 +540,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     </div>`;
   }
 
-  /** AC FAB (B9): tap = dialog, hold 550 ms = power with a toast. */
+  /** Floating button: tap = dialog, hold 550 ms = power with a toast. */
   private fab() {
     const a = this.ac();
     const place = this.floating.place();
@@ -576,7 +575,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     </button>`;
   }
 
-  /** Mobile AC dialog (B9): power, setpoint, mode and fan. */
+  /** Dialog of the floating button: power, setpoint, mode and fan. */
   private dialog() {
     const a = this.ac();
     const cfg = this._config;

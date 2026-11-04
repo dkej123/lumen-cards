@@ -1,5 +1,4 @@
-// Weather card (catalog section 20): forecast logic ported from the Dom panel's weather sheet
-// (design B6), generalised to one `weather.*` entity of any integration. Values stay in the
+// Weather card: forecast logic for one `weather.*` entity of any integration. Values stay in the
 // entity's own units (temperature, wind, precipitation, pressure, visibility).
 
 /** One item of a HA `weather/subscribe_forecast` message. */
@@ -352,7 +351,7 @@ export interface Warning {
   icon: string;
 }
 
-/** Phenomenon (by name, PL / EN) → icon, as in the Dom panel (B3). Unknown → mdi:alert-outline. */
+/** Phenomenon (by name, PL / EN) → icon. Unknown → mdi:alert-outline. */
 const WARNING_ICONS: [RegExp, string][] = [
   [/grad|hail/i, "mdi:weather-hail"],
   [/burz|thunder|storm/i, "mdi:weather-lightning"],

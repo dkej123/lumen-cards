@@ -13,7 +13,7 @@ const COLOR_MODES = new Set(["hs", "rgb", "rgbw", "rgbww", "xy"]);
 export const supportsColor = (entity?: HassEntity): boolean =>
   (entity?.attributes.supported_color_modes ?? []).some((mode: string) => COLOR_MODES.has(mode));
 
-/** Colour temperature presets (design: B10 colour picker), extended for cool-white bulbs. */
+/** Colour temperature presets, extended for cool-white bulbs. */
 export const CT_PRESETS: [number, string][] = [
   [2200, "card.light.ct.candle"],
   [2700, "card.light.ct.warm"],
@@ -23,14 +23,14 @@ export const CT_PRESETS: [number, string][] = [
   [6500, "card.light.ct.daylight"],
 ];
 
-/** The bulb's own kelvin range (2200–4000 K, the design range, when it does not say). */
+/** The bulb's own kelvin range (2200–4000 K when it does not say). */
 export function kelvinRange(entity?: HassEntity): [number, number] {
   const lo = Number(entity?.attributes.min_color_temp_kelvin) || 2200;
   const hi = Number(entity?.attributes.max_color_temp_kelvin) || 4000;
   return lo < hi ? [lo, hi] : [2200, 4000];
 }
 
-/** Up to four presets inside the bulb's range, spread across it (the design's four for 2200–4000 K). */
+/** Up to four presets inside the bulb's range, spread across it. */
 export function ctPresets(entity?: HassEntity): [number, string][] {
   const [lo, hi] = kelvinRange(entity);
   const inRange = CT_PRESETS.filter(([k]) => k >= lo - 50 && k <= hi + 50);
@@ -40,7 +40,7 @@ export function ctPresets(entity?: HassEntity): [number, string][] {
 }
 
 /**
- * Hue swatches of the light sheet (catalog `HUES`): the swatch is drawn in the design colour
+ * Hue swatches of the light sheet: the swatch is drawn in
  * `oklch(0.74 0.16 h)`, the bulb gets the matching hs_color (hue of that colour, saturation
  * raised to at least 75 % so a bulb does not look washed out).
  */
@@ -86,7 +86,7 @@ export function hsOf(entity?: HassEntity): [number, number] | undefined {
 
 /**
  * Four white presets spread evenly in mireds between the bulb's warmest and coolest white
- * (catalog: 2200, 2800, 3950, 6500 K for a 2200–6500 K bulb), rounded to 50 K.
+ * (2200, 2800, 3950, 6500 K for a 2200–6500 K bulb), rounded to 50 K.
  */
 export function miredPresets(entity?: HassEntity): number[] {
   const [lo, hi] = kelvinRange(entity);
@@ -120,7 +120,7 @@ export function whiteColor(k: number): string {
   return `oklab(${l.toFixed(3)} ${aa.toFixed(3)} ${bb.toFixed(3)})`;
 }
 
-/** Colour-temperature bar for a bulb's range: the catalog whites as stops, placed by kelvin. */
+/** Colour-temperature bar for a bulb's range: fixed whites as stops, placed by kelvin. */
 export function whiteGradient(lo: number, hi: number): string {
   const pos = (k: number) => `${(((k - lo) / (hi - lo)) * 100).toFixed(1)}%`;
   const stops = [lo, ...WHITE.map(([k]) => k).filter((k) => k > lo && k < hi), hi];

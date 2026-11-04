@@ -1,4 +1,4 @@
-// Demo data of the catalog's section 14 cards (cover, media, select, fan, number, calendar,
+// Demo data of the cover, media, select, fan, number, calendar,
 // nav, pop-up): fake entities, their services, the calendar API and HA's navigate / toggle actions.
 import type { HassEntity } from "../src/hass/types";
 
@@ -35,7 +35,7 @@ export const domainStates = (e: Mk): HassEntity[] => [
 
 const timers = new Map<string, number>();
 
-/** Moves a cover towards `target` like a real motor (3 % per 120 ms, the catalog's speed). */
+/** Moves a cover towards `target` like a real motor (3 % per 120 ms). */
 function runCover(ctx: DemoCtx, id: string, target: number) {
   window.clearInterval(timers.get(id));
   const from = Number(ctx.get(id)?.attributes.current_position ?? 0);

@@ -11,7 +11,7 @@ export interface HeaderConfig extends BaseConfig {
   name?: string;
 }
 
-/** Greeting by the time of day + date (design header). */
+/** Greeting by the time of day + date. */
 export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
   protected static grid = GRID.full;
   protected static skeletonHeight = 0;

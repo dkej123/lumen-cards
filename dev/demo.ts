@@ -3,8 +3,8 @@
 //   &scene=phone | desktop   the example dashboards of the README
 //   &only=<id>               one card of the gallery (ids in GALLERY below), for screenshots
 //   &weather=rainy|snowy|…   weather state;  &alarm=triggered   alarm state;  &code   lock asks for a code
-//   &only=alarm-states | lock-states | climate-states | sensor-states | general-states   catalog 2026-10-29 states
-//   &only=fab-sheet | compact-row   catalog 2026-10-30 (floating panel, 44 px compacts);  &edit   dashboard edit mode
+//   &only=alarm-states | lock-states | climate-states | sensor-states | general-states   every state of a card
+//   &only=fab-sheet | compact-row   floating panel, 44 px compact looks;  &edit   dashboard edit mode
 //   (demo code for the alarm and the locks: 1234)
 import type { HassLike } from "../src/hass/types";
 import { injectLocalFonts } from "./local-fonts";

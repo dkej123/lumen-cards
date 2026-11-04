@@ -4,7 +4,7 @@ import { numberLocale, t } from "../core/i18n";
 
 export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
-/** Finger position over the element → 0..1 (design: the value follows the finger, not the drag distance). */
+/** Finger position over the element → 0..1 (the value follows the finger, not the drag distance). */
 export const fractionAt = (clientX: number, rect: { left: number; width: number }): number =>
   rect.width > 0 ? clamp((clientX - rect.left) / rect.width, 0, 1) : 0;
 
@@ -50,7 +50,7 @@ const fmt = (v: number, decimals: number) =>
 
 /**
  * Value text of the number tile: "55%" (percent sticks to the number), "21,5 °C" (other units),
- * "3 of 10" (no unit: the position on the scale, as the design's ring volume).
+ * "3 of 10" (no unit: the position on the scale, e.g. a ring volume).
  */
 export function numberText(v: number, unit: string | undefined, r: NumberRange): string {
   const d = Math.max(stepDecimals(r.step), Number.isInteger(v) ? 0 : 1);

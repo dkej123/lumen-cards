@@ -108,8 +108,7 @@ const scrollTo = (key: string, x: number) =>
   });
 
 /**
- * Weather (catalog section 20): the Dom panel's weather line (A27) and details sheet (B6) for any
- * `weather.*` entity. Line (44 px), icon + temperature, or card with an hourly row; tap opens the
+ * Weather line and details sheet for any `weather.*` entity. Line (44 px), icon + temperature, or card with an hourly row; tap opens the
  * shared bottom sheet with Now, Today hourly (chart of temperature and apparent temperature),
  * the next days (expandable), warnings and sources. Forecasts come from `weather/subscribe_forecast`.
  */

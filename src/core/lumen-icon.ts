@@ -2,7 +2,7 @@ import { LitElement, css, html, svg } from "lit";
 import { ICONS } from "./icons";
 
 /**
- * MDI icon sized by font-size (like `<i class="mdi">` in the design). Icons used by the
+ * MDI icon sized by font-size (like `<i class="mdi">`). Icons used by the
  * cards themselves are bundled (scripts/gen-icons.mjs); any other icon a user picks in
  * the editor comes from Home Assistant's own `ha-icon`.
  */

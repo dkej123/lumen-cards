@@ -18,7 +18,7 @@ export const barInner = (c: CardConfig): CardConfig =>
   String(c.type ?? "").startsWith("custom:lumen-") ? { weather_effects: false, ...c, layout: "compact" } : c;
 
 /**
- * Access bar (Dom panel B7): one glass row 52 px high (padding 4, gap 4, r18) with the compact
+ * Access bar: one glass row 52 px high (padding 4, gap 4, r18) with the compact
  * 44 px cells of the cards inside – doors, alarms, locks, buttons in one frame, equal widths.
  */
 export class LumenBarCard extends LumenContainerCard<BarConfig> {

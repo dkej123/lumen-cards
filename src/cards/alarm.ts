@@ -42,7 +42,7 @@ export interface AlarmConfig extends BaseConfig {
   show_state?: boolean;
   /** Arm / Disarm / Cancel / Code buttons on the card. */
   show_buttons?: boolean;
-  /** Colour of the disarmed state (Dom: danger red). Default neutral. */
+  /** Colour of the disarmed state. Default neutral. */
   disarmed_color?: string | [number, number, number];
   /** Arm modes offered by the pad (of those the entity supports). Default: all supported. */
   arm_modes?: string[];
@@ -91,7 +91,7 @@ export function alarmCountdown(e: HassEntity | undefined, cfg: { arming_time?: n
 
 
 /**
- * One alarm (catalog section 05): a row with the state and Arm / Disarm when wide, a tile when
+ * One alarm: a row with the state and Arm / Disarm when wide, a tile when
  * compact, only the icon below 100 px. Arm opens the code pad with the mode choice (modes the
  * entity supports), Disarm the pad alone; HA checks the code, a failed call shakes the dots.
  */
@@ -301,7 +301,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     return { icon: s.icon, sub: s.label, ...(s.tone === "info" ? toneLook(tone("info")) : {}) };
   }
 
-  /** Buttons of the state (catalog B): Arm / Disarm / Cancel / Code. */
+  /** Buttons of the state: Arm / Disarm / Cancel / Code. */
   private buttons(e: HassEntity | undefined, s: Status): Seg[] {
     const st = e?.state;
     if (!e || s.tone === "unavailable" || this._config.show_buttons === false) return [];
@@ -325,9 +325,9 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     const handlers = una
       ? this.actions(`alarm:${c.entity}`, withoutCommands(c), c.entity)
       : this.actions(`alarm:${c.entity}`, c, c.entity, { tap: () => this.tap() });
-    // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
+    // Compact is always the access bar cell: no square or icon-only tiles.
     if (this.compact) {
-      // Catalog correction 2026-10-30: hold 500 ms = the main command (arm / cancel / the
+      // Hold 500 ms = the main command (arm / cancel / the
       // disarm pad), a tap = the tap action or more-info.
       // Unavailable: nothing to send, the cell is disabled like the lock's.
       const cell = una

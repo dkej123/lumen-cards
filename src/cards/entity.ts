@@ -30,7 +30,7 @@ export interface EntityConfig extends BaseConfig {
   device_class?: string;
 }
 
-/** Binary sensor glyphs by device class [on, off]; openings are red when open (design doors). */
+/** Binary sensor glyphs by device class [on, off]; openings are red when open. */
 const BINARY: Record<string, [string, string]> = {
   door: ["mdi:door-open", "mdi:door-closed-lock"],
   garage_door: ["mdi:garage-open", "mdi:garage"],
@@ -54,7 +54,7 @@ export function validateEntity(c: Partial<EntityConfig>): void {
   requireEntity(c);
 }
 
-/** Openings and alarms look like the design doors; any other entity shows its HA-formatted state. */
+/** Openings and alarms use their tones; any other entity shows its HA-formatted state. */
 export function entityStatus(e: HassEntity | undefined, hass: HassLike | undefined, iconOverride?: string): Status {
   const [domain] = (e?.entity_id ?? "").split(".");
   const dc: string | undefined = e?.attributes.device_class;
@@ -71,7 +71,7 @@ export function entityStatus(e: HassEntity | undefined, hass: HassLike | undefin
 }
 
 /**
- * Tile look of an entity (catalog section 02): alerts (doors, leaks…) keep their tone, anything
+ * Tile look of an entity: alerts (doors, leaks…) keep their tone, anything
  * else is accent when on and neutral when off; unknown = "No data", unavailable = dashed frame.
  */
 export function entityLook(e: HassEntity | undefined, s: Status): TileLook {
@@ -92,7 +92,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     return [this._config.entity, ...subButtonEntities(this._config.sub_buttons)];
   }
 
-  /** Sub-buttons that fit (catalog C3). */
+  /** Sub-buttons that fit. */
   private get subMax() {
     return subButtonLimit(this.compact, this._width);
   }
@@ -122,7 +122,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
         handlers: h,
         unavailable: una,
         extra: this.subs.render(c.sub_buttons, { compact: true, max: 1 }),
-        // Doors get the design's 5 px position dot next to the glyph.
+        // Doors get a 5 px position dot next to the glyph.
         body: glyph.includes("door")
           ? html`<span style="position:relative;display:inline-flex">${icon(glyph, "display:block")}<span style="position:absolute;right:-7px;top:3px;width:5px;height:5px;border-radius:50%;background:${col}"></span></span>`
           : icon(glyph, "display:block"),

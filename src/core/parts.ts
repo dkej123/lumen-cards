@@ -5,14 +5,13 @@ import type { VisibilityLabel } from "./visibility";
 import { t } from "./i18n";
 import { glass, prevent, stop } from "./styles";
 
-// Building blocks of the Lumen Cards catalog (2026-10-29): the row card (R), the compact tile (C),
-// the icon tile (I), segment buttons (B), the countdown bar, the code pad (PAD) and the general
-// states of section 15 (error card, loading skeleton, sample badge).
+// Building blocks of the cards: the row card, the compact tile, the icon tile, segment buttons,
+// the countdown bar, the code pad and the general states (error card, loading skeleton, sample badge).
 
 export const WFX = html`<canvas class="wfx" aria-hidden="true"></canvas>`;
 const DASH = "1px dashed var(--lumen-border-strong)";
 
-/** Colours of a row / tile (the catalog's look fields); unset = the neutral default. */
+/** Colours of a row / tile; unset = the neutral default. */
 export interface TileLook {
   /** Icon cell background / glyph colour. */
   iconBg?: string;
@@ -48,7 +47,7 @@ export const UNKNOWN: TileLook = { iconBg: "var(--lumen-surface-2)", iconFg: "va
 /** Section 15: unavailable = dashed frame on surface-2, unavailable-coloured icon, no shadow. */
 export const UNAVAILABLE: TileLook = { iconBg: "transparent", iconFg: "var(--lumen-unavailable)", subC: "var(--lumen-text-3)", border: DASH, bg: "var(--lumen-surface-2)", shadow: "none", una: true };
 
-/** `tone(C)` of the catalog: icon on C 16 %, status line in C; optional frame border. */
+/** Tone of colour C: icon on C 16 %, status line in C; optional frame border. */
 export const toneLook = (c: string, border?: string): TileLook => ({ iconBg: `color-mix(in srgb, ${c} 16%, transparent)`, iconFg: c, subC: c, border });
 
 /** `1px solid` tone mixed into the border (waiting / error frames). */
@@ -84,7 +83,7 @@ export const titleSub = (title: string, sub: string | undefined, o: { subC?: str
 /** Red frame of open / jammed / error states. */
 export const dangerBorder = "1px solid color-mix(in srgb, var(--lumen-danger) 40%, var(--lumen-border))";
 
-/** A segment button of the catalog (`B`). */
+/** A segment button. */
 export interface Seg {
   icon: string;
   label: string;
@@ -217,7 +216,7 @@ export interface PadOptions {
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "bk"];
 
-/** Code pad dialog (catalog `PAD`) for the layer: bottom sheet on a narrow screen, centred dialog otherwise. */
+/** Code pad dialog for the layer: bottom sheet on a narrow screen, centred dialog otherwise. */
 export function codePad(o: PadOptions): TemplateResult {
   const n = Math.max(4, Math.min(8, o.code.length));
   const err = !!o.error;

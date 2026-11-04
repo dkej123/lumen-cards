@@ -1,8 +1,8 @@
 import { noChange, type ReactiveController, type ReactiveControllerHost } from "lit";
 import { Directive, directive, PartType, type ElementPart, type PartInfo } from "lit/directive.js";
 
-// Generic tap / hold (500 ms) / double tap with scroll protection – design `pressHandlers`
-// (prototype `ph`). Keyboard: Enter / Space = tap, Shift+Enter or the context-menu key = hold.
+// Generic tap / hold (500 ms) / double tap with scroll protection.
+// Keyboard: Enter / Space = tap, Shift+Enter or the context-menu key = hold.
 
 interface Press { key: string; el: HTMLElement; x: number; y: number; moved: boolean; held: boolean; t?: number }
 

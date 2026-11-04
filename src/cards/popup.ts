@@ -24,7 +24,7 @@ export interface PopupConfig extends ContainerConfig {
 }
 
 /**
- * Pop-up / sheet with any cards inside (catalog section 14). Opens when the URL hash matches
+ * Pop-up / sheet with any cards inside. Opens when the URL hash matches
  * (`#salon`, e.g. a navigate action or the nav card), closes on the backdrop, ×, Esc or a swipe
  * down (the bottom sheet shared with the floating panel, core/sheet.ts); closing removes the
  * hash. Invisible in the dashboard unless `show_trigger` is on; the card editor shows the trigger

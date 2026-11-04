@@ -48,7 +48,7 @@ const BULK_LABEL: Record<string, string> = { comfort: "card.climate.preset.comfo
 const ORANGE = "var(--lumen-orange)";
 
 /**
- * Floating panel (catalog section 19): one FAB in the shared stack that opens a bottom sheet with
+ * Floating panel: one FAB in the shared stack that opens a bottom sheet with
  * any cards – typically all the thermostats in one place instead of a FAB each. The FAB counts
  * what is heating, warns about a low battery / an unavailable entity and hides under the open
  * sheet. Wider than a phone (with `narrow_only`) and while the dashboard is edited the card is a
@@ -220,7 +220,7 @@ export class LumenFabSheetCard extends LumenContainerCard<FabSheetConfig> {
     const s = this.status();
     const b = this.bulk();
     const body = this.hasCards ? this.inner.grid(this._config.cards) : emptySheet(t("card.fab_sheet.empty_title"), t("card.fab_sheet.empty_text"));
-    // As tall as its cards need (owner, not the design's 85 %); only a phone-filling panel scrolls.
+    // As tall as its cards need; only a phone-filling panel scrolls.
     return this.sheet.render(this.head(s), body, b ? this.bulkRow(b) : nothing, { maxHeight: "calc(100% - env(safe-area-inset-top) - 12px)" });
   }
 

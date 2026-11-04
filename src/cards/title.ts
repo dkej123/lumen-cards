@@ -48,8 +48,7 @@ export function validateTitle(c: Partial<TitleConfig>): void {
 const OVERLINE = "font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--lumen-text-3)";
 
 /**
- * Section headings of the design (`overline`, light group headers, room headers, mobile
- * `sectionLabel`) – the community pattern of a title card with entity values.
+ * Section headings (overline, section title, room header) – the community pattern of a title card with entity values.
  */
 export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
   protected static grid = GRID.full;

@@ -74,7 +74,7 @@ export function validateChips(c: Partial<ChipsConfig>): void {
 
 /**
  * A row of small chips (the community "chips card" pattern): action chips (scenes, scripts…,
- * optionally as a floating speed-dial button) and the light pills of the design rooms.
+ * optionally as a floating speed-dial button) and light pills.
  */
 export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   protected static grid = GRID.full;
@@ -189,7 +189,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
     </div>`;
   }
 
-  /** Floating button (catalog FAB): 64 px, inverted; tap opens the list with its heading above it. */
+  /** Floating button: 64 px, inverted; tap opens the list with its heading above it. */
   private renderFab() {
     const open = this._fab;
     const items = this.of("action");

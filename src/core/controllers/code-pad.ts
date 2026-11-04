@@ -4,7 +4,7 @@ import type { PadOptions } from "../parts";
 type PadState<X> = X & { code: string; error?: string; shake: number; busy: boolean };
 
 /**
- * State of a card's code pad (catalog PAD): the code typed so far, a sent attempt, the error of
+ * State of a card's code pad: the code typed so far, a sent attempt, the error of
  * a failed one (code cleared, the dots shake). `X` is what the card needs to send (command, mode).
  */
 export class CodePad<X extends object> implements ReactiveController {

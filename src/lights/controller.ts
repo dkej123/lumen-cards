@@ -18,10 +18,8 @@ import {
 } from "../logic/light";
 import { warm } from "../weather/fx";
 
-// Lights of the design (light(), lightHandlers(), tile(), pill(), ctOverlay(),
-// slider(), the light sheet and the brightness HUD) as a controller any card can own.
-// The compact and icon-only tiles, the sheet's white presets, hue swatches and colour wheel
-// follow the Lumen Cards catalog (2026-10-29). `l.col` can be overridden by the card's glow colour.
+// Light tiles, pills, the light sheet and the brightness HUD as a controller any card can own.
+// `l.col` can be overridden by the card's glow colour.
 
 export interface LightItem {
   entity: string;
@@ -51,12 +49,12 @@ interface Drag {
   moved: boolean; dragging: boolean; held: boolean; cur?: number;
 }
 
-/** Horizontal movement (px) that turns a press into a brightness drag (catalog "Zachowanie"). */
+/** Horizontal movement (px) that turns a press into a brightness drag. */
 export const DRAG_PX = 6;
 const HUD_H = 40;
 const HUD_GAP = 12;
 const HUD_MIN_TOP = 8;
-/** HA toolbar height above the dashboard (the design measured from its own frame). */
+/** HA toolbar height above the dashboard. */
 const TOP = 56;
 const onSwatch = (e: Event) => !!(e.target as Element | null)?.closest?.("[data-ct]");
 const RAINBOW = "conic-gradient(#f55, #fd5, #5d7, #5cf, #86f, #f5b, #f55)";
@@ -471,7 +469,7 @@ export class LightsController implements ReactiveController {
     </button>`;
   }
 
-  /** Large tile (design `tile`). */
+  /** Large tile. */
   tile(item: LightItem, i: number, minH: number, mobile: boolean, swatch = true, extra: unknown = nothing): TemplateResult {
     const l = this.light(item);
     const h = this.handlers(item);
@@ -482,7 +480,7 @@ export class LightsController implements ReactiveController {
     const ctOpen = l.on && l.ct && !l.hs && this.ctOpen === item.entity;
     const border = l.una ? "1.5px dashed var(--lumen-border-strong)" : l.on ? `1px solid color-mix(in srgb, ${l.col} 45%, transparent)` : "1px solid var(--lumen-border)";
     const shadow = l.on ? `0 18px 44px -18px color-mix(in srgb, ${l.col} ${Math.round(35 + l.b * 0.5)}%, transparent), var(--lumen-shadow-1)` : "var(--lumen-shadow-1)";
-    // Compact (catalog correction 2026-10-30): the low Dom tile, r16, icon 28 r9, one-line name.
+    // Compact: the low tile, r16, icon 28 r9, one-line name.
     const iconSize = mobile ? 28 : 34;
     return html`<div data-fx role="button" tabindex="0" aria-pressed=${l.on} aria-disabled=${l.una} aria-label="${lightName(item, l.e)} · ${value}" aria-keyshortcuts="Shift+Enter ArrowLeft ArrowRight"
       @pointerdown=${h.down} @pointermove=${h.move} @pointerup=${h.up} @pointercancel=${h.cancel} @keydown=${h.key} @contextmenu=${prevent}
@@ -525,7 +523,7 @@ export class LightsController implements ReactiveController {
     </div>`;
   }
 
-  /** Compact pill (design `pill`, rooms). */
+  /** Compact pill. */
   pill(item: LightItem, mobile = false) {
     const l = this.light(item);
     const h = this.handlers(item);
@@ -652,7 +650,7 @@ export class LightsController implements ReactiveController {
     },
   };
 
-  /** HUD top (viewport px): the design spot below the toolbar, or above the element; null if no room. */
+  /** HUD top (viewport px): just below the toolbar, or above the element; null if no room. */
   private hudY(elTop: number): number | null {
     const y = Math.min(TOP + (this.host.narrowScreen ? 64 : 24), elTop - HUD_GAP - HUD_H);
     return y < HUD_MIN_TOP ? null : y;

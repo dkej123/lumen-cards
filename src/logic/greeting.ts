@@ -1,4 +1,4 @@
-/** Greeting by the clock (owner decision), in the browser's local time: "Good night" only late at night. */
+/** Greeting by the clock, in the browser's local time: "Good night" only late at night. */
 export function greetingKey(now: Date = new Date()): string {
   const h = now.getHours();
   if (h >= 5 && h < 12) return "card.greeting.morning";

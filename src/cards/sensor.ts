@@ -63,13 +63,13 @@ export const sensorStale = (e: HassEntity | undefined, hours: number, now = Date
   !!e && !isUnavailable(e) && hours > 0 && ageMs(e.last_reported ?? e.last_updated, now) > hours * 3_600_000;
 
 /**
- * One sensor tile with a sparkline of the last hours (catalog section 10). Outdated: dashed frame,
+ * One sensor tile with a sparkline of the last hours. Outdated: dashed frame,
  * value in text-3, "name · 3 h ago", chart at .4; unavailable: dashed, "—", no chart; compact:
  * a 36 px row without the chart (only with `layout: compact`).
  */
 export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
   protected static grid = GRID.half;
-  /** Full look in any grid width (catalog section 17); compact only when chosen. */
+  /** Full look in any grid width; compact only when chosen. */
   protected static compactBelow = 0;
   protected static sample = (id: string): HassEntity => ({ entity_id: id, state: "21.5", attributes: { friendly_name: t("card.sensor.name"), unit_of_measurement: "°C", device_class: "temperature" }, last_changed: new Date().toISOString(), last_updated: new Date().toISOString() });
   private history = new History(this, () => (this._config ? [this._config.entity] : []));
@@ -101,7 +101,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
     const chart = c.show_graph === false || una ? nothing : html`<svg viewBox="0 0 120 36" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:70%;pointer-events:none;opacity:${stale ? 0.4 : 1}"><path d=${sp.area} fill="currentColor" opacity="0.16"></path><path d=${sp.line} fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.7" vector-effect="non-scaling-stroke"></path></svg>`;
     const hpx = Number(c.height) > 0 ? Math.max(28, Math.min(200, Number(c.height))) : 0;
     if (this.compact || (hpx && hpx < ONE_LINE_BELOW)) {
-      // Dom mobile (handoff 2026-10-06): one line over a dimmed sparkline, 36 px.
+      // One line over a dimmed sparkline, 36 px.
       const shade = `color:${ink};text-shadow:0 1px 6px color-mix(in srgb, var(--lumen-bg) 70%, transparent)`;
       return html`<div data-fx ${pressable(h)} class="press" aria-label=${label}
         style="position:relative;display:flex;align-items:center;height:${hpx || 36}px;padding:0 10px;box-sizing:border-box;border-radius:14px;background:var(--lumen-surface);border:${border};${glass};cursor:pointer;user-select:none;touch-action:pan-y;color:${stale ? "var(--lumen-text-3)" : color}">${WFX}

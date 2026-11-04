@@ -24,7 +24,7 @@ export function validateNumber(c: Partial<NumberConfig>): void {
 }
 
 /**
- * input_number / number as a slider tile in the accent colour (catalog section 14): a horizontal
+ * input_number / number as a slider tile in the accent colour: a horizontal
  * drag sets the value from the finger, snapped to the step (set_value on release); tap and hold
  * open more-info unless actions are set.
  */

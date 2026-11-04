@@ -34,7 +34,7 @@ export const selectOptions = (e?: HassEntity): string[] => (Array.isArray(e?.att
 const MENU_W = 200;
 
 /**
- * input_select / select (catalog section 14): the current option on a pick button, a tap opens
+ * input_select / select: the current option on a pick button, a tap opens
  * the option list under it (in the body layer, so it floats over the dashboard). The choice
  * calls select_option; Esc, a tap outside or scrolling closes the list.
  */

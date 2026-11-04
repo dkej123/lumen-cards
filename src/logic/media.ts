@@ -93,7 +93,7 @@ export interface VolumeButtons {
 }
 
 /**
- * Buttons of the `volume_only` tile by card width (design U11): from 320 px all four, 200–319 px
+ * Buttons of the `volume_only` tile by card width: from 320 px all four, 200–319 px
  * play/pause and mute, below that play/pause alone. Unsupported ones and an off player have none.
  * `playback: false` leaves only mute. Width 0 = not measured yet: the full set, so nothing pops in.
  */

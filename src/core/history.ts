@@ -4,7 +4,7 @@ import { num } from "../logic/format";
 import { sparkPath, type Point } from "../logic/spark";
 
 /**
- * 24 h history for sparklines (design loadHistory/spark), shared by every card on the page:
+ * 24 h history for sparklines, shared by every card on the page:
  * entities asked for in the same tick go out as one `history_during_period` call, an entity is
  * reloaded at most every 10 min, and live changes are appended in between (dashboards stay
  * open all day).

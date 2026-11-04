@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// Catalog 2026-10-30: floating panel (section 19), compact heights (sections 01–06, 17), battery.
+// Floating panel, compact heights, battery.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ent, layer, mockHass, mount as mountCard, settle, type Card } from "./helpers";
 import { plural, setLanguage } from "../src/core/i18n";
@@ -186,7 +186,7 @@ describe("floating panel card", () => {
   });
 });
 
-describe("compact looks: 44 px, rows auto (catalog correction 2026-10-30)", () => {
+describe("compact looks: 44 px, rows auto", () => {
   const sub = [{ entity: "input_boolean.x", icon: "mdi:power" }];
   it("entity / button / alarm cell 44 px with one 30 px sub-button; lock cell 44 px", async () => {
     for (const [type, entity] of [["entity", "binary_sensor.door"], ["button", "script.gate"], ["alarm", "alarm_control_panel.home"]]) {

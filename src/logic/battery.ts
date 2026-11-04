@@ -6,7 +6,7 @@ export interface Battery {
   low: boolean;
 }
 
-/** Low battery below this % by default (catalog section 19). */
+/** Low battery below this % by default. */
 export const BATTERY_LOW = 15;
 
 const level = (v: unknown): number | null => {

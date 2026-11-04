@@ -110,7 +110,7 @@ describe("keyboard", () => {
 });
 
 describe("climate", () => {
-  it("°F thermostat is not clamped to the 16–30 °C design range", async () => {
+  it("°F thermostat is not clamped to the 16–30 °C range", async () => {
     const h = hass();
     h.states["climate.f"] = ent("climate.f", "heat", { hvac_modes: ["off", "heat"], temperature: 68, min_temp: 45, max_temp: 95, target_temp_step: 1 });
     const el = document.createElement("lumen-climate-card") as Card & { step(d: number): void };

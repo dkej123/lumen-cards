@@ -32,7 +32,7 @@ interface CardSurface {
 }
 
 /**
- * A card without glass (catalog section 13): no backdrop blur, or an opaque background
+ * A card without glass: no backdrop blur, or an opaque background
  * (surface-solid). Weather on it stays on the edge: drops, frost and the snow cap.
  */
 export function isSolidCard(cs: { backdropFilter?: string; webkitBackdropFilter?: string; backgroundColor?: string; backgroundImage?: string }): boolean {
@@ -214,7 +214,7 @@ export class WeatherEngine {
       this.wake();
     });
     document.addEventListener("visibilitychange", this.wake);
-    // Dashboard scroll: hold the background, halve card redraws (design: mobile scroller).
+    // Dashboard scroll: hold the background, halve card redraws.
     document.addEventListener("scroll", this.onScroll, { capture: true, passive: true });
   }
 

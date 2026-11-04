@@ -86,7 +86,7 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       e("sensor.pm10", "22", { friendly_name: "PM10", unit_of_measurement: "µg/m³", device_class: "pm10" }, 5),
       e("climate.bedroom_ac", "cool", { friendly_name: "Bedroom AC", hvac_modes: ["off", "heat", "cool"], fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 23.4, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }),
       e("input_boolean.bike_battery", "on", { friendly_name: "Bike battery low" }, 10),
-      // Catalog 2026-10-29 states (sections 05, 06, 09, 10, 11, 15).
+      // Every state of the alarm, lock, climate, sensor and air quality cards.
       e("alarm_control_panel.demo", "disarmed", { friendly_name: "Alarm · home", supported_features: 7, code_format: "number" }),
       e("alarm_control_panel.home_mode", "armed_home", { friendly_name: "Alarm · home", supported_features: 7, code_format: "number" }),
       e("alarm_control_panel.night", "armed_night", { friendly_name: "Alarm · home", supported_features: 7, code_format: "number" }),
@@ -107,7 +107,7 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       e("climate.radiator", "heat", { friendly_name: "Radiator · bathroom", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 23, current_temperature: 21.2, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort" }),
       e("climate.office_f", "cool", { friendly_name: "AC · office", temperature_unit: "°F", hvac_modes: ["auto", "cool", "heat", "dry", "fan_only"], hvac_action: "cooling", temperature: 72, current_temperature: 76, min_temp: 61, max_temp: 86, target_temp_step: 1, fan_modes: ["auto", "1", "2", "3", "turbo"], fan_mode: "auto", swing_modes: ["off", "vertical", "both"], swing_mode: "vertical", preset_modes: ["none", "eco", "sleep", "boost"], preset_mode: "none" }),
       e("climate.off", "off", { friendly_name: "Climate · living room", hvac_modes: ["off", "cool", "heat", "dry"], fan_modes: ["auto", "low", "medium", "high"], fan_mode: "auto", temperature: 22, current_temperature: 24.1, min_temp: 16, max_temp: 30, target_temp_step: 0.5 }),
-      // Floating panel (catalog section 19): three Better Thermostat radiators, one valve at 9 %.
+      // Floating panel: three Better Thermostat radiators, one valve at 9 %.
       e("climate.th_living", "heat", { friendly_name: "Living room", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 21, current_temperature: 20.4, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort", batteries: '{"climate.valve_living": {"battery": 82}}' }),
       e("climate.th_bedroom", "heat", { friendly_name: "Bedroom", hvac_modes: ["heat", "off"], hvac_action: "idle", temperature: 19, current_temperature: 19.6, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort" }),
       e("climate.th_bathroom", "heat", { friendly_name: "Bathroom", hvac_modes: ["heat", "off"], hvac_action: "heating", temperature: 23, current_temperature: 21.8, min_temp: 5, max_temp: 30, target_temp_step: 0.5, preset_modes: ["comfort", "eco", "away"], preset_mode: "comfort", batteries: '{"climate.valve_bath_1": {"battery": 9}, "climate.valve_bath_2": {"battery": 64}}' }),
@@ -209,7 +209,7 @@ export function createDemoHome(o: DemoOptions = {}): DemoHome {
       }
       // The made-up purifier's own services: "demo_purifier.set_x" writes the attribute of the field.
       if (domain === "demo_purifier") set(id, states[id].state, Object.fromEntries(Object.entries(data).map(([k, v]) => [{ hours: "timer", level: "light_brightness", light: "display_light", lock: "child_lock", humidity: "target_humidity" }[k] ?? k, v])));
-      // Gate with a response sensor: every third press fails (catalog live demo).
+      // Gate with a response sensor: every third press fails.
       if (domain === "script" && id === "script.gate") {
         const n = (gatePresses = gatePresses + 1);
         setTimeout(() => set("sensor.gate_status", n % 3 === 0 ? "503" : "200"), 1600);

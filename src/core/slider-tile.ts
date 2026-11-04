@@ -8,8 +8,8 @@ import { WFX } from "./parts";
 import { spinnerStyle } from "./press";
 import { glass, prevent, stop } from "./styles";
 
-// Slider tiles of the catalog (section 14: cover, fan, number) and the thin bars (cover tilt,
-// media volume / progress). Behaviour from the handoff ("Zachowanie"): pointerdown, then a
+// Slider tiles (cover, fan, number) and the thin bars (cover tilt, media volume / progress).
+// Behaviour: pointerdown, then a
 // horizontal move > 6 px sets the value from the finger (setPointerCapture, touch-action
 // pan-y); without a move it is a tap. Buttons inside stop the pointer events.
 
@@ -201,7 +201,7 @@ export class SlideDrag implements ReactiveController {
 export interface SliderLook {
   title: string;
   sub: string;
-  /** Second, quieter part of the value line (design `meta`). */
+  /** Second, quieter part of the value line. */
   meta?: string;
   subColor?: string;
   icon: string;
@@ -211,7 +211,7 @@ export interface SliderLook {
   /** Fill 0–100 (null = none). */
   fill: number | null;
   fillColor: string;
-  /** Lit look (design `lit()`): glow, tinted border and shadow. */
+  /** Lit look: glow, tinted border and shadow. */
   lit?: boolean;
   una?: boolean;
   /** Small spinner in the top-right corner (command on its way / moving). */
@@ -232,7 +232,7 @@ export interface SliderLook {
   border?: string;
 }
 
-/** Row tile of the catalog (design `R()`), wide or compact. */
+/** Row tile, wide or compact. */
 export function sliderTile(look: SliderLook, drag: SlideDrag | undefined, interactive = true) {
   const h = drag?.handlers;
   const c = look.compact;
@@ -273,7 +273,7 @@ export interface SegButton {
   click: () => void;
 }
 
-/** Segment row of buttons (design `btnRow`): pointer events stay out of the tile. */
+/** Segment row of buttons: pointer events stay out of the tile. */
 export function segButtons(btns: SegButton[], label: string) {
   return html`<div role="group" aria-label=${label} @pointerdown=${stop} @pointerup=${stop} @keydown=${stop} style="position:relative;display:flex;gap:2px;padding:3px;border-radius:14px;background:var(--lumen-surface-2)">
     ${btns.map(

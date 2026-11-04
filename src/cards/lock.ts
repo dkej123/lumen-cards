@@ -49,7 +49,7 @@ interface LockLook {
   alarm?: boolean;
 }
 
-/** Look of every lock state (catalog section 06). */
+/** Look of every lock state. */
 export function lockLook(e: HassEntity | undefined, custom?: string, now = Date.now()): LockLook {
   if (!e || e.state === "unavailable") return { icon: custom ?? "mdi:lock-off-outline", tone: "unavailable", label: t("common.unavailable") };
   // Many cars report `unknown` between polls: still controllable, state not known.
@@ -286,7 +286,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     </div>`;
   }
 
-  /** PIN pad (catalog PAD) before unlock / open when the lock has a code_format. */
+  /** PIN pad before unlock / open when the lock has a code_format. */
   private padView() {
     const p = this.pad.state!;
     const open = p.cmd === "open";
@@ -338,7 +338,7 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     const busy = !!this.busy();
     const l = this.look();
     const st = this.lock?.state;
-    // Catalog correction 2026-10-30: hold 500 ms = the main command (lock, or unlock with the
+    // Hold 500 ms = the main command (lock, or unlock with the
     // code); a tap opens the lock dialog; the card's actions replace them. Nothing while a command
     // is on its way.
     const c = this._config;

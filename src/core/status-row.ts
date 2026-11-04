@@ -7,7 +7,7 @@ import { prevent } from "./styles";
 import { WFX } from "./parts";
 
 
-/** Alarm banner while the alarm is triggered (design `alarmBanner`). */
+/** Alarm banner while the alarm is triggered. */
 export function alarmBanner(mobile: boolean, text: string, onTap?: () => void) {
   const a = onTap ? activate(onTap) : undefined;
   return html`<div role=${a ? "button" : "alert"} tabindex=${a ? 0 : nothing} @click=${a?.click} @keydown=${a?.key} style="display:flex;align-items:center;gap:${mobile ? 12 : 14}px;padding:${mobile ? "12px 14px 12px 12px" : "14px 18px 14px 14px"};border-radius:22px;color:#fff;cursor:${a ? "pointer" : "default"};background:var(--lumen-danger);animation:lumenAlarmBg 1.2s ease-in-out infinite">
@@ -19,13 +19,13 @@ export function alarmBanner(mobile: boolean, text: string, onTap?: () => void) {
 /** Pulsing red ring around the whole screen while the alarm is triggered. */
 export const alarmRing = () => html`<div style="position:absolute;inset:0;z-index:5;pointer-events:none;animation:lumenAlarmRing 1.2s ease-in-out infinite"></div>`;
 
-/** Height (px) of every compact look (catalog correction 2026-10-30): equal in a row, touch minimum. */
+/** Height (px) of every compact look: equal in a row, touch minimum. */
 export const COMPACT_H = 44;
 
 /**
- * Compact phone cell (design access bar B7, one item per card): a 44 px tinted cell (r14) with a
+ * Compact phone cell (one item per card): a 44 px tinted cell (r14) with a
  * 22 px glyph in the state's tone. Several of these side by side in the HA grid make up the bar.
- * `extra` (one sub-button, owner decision) sits beside the cell in the same 44 px row.
+ * `extra` (one sub-button) sits beside the cell in the same 44 px row.
  */
 export function compactCell(o: { title: string; color: string; body: unknown; handlers?: PressHandlers; onClick?: () => void; disabled?: boolean; alert?: boolean; unavailable?: boolean; extra?: unknown }) {
   const h = o.handlers;

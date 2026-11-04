@@ -3,8 +3,8 @@ import { tokens } from "../design/tokens";
 import { composedAncestors, isHaView, viewOf } from "./dom";
 import { shared } from "./styles";
 
-// Sheets, dialogs, FABs and the brightness HUD of the design are positioned in the
-// panel frame (`position:absolute; inset:0`). A Lovelace card is small and its ancestors
+// Sheets, dialogs, FABs and the brightness HUD need the whole screen
+// (`position:absolute; inset:0`). A Lovelace card is small and its ancestors
 // may be transformed (sections grid, edit mode, wind sway), so these pieces render into
 // a full-screen layer on <body> instead: same templates, the viewport is the frame.
 
@@ -225,8 +225,8 @@ export class LayerController implements ReactiveController {
 
 
 // Floating buttons of several cards stack upwards from a bottom corner instead of covering each
-// other (catalog A10): the lowest FAB is 64 px, every next one 48 px, 12 px above the previous one,
-// all with the same outer edge (owner: aligned to the screen edge, 16 px from it). Each card picks
+// other: the lowest FAB is 64 px, every next one 48 px, 12 px above the previous one,
+// all with the same outer edge (16 px from the screen edge). Each card picks
 // its side (`fab_side`, for left-handed use); every side is its own stack. Order from the bottom:
 // scenes, climate / floating panels, alarm (`FAB_ORDER`), then the order of registration.
 type FabOwner = { requestUpdate(): void };

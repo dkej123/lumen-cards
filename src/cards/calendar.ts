@@ -37,7 +37,7 @@ export function validateCalendar(c: Partial<CalendarConfig>): void {
 }
 
 /**
- * Upcoming events of one calendar (catalog section 14): grouped by day ("Today · Thu 29.10"),
+ * Upcoming events of one calendar: grouped by day ("Today · Thu 29.10"),
  * each event with a colour bar, title and time. Data from HA's calendar API, refreshed every
  * 5 minutes and whenever the calendar entity changes.
  */

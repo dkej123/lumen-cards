@@ -35,7 +35,7 @@ export function validateAirQuality(c: Partial<AirQualityConfig>): void {
   if (!c.pm25 && !c.pm10 && !c.aqi_entity) throw new Error(t("card.air_quality.error.sensor"));
 }
 
-/** Air quality (design): 6 levels + stale, PM2.5 / PM10 / AQI with tweened numbers, 24 h sheet. */
+/** Air quality: 6 levels + stale, PM2.5 / PM10 / AQI with tweened numbers, 24 h sheet. */
 export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
   protected static grid = GRID.full;
   static properties = { ...LumenBaseCard.properties, _sheet: { state: true } };
@@ -113,7 +113,7 @@ export class LumenAirQualityCard extends LumenBaseCard<AirQualityConfig> {
     return {
       c: col,
       stale,
-      // Outdated (catalog section 11): grey dot, dashed frame on surface-2, the age in the warning colour.
+      // Outdated: grey dot, dashed frame on surface-2, the age in the warning colour.
       title: stale ? t("card.air_quality.stale") : `${lvl.emoji} ${typeof own?.title === "string" ? own.title : t(lvl.title)}`,
       sub: stale ? t("card.air_quality.last_reading_ago", { x: formatAgo(q.readAt, now) }) : typeof own?.hint === "string" ? own.hint : t(lvl.hint),
       age: q.readAt ? formatAgo(q.readAt, now) : "",

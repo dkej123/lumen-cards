@@ -47,7 +47,7 @@ describe("alarmStatus", () => {
     expect(alarmBarIcon(ent("a.a", "triggered"), "mdi:garage")).toBe("mdi:alarm-light");
     expect(alarmBarIcon(ent("a.a", "armed_away"), "mdi:shield-car")).toBe("mdi:shield-car");
   });
-  it("garage / storage icons show a padlock when armed (Dom B7)", () => {
+  it("garage / storage icons show a padlock when armed", () => {
     expect(alarmBarIcon(ent("a.a", "armed_away"), "mdi:warehouse")).toBe("mdi:garage-lock");
     expect(alarmBarIcon(ent("a.a", "disarmed"), "mdi:garage")).toBe("mdi:garage-open");
   });

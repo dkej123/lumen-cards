@@ -98,7 +98,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
     const s = presence(this.sensor(), this.entity(c.entity), Date.now());
     const h = this.actions(`person:${key}`, c, key);
     if (compact) {
-      // The 44 px pill of the Dom panel (catalog correction 2026-10-30), not the catalog's square tile.
+      // A 44 px pill, not a square tile.
       return html`<div data-fx ${pressable(h)} class="press" aria-label="${name} · ${s.status}"
         style="display:flex;align-items:center;gap:8px;height:44px;padding:0 10px 0 7px;border-radius:16px;box-sizing:border-box;background:var(--lumen-surface);border:${s.unavailable ? "1.5px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${glass};cursor:pointer;min-width:0;user-select:none;touch-action:pan-y;transition:transform 220ms var(--lumen-ease-spring)">${WFX}
         ${this.avatar(name, s, true)}

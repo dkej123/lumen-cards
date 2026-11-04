@@ -6,7 +6,7 @@ import { ageMs } from "./time";
 export const PM25 = [10, 20, 25, 50, 75];
 export const PM10 = [20, 40, 50, 100, 150];
 /**
- * US EPA AQI on the six levels (catalog section 11): EPA "good" 0–50 splits into very good
+ * US EPA AQI on the six levels: EPA "good" 0–50 splits into very good
  * (0–25) and good (26–50), "moderate" 51–100 is moderate, then 101–150, 151–200 and 201+.
  */
 export const AQI = [26, 51, 101, 151, 201];

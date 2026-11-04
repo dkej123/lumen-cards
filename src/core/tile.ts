@@ -2,7 +2,7 @@ import { html, nothing, type TemplateResult } from "lit";
 import { iconBox, surfaceStyle, titleSub, unplugged, WFX, type TileLook } from "./parts";
 import { pressable, spinnerStyle, type PressHandlers } from "./press";
 
-// Row tile of the Lumen Cards catalog (`R`), shared by the entity, button and person cards.
+// Row tile, shared by the entity, button and person cards.
 // Colours come in as a `TileLook` (parts.ts) so each card keeps its own state logic.
 
 export interface TileOpts {
@@ -33,7 +33,7 @@ export interface TileOpts {
 
 const spinner = (o: TileOpts) => (o.busy ? html`<span style=${spinnerStyle(10, "position:absolute;top:7px;right:7px")}></span>` : nothing);
 
-/** Full-width row (catalog `R`): icon 34, title 14/700, second line 13/650 with a muted meta. */
+/** Full-width row: icon 34, title 14/700, second line 13/650 with a muted meta. */
 export function rowTile(o: TileOpts) {
   const label = o.label ?? [o.title, o.sub].filter(Boolean).join(" · ");
   return html`<div data-fx ${pressable(o.handlers)} class=${o.handlers ? "press" : ""} aria-label=${label} aria-busy=${o.busy ? "true" : nothing}

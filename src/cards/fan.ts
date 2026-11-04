@@ -38,7 +38,7 @@ export function fanSpeed(e: HassEntity | undefined): { on: boolean; pct: number;
 }
 
 /**
- * Fan as a slider tile (catalog section 14, "Wentylator · 60%"): lit in the accent colour while
+ * Fan as a slider tile: lit in the accent colour while
  * on, a horizontal drag sets the speed from the finger (set_percentage on release), tap toggles.
  */
 export class LumenFanCard extends LumenBaseCard<FanConfig> {

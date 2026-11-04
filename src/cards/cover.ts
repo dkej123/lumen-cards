@@ -29,7 +29,7 @@ export function validateCover(c: Partial<CoverConfig>): void {
 }
 
 /**
- * Roller shutter / blind (catalog section 14): the tile fill is the position, a horizontal drag
+ * Roller shutter / blind: the tile fill is the position, a horizontal drag
  * sets it (set_cover_position on release), Open / Stop / Close in a second row, a separate slat
  * bar for tilting blinds. Tap toggles, hold opens more-info.
  */

@@ -1,4 +1,4 @@
-// Time helpers with the design's wording ("3 h", "25 min temu", "time.just_now").
+// Time helpers with short wording ("3 h", "25 min temu", "time.just_now").
 import { hour12, locale, numberLocale, t } from "../core/i18n";
 
 export function ageMs(iso: string | undefined, now: number = Date.now()): number {

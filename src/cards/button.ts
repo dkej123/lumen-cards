@@ -48,7 +48,7 @@ export interface ButtonConfig extends BaseConfig {
   show_name?: boolean;
   show_icon?: boolean;
   show_state?: boolean;
-  /** Colour of the icon / access-bar cell at rest (Dom: gate and barrier in info blue). */
+  /** Colour of the icon / access-bar cell at rest. */
   color?: string | [number, number, number];
 }
 
@@ -60,7 +60,7 @@ export function lastUsedMs(e: HassEntity | undefined): number | undefined {
   return Number.isFinite(ms) ? ms : undefined;
 }
 
-/** How long the success line stays before the last use comes back (catalog: 6 s). */
+/** How long the success line stays before the last use comes back. */
 export const SUCCESS_MS = 6000;
 
 const ICONS: Record<string, string> = { script: "mdi:script-text-play", scene: "mdi:palette", button: "mdi:gesture-tap-button", input_button: "mdi:gesture-tap-button", automation: "mdi:robot" };
@@ -72,8 +72,8 @@ export function validateButton(c: Partial<ButtonConfig>): void {
 type Phase = "idle" | "wait" | "ok" | "err";
 
 /**
- * A button that runs something and (optionally) waits for the device's answer (design gate /
- * barrier, generalised). With `feedback`: spinner and "Waiting…" (at most 10 s), then a green
+ * A button that runs something and (optionally) waits for the device's answer
+ * (e.g. a gate). With `feedback`: spinner and "Waiting…" (at most 10 s), then a green
  * line with the code for 6 s, or a red frame with the error until the next use.
  */
 export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
@@ -262,7 +262,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
       : this.actions(`button:${c.entity}`, c, c.entity, { tap: () => this.run(), hold: () => this.moreInfo(this.feedback?.status_entity ?? c.entity) });
     const ic = c.icon ?? e?.attributes.icon ?? ICONS[this.domain] ?? "mdi:gesture-tap";
     const look = this.look(e);
-    // Owner 2026-10-29: compact is always the access bar cell (no square tile).
+    // Compact is always the access bar cell, not a square tile.
     const tiny = this.compact;
     const out = this.outcome(tiny);
     const sub = una ? t("common.unavailable") : out ?? (c.show_state === false ? "" : this.sub(e));

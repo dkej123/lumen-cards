@@ -24,7 +24,7 @@ export interface SubButton {
 /** The entities of a `sub_buttons` list, for `entityIds()`. */
 export const subButtonEntities = (list: unknown): (string | undefined)[] => listOf<SubButton>(list).map((b) => b.entity);
 
-/** Sub-buttons a card shows (catalog C3): 4 in the full look, 2 on a narrow card (6 phone columns), 1 when compact. */
+/** Sub-buttons a card shows: 4 in the full look, 2 on a narrow card (6 phone columns), 1 when compact. */
 export function subButtonLimit(compact: boolean, width = 0): number {
   if (compact) return 1;
   return width > 0 && width < 280 ? 2 : 4;

@@ -22,7 +22,7 @@ export interface Presence {
 
 const NO_ZONE = new Set(["home", "not_home", "unknown", "unavailable"]);
 
-/** "now" under a minute, else the design's duration ("15 min", "3 h"). */
+/** "now" under a minute, else a duration ("15 min", "3 h"). */
 export const sinceText = (iso: string | undefined, now: number = Date.now()): string => {
   const ms = ageMs(iso, now);
   return ms < 60_000 ? t("time.now") : formatDuration(ms);
@@ -48,7 +48,7 @@ export function presence(sensor: HassEntity | undefined, person: HassEntity | un
   return { home: false, unknown: false, unavailable: false, label, zone, since, status: `${label} · ${since}`, short: `${zone || t("card.person.away")} · ${since}` };
 }
 
-/** Hues of the avatars without a colour (catalog: 6 hues, oklch L .62). */
+/** Hues of the avatars without a colour (6 hues, oklch L .62). */
 const AVATAR_HUES = [255, 150, 30, 330, 75, 200];
 
 /** Avatar colour picked from the name, stable for the same name. */

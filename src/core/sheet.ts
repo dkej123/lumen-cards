@@ -4,7 +4,7 @@ import { cardSpan } from "../logic/popup";
 import { t } from "./i18n";
 import { icon } from "./lumen-icon";
 
-// Bottom sheet shared by the pop-up and the floating panel (catalog sections 14 and 19): from
+// Bottom sheet shared by the pop-up and the floating panel: from
 // the bottom on every width, centred and at most 520 px wide, 85 % of the screen high, radius
 // 28 28 0 0. The handle and the header stay, only the list scrolls. Closes on ✕, a tap on the
 // scrim, Escape (LayerController) or a drag of the header down by more than 40 px.
@@ -264,7 +264,7 @@ export class Sheet implements ReactiveController {
   }
 }
 
-/** Empty state of a sheet without cards (catalog section 19). */
+/** Empty state of a sheet without cards. */
 export const emptySheet = (title: string, text: string) =>
   html`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 18px 22px;text-align:center">
     <span style="width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:26px;background:var(--lumen-surface-2);color:var(--lumen-text-3)">${icon("mdi:card-plus-outline", "display:block")}</span>

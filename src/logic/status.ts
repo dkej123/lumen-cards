@@ -14,7 +14,7 @@ export interface Status {
   busy?: boolean;
 }
 
-/** Arm modes in the catalog's order, with their AlarmControlPanelEntityFeature bit. */
+/** Arm modes in display order, with their AlarmControlPanelEntityFeature bit. */
 export const ARM_MODES: readonly [string, number][] = [
   ["armed_home", 1],
   ["armed_away", 2],
@@ -38,7 +38,7 @@ export const modeLabel = (mode: string) => t(`card.alarm.mode.${ARMED.has(mode) 
 
 /**
  * Arm modes the entity supports (supported_features), optionally narrowed by the card's
- * `arm_modes`. Without supported_features: home, away, night (the catalog's set).
+ * `arm_modes`. Without supported_features: home, away, night.
  */
 export function armModes(entity: HassEntity | undefined, wanted?: string[]): string[] {
   const f = entity?.attributes.supported_features;
@@ -54,7 +54,7 @@ export function targetMode(entity: HassEntity | undefined): string | undefined {
 }
 
 /**
- * Every `alarm_control_panel` state (catalog section 05): every armed mode is green and told
+ * Every `alarm_control_panel` state: every armed mode is green and told
  * apart by icon and caption, arming yellow, pending orange, triggered red, disarmed neutral.
  * `icon` replaces the shield glyphs (except while triggered).
  */
@@ -90,14 +90,14 @@ export function binaryStatus(entity: HassEntity | undefined, icons: { on: string
 }
 
 /**
- * Glyph of an alarm in a compact cell (design B7): the house with an open or closed padlock;
+ * Glyph of an alarm in a compact cell: the house with an open or closed padlock;
  * arming and the entry countdown already count as armed. A custom icon is used as is.
  */
 export function alarmBarIcon(entity: HassEntity | undefined, customIcon?: string): string {
   const state = isUnavailable(entity) ? "" : entity!.state;
   if (state === "triggered") return "mdi:alarm-light";
   const armed = ARMED.has(state) || state === "pending" || state === "arming";
-  // A garage / storage alarm (Dom B7): the garage with a padlock or open.
+  // A garage / storage alarm: the garage with a padlock or open.
   if (customIcon && /^mdi:(warehouse|garage(-variant)?)$/.test(customIcon)) return armed ? "mdi:garage-lock" : "mdi:garage-open";
   if (customIcon) return customIcon;
   return armed ? "mdi:home-lock" : "mdi:home-lock-open";

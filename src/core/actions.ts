@@ -49,7 +49,7 @@ export const haptic = (node: EventTarget, type: string): void => {
 
 /**
  * Gentle ticks while a value is dragged (brightness, speed, position, volume…): the lightest
- * `selection` tick every `step` units (owner: every 1 %), `light` at either end of the scale, and
+ * `selection` tick every `step` units (every 1 %), `light` at either end of the scale, and
  * at most one tick per 25 ms so a fast drag does not buzz.
  */
 export class DragTicks {

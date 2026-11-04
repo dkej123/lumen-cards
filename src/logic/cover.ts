@@ -62,7 +62,7 @@ export function activeButton(s: CoverState): "open" | "stop" | "close" | null {
   return null;
 }
 
-/** Tilt 0–100 % as the slat angle of the design ("45°" at 50 %). */
+/** Tilt 0–100 % as the slat angle ("45°" at 50 %). */
 export const tiltDegrees = (pct: number): number => Math.round(pct * 0.9);
 
 const ICONS: Record<string, [open: string, closed: string]> = {
