@@ -1,5 +1,5 @@
 // Sections of the catalog page (dev/catalog.ts): every Lumen card with its variants on the demo
-// home of mock-hass.ts. Texts in Polish, the language of the page.
+// home of mock-hass.ts. Texts in Polish; catalog-en.ts holds the English ones.
 
 export interface Variant {
   /** Tab label. */

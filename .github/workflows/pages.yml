@@ -26,7 +26,7 @@ jobs:
       - name: Build the catalog page
         run: |
           npx vite build --config vite.catalog.config.ts --outDir _site
-          cp site/index.html _site/
+          cp -r site/. _site/
           cp dist/*.woff2 _site/
       - uses: actions/upload-pages-artifact@v4
         with:

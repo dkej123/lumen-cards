@@ -1,9 +1,29 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Karty Lumen</title>
+<title>Lumen Cards: glass-style cards for Home Assistant</title>
+<meta name="description" content="Beautiful, glass-style cards for your Home Assistant dashboard. Try every card live, in a made-up home.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>
+// The language before anything paints: ?lang= wins and is remembered, the default is English.
+(function () {
+  var q = new URLSearchParams(location.search).get("lang"), saved = null;
+  try {
+    saved = localStorage.getItem("lumen-page-lang");
+    if (q === "en" || q === "pl") localStorage.setItem("lumen-page-lang", q);
+  } catch (e) {}
+  var lang = q === "en" || q === "pl" ? q : saved;
+  if (lang === "pl") {
+    document.documentElement.lang = "pl";
+    document.documentElement.dataset.translating = "";
+    setTimeout(function () { delete document.documentElement.dataset.translating; }, 5000);
+  }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400..800&display=swap">
@@ -72,11 +92,18 @@ svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; }
 .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 
+html[lang="pl"] .hint::before { content: "Wypr\00F3buj"; }
+html[data-translating] .wrap { visibility: hidden; }
+
 /* top bar */
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in oklch, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.top .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
+.top .wrap { display: flex; align-items: center; gap: 12px; height: 60px; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 19px; text-decoration: none; margin-right: auto; }
-.brand i { width: 24px; height: 24px; border-radius: 8px; background: var(--sky); box-shadow: inset 0 0 0 1px var(--line-2); }
+.brand img { width: 28px; height: 28px; display: block; }
+.langs { display: flex; padding: 3px; border-radius: 11px; border: 1px solid var(--line-2); background: var(--paper); }
+.langs a { min-width: 34px; height: 30px; display: grid; place-items: center; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 13px; color: var(--fg-2); }
+.langs a:hover { color: var(--fg); }
+html[lang="en"] .langs a[hreflang="en"], html[lang="pl"] .langs a[hreflang="pl"] { background: var(--fg); color: var(--bg); }
 .top nav { display: flex; gap: 4px; }
 .top nav a { text-decoration: none; font-weight: 700; font-size: 14px; color: var(--fg-2); padding: 6px 10px; border-radius: 9px; }
 .top nav a:hover { color: var(--fg); background: var(--accent-soft); }
@@ -145,7 +172,7 @@ code, .pill { font-family: var(--mono); font-size: .86em; background: var(--acce
 .stage-grid { --span: 12; width: 100%; max-width: 540px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; }
 .stage-grid > * { grid-column: span var(--span); min-width: 0; }
 .hint { margin: 0; font-size: 14px; color: var(--fg-2); display: flex; gap: 8px; }
-.hint::before { content: "Wypróbuj"; flex: none; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 6px; height: fit-content; margin-top: 1px; }
+.hint::before { content: "Try it"; flex: none; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 6px; height: fit-content; margin-top: 1px; }
 .words { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .about { margin: 0; max-width: 60ch; }
 .need { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 15px; }
@@ -183,6 +210,14 @@ code, .pill { font-family: var(--mono); font-size: .86em; background: var(--acce
 .yaml pre { margin: 0; padding: 14px 16px; font: 400 13px/1.65 var(--mono); color: var(--ink-fg); overflow-x: auto; }
 .t-key { color: var(--t-key); } .t-str { color: var(--t-str); } .t-num { color: var(--t-num); } .t-dim { color: var(--ink-dim); }
 
+/* for agents */
+.agents { padding-block: 56px; border-top: 1px solid var(--line); }
+.agents-sub { font-size: 20px; letter-spacing: -.01em; margin: 32px 0 14px; }
+.agent-link { font-size: 14px; font-weight: 700; color: var(--accent); }
+#agents-cards .fold-title { font-family: var(--mono); font-weight: 500; font-size: 14px; }
+.md-box pre { max-height: 420px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.yaml-bar a.copy { text-decoration: none; }
+
 /* questions */
 .faq { padding-block: 56px 0; border-top: 1px solid var(--line); }
 .faq-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
@@ -210,93 +245,109 @@ body.ready .loading { display: none; }
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#start-strony"><i aria-hidden="true"></i>Lumen</a>
-    <nav aria-label="Strona">
-      <a href="#jak-zaczac">Jak zacząć</a>
-      <a href="#karty">Karty</a>
-      <a href="#pytania">Pytania</a>
+    <a class="brand" href="#top"><img src="logo.svg" alt="" width="28" height="28">Lumen</a>
+    <nav aria-label="Page">
+      <a href="#get-started" data-i18n="navStart">Get started</a>
+      <a href="#all-cards" data-i18n="navCards">Cards</a>
+      <a href="#for-agents" data-i18n="navAgents">For agents</a>
+      <a href="#questions" data-i18n="navFaq">Questions</a>
       <a href="https://github.com/dkej123/lumen-cards">GitHub</a>
     </nav>
-    <button id="theme" type="button" aria-label="Zmień motyw"></button>
+    <div class="langs" role="group" aria-label="Language">
+      <a href="?lang=en" hreflang="en" lang="en">EN</a>
+      <a href="?lang=pl" hreflang="pl" lang="pl">PL</a>
+    </div>
+    <button id="theme" type="button" aria-label="Change theme"></button>
   </div>
 </header>
 
-<div class="wrap" id="start-strony">
+<div class="wrap" id="top">
   <section class="hero">
     <div>
-      <span class="eyebrow">Karty do Home Assistant</span>
-      <h1>Dom, który dobrze wygląda na telefonie.</h1>
-      <p>Lumen to <span id="count">25</span> kart do dashboardu Home Assistant: światła, alarm, klimatyzacja, pogoda, domownicy i więcej. Ustawiasz je w zwykłym oknie edycji, bez pisania kodu.</p>
+      <span class="eyebrow" data-i18n="heroEyebrow">Cards for Home Assistant</span>
+      <h1 data-i18n="heroTitle">A home that looks good on every screen.</h1>
+      <p data-i18n="heroText">Lumen is <span id="count">25</span> cards for your Home Assistant dashboard: lights, alarm, air conditioning, weather, people and more. You set them up in the regular edit window, without writing code.</p>
       <div class="cta">
-        <a class="btn main" href="#karty">Zobacz wszystkie karty</a>
-        <a class="btn" href="#jak-zaczac">Jak zainstalować</a>
+        <a class="btn main" href="#all-cards" data-i18n="heroAll">See all cards</a>
+        <a class="btn" href="#get-started" data-i18n="heroInstall">How to install</a>
       </div>
-      <p class="try">Karty na tej stronie działają naprawdę, w wymyślonym domu. Śmiało klikaj. Kod do alarmu i zamka: <b>1234</b>.</p>
+      <p class="try" data-i18n="heroTry">The cards on this page really work, in a made-up home. Go ahead and click. The alarm and lock code is <b>1234</b>.</p>
     </div>
     <div class="hero-sky"><div id="hero-cards"></div></div>
   </section>
 
-  <section class="start" id="jak-zaczac">
+  <section class="start" id="get-started">
     <div class="section-head">
-      <span class="eyebrow">Jak zacząć</span>
-      <h2>Trzy kroki do pierwszej karty</h2>
-      <p>Potrzebujesz Home Assistant 2026.6 lub nowszego i sklepu z dodatkami HACS.</p>
+      <span class="eyebrow" data-i18n="startEyebrow">Get started</span>
+      <h2 data-i18n="startTitle">Three steps to your first card</h2>
+      <p data-i18n="startText">You need Home Assistant 2026.6 or newer and the HACS add-on store.</p>
     </div>
     <ol class="start-steps">
       <li>
-        <h3>Zainstaluj przez HACS</h3>
+        <h3 data-i18n="s1Title">Install with HACS</h3>
         <ol>
-          <li>Otwórz <b>HACS</b>, menu <b>⋮</b> → <b>Custom repositories</b>.</li>
-          <li>Wklej <code>https://github.com/dkej123/lumen-cards</code>, typ <b>Dashboard</b>, <b>Add</b>.</li>
-          <li>Wyszukaj <b>Lumen Cards</b> i kliknij <b>Download</b>.</li>
+          <li data-i18n="s1a">Open <b>HACS</b>, then the <b>⋮</b> menu → <b>Custom repositories</b>.</li>
+          <li data-i18n="s1b">Paste <code>https://github.com/dkej123/lumen-cards</code>, type <b>Dashboard</b>, <b>Add</b>.</li>
+          <li data-i18n="s1c">Search for <b>Lumen Cards</b> and click <b>Download</b>.</li>
         </ol>
         <details>
-          <summary>Bez HACS</summary>
-          <p>Skopiuj <code>lumen-cards.js</code> i pliki czcionek do <code>config/www/lumen-cards/</code>, potem w <b>Ustawienia → Dashboardy → ⋮ → Zasoby</b> dodaj <code>/local/lumen-cards/lumen-cards.js</code> jako moduł JavaScript.</p>
+          <summary data-i18n="s1NoHacs">Without HACS</summary>
+          <p data-i18n="s1Manual">Copy <code>lumen-cards.js</code> and the font files to <code>config/www/lumen-cards/</code>. Then in <b>Settings → Dashboards → ⋮ → Resources</b>, add <code>/local/lumen-cards/lumen-cards.js</code> as a JavaScript module.</p>
         </details>
       </li>
       <li>
-        <h3>Odśwież przeglądarkę</h3>
-        <p>Na komputerze <b>Ctrl+F5</b> (na Macu <b>Cmd+Shift+R</b>).</p>
-        <p>W aplikacji na telefonie: <b>Ustawienia → Aplikacja towarzysząca → Debugowanie → Zresetuj pamięć podręczną interfejsu</b>.</p>
+        <h3 data-i18n="s2Title">Refresh your browser</h3>
+        <p data-i18n="s2a">On a computer, press <b>Ctrl+F5</b> (on a Mac, <b>Cmd+Shift+R</b>).</p>
+        <p data-i18n="s2b">In the phone app: <b>Settings → Companion app → Debugging → Reset frontend cache</b>.</p>
       </li>
       <li>
-        <h3>Dodaj kartę</h3>
-        <p>Kliknij <b>ołówek</b> na dashboardzie, potem <b>+ Dodaj kartę</b> i wpisz <b>Lumen</b>. Wybierz kartę i swoje urządzenie, a podgląd od razu się zmieni.</p>
-        <p>W zakładce <b>Według encji</b> Lumen sam podpowie kartę do wybranego urządzenia.</p>
+        <h3 data-i18n="s3Title">Add a card</h3>
+        <p data-i18n="s3a">Click the <b>pencil</b> on your dashboard, then <b>+ Add card</b>, and type <b>Lumen</b>. Pick a card and your device, and the preview changes right away.</p>
+        <p data-i18n="s3b">On the <b>By entity</b> tab, Lumen suggests a card for the device you pick.</p>
       </li>
     </ol>
   </section>
 
-  <section class="all" id="karty">
+  <section class="all" id="all-cards">
     <div class="section-head">
-      <span class="eyebrow">Karty</span>
-      <h2>Wybierz kartę, żeby zobaczyć, co potrafi</h2>
-      <p>Każda karta sama zmniejsza się w wąskim miejscu, np. na telefonie albo w rzędzie kilku kart.</p>
+      <span class="eyebrow" data-i18n="cardsEyebrow">Cards</span>
+      <h2 data-i18n="cardsTitle">Pick a card to see what it can do</h2>
+      <p data-i18n="cardsText">Every card shrinks by itself in a narrow space, such as on a phone or in a row of several cards.</p>
     </div>
-    <div id="filters" role="group" aria-label="Pokaż karty"></div>
+    <div id="filters" role="group" aria-label="Show cards"></div>
     <div id="gallery"></div>
   </section>
 
-  <main id="cards"><p class="loading">Wczytuję karty…</p></main>
+  <main id="cards"><p class="loading" data-i18n="loading">Loading the cards…</p></main>
 
-  <section class="faq" id="pytania">
+  <section class="agents" id="for-agents">
     <div class="section-head">
-      <span class="eyebrow">Pytania</span>
-      <h2>Gdy coś nie działa</h2>
+      <span class="eyebrow" data-i18n="agentsEyebrow">For AI agents</span>
+      <h2 data-i18n="agentsTitle">Give your agent the full context</h2>
+      <p data-i18n="agentsText">Setting up a dashboard with an AI agent? Hand it this file. It says what Lumen is and what it can do, and links to each card's file with every option.</p>
+    </div>
+    <div id="agents-overview"></div>
+    <h3 class="agents-sub" data-i18n="agentsCards">Every card, with all its options</h3>
+    <div class="more" id="agents-cards"></div>
+  </section>
+
+  <section class="faq" id="questions">
+    <div class="section-head">
+      <span class="eyebrow" data-i18n="faqEyebrow">Questions</span>
+      <h2 data-i18n="faqTitle">When something does not work</h2>
     </div>
     <div class="faq-list">
-      <details><summary>Zainstalowałem, ale nie widzę kart.</summary><p>Odśwież przeglądarkę klawiszami Ctrl+F5 (na Macu Cmd+Shift+R). W aplikacji na telefonie: Ustawienia → Aplikacja towarzysząca → Debugowanie → Zresetuj pamięć podręczną interfejsu. Potem przy dodawaniu karty wpisz „Lumen”.</p></details>
-      <details><summary>Widzę „Custom element doesn't exist: lumen-…”.</summary><p>To samo: odśwież przeglądarkę. Jeśli dalej to widać, sprawdź Ustawienia → Dashboardy → ⋮ → Zasoby. Powinien tam być jeden wpis kończący się na lumen-cards.js.</p></details>
-      <details><summary>Na telefonie karty wyglądają inaczej niż na tablecie.</summary><p>Tak ma być: mała karta pokazuje wersję kompaktową. W ustawieniach karty możesz wybrać wygląd Pełny albo Kompaktowy, żeby się nie przełączała.</p></details>
-      <details><summary>Jak zrobić tło z prawdziwą pogodą?</summary><p>Dodaj kartę Lumen · Tło pogodowe raz w każdym widoku i wybierz w niej swoją prognozę. Niebo za kartami pokaże słońce, chmury, deszcz albo śnieg, w dzień i w nocy.</p></details>
-      <details><summary>Pływający przycisk coś zasłania.</summary><p>Kilka pływających przycisków samo ustawia się jeden nad drugim. Żeby podnieść je wyżej, np. nad dolny pasek nawigacji, dodaj do motywu Home Assistant lumen-cards-fab-bottom: 90px.</p></details>
-      <details><summary>Czy mogę zmienić kolory?</summary><p>Tak. Każda karta ma w ustawieniach kolor akcentu i poświaty. Dla wszystkich kart naraz ustaw je w motywie Home Assistant.</p></details>
-      <details><summary>Czy da się obsługiwać karty klawiaturą?</summary><p>Tak. Tab przechodzi między kartami, Enter albo spacja to dotknięcie, Shift+Enter to przytrzymanie. Strzałki zmieniają jasność, a Escape zamyka okna.</p></details>
+      <details><summary data-i18n="q1">I installed it, but I do not see the cards.</summary><p data-i18n="a1">Refresh your browser with Ctrl+F5 (on a Mac, Cmd+Shift+R). In the phone app: Settings → Companion app → Debugging → Reset frontend cache. Then type “Lumen” when adding a card.</p></details>
+      <details><summary data-i18n="q2">I see “Custom element doesn't exist: lumen-…”.</summary><p data-i18n="a2">The same fix: refresh your browser. If you still see it, check Settings → Dashboards → ⋮ → Resources. There should be one entry ending in lumen-cards.js.</p></details>
+      <details><summary data-i18n="q3">Cards look different on a phone and on a tablet.</summary><p data-i18n="a3">That is intended: a small card shows its compact version. In the card's settings you can choose the Full or Compact look so it does not switch.</p></details>
+      <details><summary data-i18n="q4">How do I get a background with the real weather?</summary><p data-i18n="a4">Add the Lumen · Weather background card once per view and pick your forecast in it. The sky behind the cards shows the sun, clouds, rain or snow, by day and by night.</p></details>
+      <details><summary data-i18n="q5">A floating button covers something.</summary><p data-i18n="a5">Several floating buttons stack above each other by themselves. To lift them higher, for example above a bottom navigation bar, add lumen-cards-fab-bottom: 90px to your Home Assistant theme.</p></details>
+      <details><summary data-i18n="q6">Can I change the colours?</summary><p data-i18n="a6">Yes. Each card has accent and glow colours in its settings. To change them for all cards at once, set them in your Home Assistant theme.</p></details>
+      <details><summary data-i18n="q7">Can I use the cards with a keyboard?</summary><p data-i18n="a7">Yes. Tab moves between cards, Enter or Space is a tap, and Shift+Enter is a hold. Arrow keys change the brightness, and Escape closes windows.</p></details>
     </div>
   </section>
 
-  <footer>Lumen Cards · karty na tej stronie sterują wymyślonym domem, bez połączenia z Twoim Home Assistant.</footer>
+  <footer data-i18n="footer">Lumen Cards · the cards on this page control a made-up home, with no connection to your Home Assistant.</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>

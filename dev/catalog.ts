@@ -1,7 +1,7 @@
 // Catalog page for Lumen users: a gallery of every card, then one section per card – the live card
 // on the demo home with its looks, what it is for, how you use it, how to add it and what you can
 // set (from the card's visual editor); the YAML only on request. Built to one module next to the
-// fonts (see the page in the catalog artifact); js-yaml comes from the page as the global `jsyaml`.
+// fonts (site/index.html, deployed by .github/workflows/pages.yml); js-yaml comes from the page as the global `jsyaml`.
 import {
   mdiAirPurifier,
   mdiBicycleElectric,
@@ -30,11 +30,27 @@ import {
   mdiWindowOpenVariant,
 } from "@mdi/js";
 import type { HassLike } from "../src/hass/types";
-import { SECTIONS, type Section, type Variant } from "./catalog-data";
-import { GUIDE, type Gesture } from "./catalog-guide";
+import overviewMd from "../docs/agents/overview.md?raw";
+import { SECTIONS as SECTIONS_PL, type Section, type Variant } from "./catalog-data";
+import { EN, GUIDE_EN, translated } from "./catalog-en";
+import { GUIDE as GUIDE_PL, type Gesture } from "./catalog-guide";
+import { PAGE_PL } from "./catalog-page-pl";
 import { createDemoHome } from "./mock-hass";
 
 declare const jsyaml: { dump(value: unknown, opts?: Record<string, unknown>): string };
+
+// The page's inline script has picked the language: English unless the visitor chose Polish.
+const lang = document.documentElement.lang === "pl" ? "pl" : "en";
+const tr = (en: string, pl: string) => (lang === "pl" ? pl : en);
+const SECTIONS = lang === "pl" ? SECTIONS_PL : translated(SECTIONS_PL);
+const GUIDE = lang === "pl" ? GUIDE_PL : GUIDE_EN;
+if (lang === "pl") {
+  document.title = "Karty Lumen: szklane karty do Home Assistant";
+  document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((n) => (n.innerHTML = PAGE_PL[n.dataset.i18n!]));
+}
+delete document.documentElement.dataset.translating;
+// The switch keeps the place on the page.
+document.querySelectorAll<HTMLAnchorElement>(".langs a").forEach((a) => a.addEventListener("click", () => (a.href = `?lang=${a.hreflang}${location.hash}`)));
 
 // Weather effects off: the page is the background here.
 try {
@@ -71,10 +87,10 @@ customElements.define(
   },
 );
 
-await import("../src/lumen-cards");
-// The settings lists read their labels before any card has set the language from hass.
+// The settings lists and the picker names read their labels before any card has set the language from hass.
 const { setLanguage } = await import("../src/core/i18n");
-setLanguage("pl");
+setLanguage(lang);
+await import("../src/lumen-cards");
 
 type Card = HTMLElement & { hass: HassLike; setConfig(c: unknown): void };
 type Field = { name?: string; title?: string; selector?: Record<string, Record<string, unknown> | null>; schema?: Field[] };
@@ -82,14 +98,14 @@ type CardForm = { schema: Field[]; computeLabel(f: Field): string | undefined; c
 
 const root = document.documentElement;
 const isDark = () => (root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches);
-const home = createDemoHome({ lang: "pl", dark: isDark() });
+const home = createDemoHome({ lang, dark: isDark() });
 const cards = new Set<Card>();
 home.listen((h) => cards.forEach((c) => (c.hass = h)));
 const themeBtn = document.getElementById("theme") as HTMLButtonElement;
 const syncTheme = () => {
   home.setDark(isDark());
   themeBtn.innerHTML = svg(isDark() ? mdiWhiteBalanceSunny : mdiWeatherNight);
-  themeBtn.setAttribute("aria-label", isDark() ? "Jasny motyw" : "Ciemny motyw");
+  themeBtn.setAttribute("aria-label", isDark() ? tr("Light theme", "Jasny motyw") : tr("Dark theme", "Ciemny motyw"));
 };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
 new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
@@ -159,11 +175,11 @@ function highlight(src: string): string {
 }
 
 const GESTURE: Record<Gesture, [string, string]> = {
-  tap: [mdiGestureTap, "Dotknij"],
-  drag: [mdiGestureSwipeHorizontal, "Przesuń"],
-  hold: [mdiGestureTapHold, "Przytrzymaj"],
-  icon: [mdiCursorDefaultClickOutline, "Ikona"],
-  see: [mdiEyeOutline, "Spójrz"],
+  tap: [mdiGestureTap, tr("Tap", "Dotknij")],
+  drag: [mdiGestureSwipeHorizontal, tr("Slide", "Przesuń")],
+  hold: [mdiGestureTapHold, tr("Hold", "Przytrzymaj")],
+  icon: [mdiCursorDefaultClickOutline, tr("Icon", "Ikona")],
+  see: [mdiEyeOutline, tr("Look", "Spójrz")],
 };
 
 /** What the settings window of the card offers, in its own words (labels and help of its editor). */
@@ -232,19 +248,26 @@ function howToAdd(s: Section): HTMLElement {
     li.innerHTML = html;
     ol.append(li);
   };
-  step("Otwórz dashboard i kliknij <b>ołówek</b> w prawym górnym rogu.");
-  step("Kliknij <b>+ Dodaj kartę</b>.");
-  step(`Wpisz w wyszukiwarkę <b>Lumen</b> i wybierz ${names.map((n) => `<span class="pill">${n}</span>`).join(" albo ")}.`);
-  step(s.card === "spacer" ? "Zostaw wysokość pustą, żeby karta dopasowała się do pływających przycisków, albo wpisz liczbę pikseli. Kliknij <b>Zapisz</b>." : s.card === "title" || s.card === "greeting" ? "Wpisz tekst albo zostaw domyślny i kliknij <b>Zapisz</b>." : "W pierwszym polu wybierz swoje urządzenie. Podgląd zmieni się od razu. Kliknij <b>Zapisz</b>.");
+  step(tr("Open your dashboard and click the <b>pencil</b> in the top right corner.", "Otwórz dashboard i kliknij <b>ołówek</b> w prawym górnym rogu."));
+  step(tr("Click <b>+ Add card</b>.", "Kliknij <b>+ Dodaj kartę</b>."));
+  const picks = names.map((n) => `<span class="pill">${n}</span>`).join(tr(" or ", " albo "));
+  step(tr(`Type <b>Lumen</b> in the search box and pick ${picks}.`, `Wpisz w wyszukiwarkę <b>Lumen</b> i wybierz ${picks}.`));
+  step(
+    s.card === "spacer"
+      ? tr("Leave the height empty so the card matches the floating buttons, or enter a number of pixels. Click <b>Save</b>.", "Zostaw wysokość pustą, żeby karta dopasowała się do pływających przycisków, albo wpisz liczbę pikseli. Kliknij <b>Zapisz</b>.")
+      : s.card === "title" || s.card === "greeting"
+        ? tr("Type your text or keep the default, and click <b>Save</b>.", "Wpisz tekst albo zostaw domyślny i kliknij <b>Zapisz</b>.")
+        : tr("Pick your device in the first field. The preview changes right away. Click <b>Save</b>.", "W pierwszym polu wybierz swoje urządzenie. Podgląd zmieni się od razu. Kliknij <b>Zapisz</b>."),
+  );
   return ol;
 }
 
 function yamlBox(s: Section, get: () => Variant): HTMLElement {
   const box = el("div", "yaml");
   const bar = el("div", "yaml-bar");
-  bar.append(el("span", "", "Wklej w oknie karty: ⋮ → Edytuj w YAML"));
+  bar.append(el("span", "", tr("Paste it in the card's window: ⋮ → Edit in YAML", "Wklej w oknie karty: ⋮ → Edytuj w YAML")));
   const copy = el("button", "copy");
-  const label = (ok: boolean) => (copy.innerHTML = `${svg(ok ? mdiCheck : mdiContentCopy)}<span>${ok ? "Skopiowano" : "Kopiuj"}</span>`);
+  const label = (ok: boolean) => (copy.innerHTML = `${svg(ok ? mdiCheck : mdiContentCopy)}<span>${ok ? tr("Copied", "Skopiowano") : tr("Copy", "Kopiuj")}</span>`);
   label(false);
   const pre = el("pre");
   copy.addEventListener("click", () => {
@@ -261,6 +284,37 @@ function yamlBox(s: Section, get: () => Variant): HTMLElement {
   return box;
 }
 
+const REPO_RAW = "https://raw.githubusercontent.com/dkej123/lumen-cards/main";
+const CARD_DOCS = import.meta.glob<string>("../docs/agents/cards/*.md", { query: "?raw", import: "default", eager: true });
+
+/** A Markdown file for agents, always in English: copy it, or open the file itself. */
+function mdBox(file: string, text: string): HTMLElement {
+  const box = el("div", "yaml md-box");
+  const bar = el("div", "yaml-bar");
+  bar.append(el("span", "", file.split("/").pop()!));
+  const open = el("a", "copy", tr("Open .md", "Otwórz .md"));
+  open.href = `${REPO_RAW}/${file}`;
+  open.target = "_blank";
+  open.rel = "noopener";
+  const copy = el("button", "copy");
+  const label = (ok: boolean) => (copy.innerHTML = `${svg(ok ? mdiCheck : mdiContentCopy)}<span>${ok ? tr("Copied", "Skopiowano") : tr("Copy", "Kopiuj")}</span>`);
+  label(false);
+  const pre = el("pre", "", text.replace(/^<!-- GENERATED[^\n]*\n\n/, ""));
+  pre.tabIndex = 0;
+  copy.addEventListener("click", () => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        label(true);
+        window.setTimeout(() => label(false), 1600);
+      },
+      () => getSelection()?.selectAllChildren(pre),
+    );
+  });
+  bar.append(open, copy);
+  box.append(bar, pre);
+  return box;
+}
+
 function sectionView(s: Section): HTMLElement {
   const g = GUIDE[s.id];
   const sec = el("section", "card");
@@ -273,7 +327,7 @@ function sectionView(s: Section): HTMLElement {
   const demo = el("div", "demo");
   const looks = el("div", "looks");
   looks.setAttribute("role", "tablist");
-  looks.setAttribute("aria-label", `Wygląd karty ${s.name}`);
+  looks.setAttribute("aria-label", tr(`Looks of the ${s.name} card`, `Wygląd karty ${s.name}`));
   const stage = el("div", "stage");
   const grid = el("div", "stage-grid");
   stage.append(grid);
@@ -285,7 +339,7 @@ function sectionView(s: Section): HTMLElement {
   const text = el("div", "words");
   text.append(el("p", "about", g.about));
   const need = el("p", "need");
-  need.append(el("span", "", "Potrzebujesz"), el("b", "", g.need));
+  need.append(el("span", "", tr("You need", "Potrzebujesz")), el("b", "", g.need));
   const how = el("ul", "how");
   for (const [k, t] of g.controls) {
     const li = el("li");
@@ -293,7 +347,10 @@ function sectionView(s: Section): HTMLElement {
     li.append(el("span", "", t));
     how.append(li);
   }
-  text.append(need, el("h3", "", "Jak używać"), how);
+  const agentLink = el("a", "agent-link", tr("Every option, for AI agents", "Wszystkie opcje, dla agentów AI"));
+  agentLink.href = `#agent-lumen-${s.card}-card`;
+  agentLink.addEventListener("click", () => document.querySelector<HTMLDetailsElement>(agentLink.hash)?.setAttribute("open", ""));
+  text.append(need, el("h3", "", tr("How to use it", "Jak używać")), how, agentLink);
 
   const body = el("div", "card-body");
   body.append(demo, text);
@@ -322,10 +379,10 @@ function sectionView(s: Section): HTMLElement {
   });
 
   const more = el("div", "more");
-  more.append(fold("Jak dodać na swój dashboard", "4 kroki, bez pisania kodu", howToAdd(s)));
+  more.append(fold(tr("How to add it to your dashboard", "Jak dodać na swój dashboard"), tr("4 steps, no code", "4 kroki, bez pisania kodu"), howToAdd(s)));
   const set = settings(s);
-  if (set) more.append(fold("Co możesz ustawić", `${set.count} ${set.count < 5 ? "ustawienia" : "ustawień"} w oknie karty`, set.body));
-  more.append(fold("Kod YAML", "dla zaawansowanych", yaml));
+  if (set) more.append(fold(tr("What you can set", "Co możesz ustawić"), tr(`${set.count} ${set.count === 1 ? "setting" : "settings"} in the card's window`, `${set.count} ${set.count < 5 ? "ustawienia" : "ustawień"} w oknie karty`), set.body));
+  more.append(fold(tr("YAML code", "Kod YAML"), tr("for advanced users", "dla zaawansowanych"), yaml));
 
   sec.append(head, body, more);
   return sec;
@@ -346,8 +403,18 @@ function tile(s: Section): HTMLElement {
 }
 
 // Groups in the order of the page; sections keep their order inside a group.
-const ORDER = ["Oświetlenie", "Dom", "Bezpieczeństwo", "Klimat", "Rozrywka", "Układ"];
+const ORDER = ["Oświetlenie", "Dom", "Bezpieczeństwo", "Klimat", "Rozrywka", "Układ"].map((g) => (lang === "pl" ? g : EN[g]));
 const groups = ORDER.map((name) => [name, SECTIONS.filter((s) => s.group === name)] as const).filter(([, list]) => list.length);
+
+// for agents: the overview, then one file per card (all of them, also those without a section of their own)
+document.getElementById("agents-overview")!.append(mdBox("docs/agents/overview.md", overviewMd));
+const agentList = document.getElementById("agents-cards")!;
+for (const [path, text] of Object.entries(CARD_DOCS).sort(([a], [b]) => (a < b ? -1 : 1))) {
+  const file = path.split("/").pop()!;
+  const row = fold(file.replace(/\.md$/, ""), "", mdBox(`docs/agents/cards/${file}`, text));
+  row.id = `agent-${file.replace(/\.md$/, "")}`;
+  agentList.append(row);
+}
 
 // hero: a small dashboard
 const hero = document.getElementById("hero-cards")!;
@@ -368,12 +435,13 @@ const filters = document.getElementById("filters")!;
 const gallery = document.getElementById("gallery")!;
 const tiles: [string, HTMLElement][] = [];
 for (const [name, list] of groups) for (const s of list) tiles.push([name, gallery.appendChild(tile(s))]);
-for (const name of ["Wszystkie", ...groups.map(([n]) => n)]) {
+const ALL = tr("All", "Wszystkie");
+for (const name of [ALL, ...groups.map(([n]) => n)]) {
   const b = el("button", "filter", name);
-  b.setAttribute("aria-pressed", String(name === "Wszystkie"));
+  b.setAttribute("aria-pressed", String(name === ALL));
   b.addEventListener("click", () => {
     filters.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    for (const [g, t] of tiles) t.hidden = name !== "Wszystkie" && g !== name;
+    for (const [g, t] of tiles) t.hidden = name !== ALL && g !== name;
   });
   filters.append(b);
 }

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lumen">
+  <defs>
+    <linearGradient id="sky" x1="8" y1="2" x2="56" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#252C4C"/>
+      <stop offset="1" stop-color="#4A4676"/>
+    </linearGradient>
+    <linearGradient id="lit" x1="7" y1="32" x2="57" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#FFB757" stop-opacity=".62"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="42" cy="32" r="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFC56E" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#FFA647" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#sky)"/>
+  <circle cx="42" cy="32" r="24" fill="url(#glow)"/>
+  <rect x="7" y="18" width="50" height="28" rx="14" fill="url(#lit)" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/>
+  <circle cx="43" cy="32" r="10" fill="#FFB757" stroke="#FFEBC9" stroke-width="2"/>
+</svg>

@@ -4,6 +4,8 @@ Lumen Cards is a library of glass-style custom cards for Home Assistant Lovelace
 
 - Part 1: building or changing a dashboard with Lumen cards.
 - Part 2: changing the library's code.
+- [docs/agents/overview.md](docs/agents/overview.md): what the project is and what it can do, in one file, with links to each card.
+- [docs/agents/cards/](docs/agents/cards/): one file per card, with every option of that card.
 - [docs/agents/cards.md](docs/agents/cards.md): every card and every field, generated from the code. Use it for option names and allowed values; do not guess them.
 - README.md: end-user prose and the fallback values of each setting.
 
@@ -321,7 +323,7 @@ No theme variable sets the accent. Use `accent_color` per card, despite the `lum
 | `dev/` | Demo (`demo.ts`, `index.html`), mock `hass` (`mock-hass.ts`), catalog (`catalog.ts`, `catalog-data.ts`, `catalog-guide.ts`) |
 | `test/` | vitest. `helpers.ts`: entities, recording `hass` mock, mounting cards |
 | `dist/` | Built bundle and fonts, **committed** |
-| `docs/agents/cards.md` | **Generated** by `test/agent-docs.test.ts`. Do not edit |
+| `docs/agents/` | `overview.md`, `cards.md`, `cards/<tag>.md`: **generated** by `test/agent-docs.test.ts`. Do not edit |
 
 ## Commands
 
@@ -330,7 +332,7 @@ No theme variable sets the accent. Use `accent_color` per card, despite the `lum
 | `npx vitest run` | All tests |
 | `npx tsc --noEmit -p .` | Type check, including `test/` and `dev/` |
 | `npm run build` | Icons + `tsc --noEmit` + bundle into `dist/`. Must succeed |
-| `npm run docs:agents` | Rewrites `docs/agents/cards.md` and the compact table in this file |
+| `npm run docs:agents` | Rewrites `docs/agents/` and the compact table in this file |
 | `npm run dev` | Demo with mock devices at `http://localhost:5174/dev/index.html` (options in the README) |
 
 **Commit `dist/` with every source change.** CI runs the build and tests, then fails on `git diff --exit-code -- dist/`.

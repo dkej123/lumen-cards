@@ -1,8 +1,10 @@
+<p align="center"><img src="site/logo.svg" alt="" width="96"></p>
+
 # Lumen Cards
 
 **Beautiful, glass-style cards for your Home Assistant dashboard. Every card can be set up with clicks, no code needed.**
 
-[Polski](README.pl.md) · **[Try every card live](https://dkej123.github.io/lumen-cards/)** (the page is in Polish)
+[Polski](README.pl.md) · **[Try every card live](https://dkej123.github.io/lumen-cards/)** · [For AI agents](docs/agents/overview.md)
 
 <p align="center">
   <img src="docs/images/dashboard-desktop.jpg" alt="A tablet / desktop dashboard built from Lumen Cards" width="820"><br>
