@@ -13,7 +13,6 @@ Lumen · Greeting: Date and a greeting by time of day
 |---|---|---|---|---|---|---|
 | `show_date` |  | boolean |  | `true` | Show date |  |
 | `name` |  | text |  |  | Name |  |
-| `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |

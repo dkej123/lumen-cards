@@ -491,3 +491,27 @@ describe("button card: feedback without status_entity counts as no feedback", ()
     el.remove();
   });
 });
+
+describe("greeting card", () => {
+  it("follows the clock, whatever the sun says", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date(2026, 10, 4, 23, 0));
+      // Sun already low in the afternoon of a Polish winter: no "Good night" at 16:30.
+      const h = mockHass([ent("sun.sun", "below_horizon", { elevation: -20 })]);
+      const late = await mountCard("greeting", {}, h);
+      expect(late.shadowRoot!.textContent).toContain("Good night");
+      vi.setSystemTime(new Date(2026, 10, 4, 16, 30));
+      const day = await mountCard("greeting", {}, h);
+      expect(day.shadowRoot!.textContent).toContain("Good afternoon");
+      expect(day.shadowRoot!.textContent).not.toContain("Good night");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("no longer has a sun field", async () => {
+    const cls = customElements.get("lumen-greeting-card") as unknown as { getConfigForm(): { schema: unknown[] } };
+    expect(JSON.stringify(cls.getConfigForm().schema)).not.toContain("sun_entity");
+  });
+});

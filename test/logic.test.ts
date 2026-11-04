@@ -6,6 +6,7 @@ import { cssColor, tone } from "../src/core/styles";
 import type { HassEntity } from "../src/hass/types";
 import { airQuality } from "../src/logic/air";
 import { alertToShow } from "../src/logic/alert";
+import { greetingKey } from "../src/logic/greeting";
 import { ctPresets, kelvinRange, lightPower } from "../src/logic/light";
 import { presence } from "../src/logic/presence";
 import { activeFeedback } from "../src/logic/response";
@@ -244,5 +245,17 @@ describe("defaultTap", () => {
     expect(defaultTap("automation.a")).toEqual({ kind: "run", domain: "automation", service: "trigger" });
     for (const id of ["switch.a", "light.a", "climate.a", "humidifier.a", "cover.a"]) expect(defaultTap(id)).toEqual({ kind: "toggle" });
     for (const id of ["lock.a", "alarm_control_panel.a", "sensor.a", "binary_sensor.a", "weather.a"]) expect(defaultTap(id)).toEqual({ kind: "more-info" });
+  });
+});
+
+describe("greetingKey", () => {
+  const at = (h: number, m = 0) => new Date(2026, 10, 4, h, m);
+  it.each([
+    [5, 0, "morning"], [11, 59, "morning"],
+    [12, 0, "day"], [17, 59, "day"],
+    [18, 0, "evening"], [21, 59, "evening"],
+    [22, 0, "night"], [0, 0, "night"], [4, 59, "night"],
+  ])("%i:%i is %s", (h, m, part) => {
+    expect(greetingKey(at(h, m))).toBe(`card.greeting.${part}`);
   });
 });

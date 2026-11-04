@@ -3,21 +3,20 @@ import { GRID, LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { advanced, appearance, form } from "../core/form";
 import { locale, t } from "../core/i18n";
 import { registerCard } from "../core/register";
-import { GREETING, phaseFromSun } from "../logic/sky";
+import { greetingKey } from "../logic/greeting";
 
 export interface HeaderConfig extends BaseConfig {
   show_date?: boolean;
-  sun_entity?: string;
   /** Name after the greeting; default: the logged-in user. */
   name?: string;
 }
 
-/** Greeting by day phase + date (design header). */
+/** Greeting by the time of day + date (design header). */
 export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
   protected static grid = GRID.full;
   protected static cardSize = 2;
   protected entityIds() {
-    return [this._config.sun_entity ?? "sun.sun"];
+    return [];
   }
 
   protected defaults() {
@@ -30,8 +29,7 @@ export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
   }
 
   private greeting() {
-    const phase = phaseFromSun(this.entity(this._config.sun_entity ?? "sun.sun"));
-    return `${t(GREETING[phase])}, ${this._config.name ?? this._hass?.user?.name ?? ""}`;
+    return `${t(greetingKey())}, ${this._config.name ?? this._hass?.user?.name ?? ""}`;
   }
 
   protected renderCard() {
@@ -57,7 +55,6 @@ export class LumenGreetingCard extends LumenBaseCard<HeaderConfig> {
     return form([
       { name: "show_date", default: true, selector: { boolean: {} } },
       { name: "name", selector: { text: {} } },
-      { name: "sun_entity", selector: { entity: { domain: "sun" } } },
       advanced([], { haptics: false }),
       appearance({ effects: false, layout: "screen", accent: false }),
     ]);
