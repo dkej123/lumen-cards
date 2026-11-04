@@ -25,7 +25,7 @@ export interface Section {
   variants: Variant[];
 }
 
-const reminder = { entity: "input_boolean.bike_battery", name: "Rower", icon: "mdi:bicycle-electric", color: "danger", value: "Bateria {value}%", value_entity: "sensor.bike_battery", title: "Naładuj rower", message: "Bateria spadła poniżej 20 %." };
+const reminder = { entity: "input_boolean.bike_battery", name: "Rower", icon: "mdi:bicycle-electric", color: "danger", value: "Bateria {value}%", value_entity: "sensor.bike_battery", title: "Naładuj rower", message: "Bateria spadła poniżej 20 %.", done: true };
 const purifierFull = {
   entity: "fan.air_purifier",
   name: "Oczyszczacz",
@@ -35,7 +35,7 @@ const purifierFull = {
   humidifier_when: { attribute: "function", contains: "Humidification" },
   index: { name: "Alergeny", entity: "sensor.air_purifier_allergens", thresholds: [3, 6, 9], labels: ["Dobry", "Średni", "Słaby", "Bardzo słaby"], max: 12 },
   filters: [{ name: "Wstępny", attribute: "pre_filter", unit: "h" }, { name: "HEPA", attribute: "hepa_filter", unit: "h" }, { name: "Węglowy", attribute: "carbon_filter", unit: "h" }, { name: "Knot", attribute: "wick_filter", unit: "h" }],
-  controls: [
+  service_controls: [
     { name: "Wyłącznik czasowy", attribute: "timer", service: "demo_purifier.set_timer", field: "hours", min: 0, max: 12, min_label: "Wył." },
     { name: "Jasność panelu", attribute: "light_brightness", service: "demo_purifier.set_light_brightness", field: "level", options: [0, 25, 50, 75, 100] },
     { name: "Podświetlenie wyświetlacza", attribute: "display_light", service: "demo_purifier.set_display_light", field: "light" },

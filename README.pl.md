@@ -14,10 +14,10 @@
 
 Co dostajesz:
 
-- **Karty na codzienne sprawy w domu:** światła, domownicy, alarm, zamki, drzwi, brama, temperatury, jakość powietrza, klimatyzacja, przypomnienia, rolety, muzyka, wentylatory, listy wyboru, kalendarze, pasek nawigacji i pop-upy.
+- **Karty na codzienne sprawy w domu:** światła, domownicy, alarm, zamki, drzwi, brama, temperatury, jakość powietrza, klimatyzacja, przypomnienia, rolety, muzyka, wentylatory, listy wyboru, kalendarze, pasek nawigacji, pop-upy i stosy.
 - **Pogoda na dashboardzie.** Za kartami pada deszcz, sypie śnieg, snuje się mgła albo świeci słońce, a krople i śnieg osiadają też na samych kartach.
 - **Duże, wygodne przyciski.** Światło włączasz dotknięciem, ściemniasz przesuwając po nim palcem, a przytrzymanie otwiera jasność i kolor.
-- **Telefon i duży ekran.** Karta wciśnięta w małe miejsce sama zamienia się w niski kompaktowy kafel (44 px, równy w wierszu).
+- **Telefon i duży ekran.** Karta wciśnięta w małe miejsce sama zamienia się w niski kompaktowy kafel.
 - **Tryb jasny i ciemny.** Karty dopasowują się do ustawień Home Assistant.
 - **Po polsku i po angielsku.** Język kart i ich ustawień jest brany z Twojego profilu w Home Assistant.
 
@@ -59,22 +59,22 @@ To wszystko. HACS sam zgłosi Home Assistantowi nowe karty.
 <details>
 <summary>Instalacja bez HACS</summary>
 
-1. Pobierz najnowsze wydanie ze strony Releases albo pliki z folderu `dist/`: `lumen-cards.js` i wszystkie pliki czcionek `.woff2`.
+1. Pobierz pliki z folderu `dist/` tego repozytorium: `lumen-cards.js` i wszystkie pliki czcionek `.woff2`.
 2. Skopiuj je do folderu `config/www/lumen-cards/` w Home Assistant.
-3. Wejdź w **Ustawienia → Dashboardy → ⋮ → Zasoby → Dodaj zasób**, wpisz `/local/lumen-cards/lumen-cards.js` i wybierz **Moduł JavaScript**.
+3. Wejdź w **Ustawienia → Panele → ⋮ → Zasoby → Dodaj zasób**, wpisz `/local/lumen-cards/lumen-cards.js` i wybierz **Moduł JavaScript**.
 4. Odśwież przeglądarkę.
 </details>
 
 ## Pierwsza karta
 
-1. Otwórz dashboard i kliknij **ołówek** w prawym górnym rogu, żeby przejść do edycji.
+1. Otwórz dashboard (polski Home Assistant nazywa go panelem) i kliknij **ołówek** w prawym górnym rogu, żeby przejść do edycji.
 2. Kliknij **+ Dodaj kartę**.
 3. Wpisz **Lumen** w wyszukiwarkę. Zobaczysz wszystkie karty Lumen z podglądem na żywo.
    Możesz też wejść w zakładkę **Według encji** i wybrać urządzenie, np. światło. Lumen podpowie pasującą kartę.
 4. Wybierz kartę. Otworzy się okno ustawień. W pierwszym polu wybierz swoje urządzenie, a podgląd od razu się zmieni.
 5. Kliknij **Zapisz**.
 
-Każde ustawienie ma swoje pole w tym oknie. Kodu nie trzeba pisać nigdy.
+Każde ustawienie ma swoje pole w tym oknie, więc kodu nie trzeba pisać nigdy. Jedyny wyjątek to własne nazwy poziomów jakości powietrza (`levels`), dostępne tylko w YAML.
 
 > **Wskazówka:** żeby powiększyć albo zmniejszyć kartę, w trybie edycji przeciągnij jej róg. Wąska karta sama przełączy się na wersję kompaktową.
 
@@ -95,15 +95,15 @@ Duży kafel jednego światła, który świeci kolorem żarówki.
 - **Kółko** po prawej zmienia biel na cieplejszą lub chłodniejszą.
 - **Dotknięcie ikony albo przytrzymanie** otwiera pełne sterowanie: jasność, cztery odcienie bieli rozłożone na zakresie Twojej żarówki, a w kolorowych żarówkach osiem kolorów i koło barw.
 
-Grupa świateł pokazuje, ile z nich świeci („2 z 3 włączone”). W małym miejscu (poniżej 220 px) kafel robi się niższy, a nazwa może zająć dwie linie.
+Grupa świateł pokazuje, ile z nich świeci („Włączone: 2 z 3”). W małym miejscu (poniżej 220 px) kafel robi się niższy, a nazwa może zająć dwie linie.
 
-<img src="docs/images/light-sheet.png" alt="Panel jasności, odcieni bieli i kolorów" width="260">
+<img src="docs/images/light-sheet.png" alt="Okno jasności, odcieni bieli i kolorów" width="260">
 
 **Kilka żarówek za osobnymi włącznikami** (np. dwa kinkiety, każdy na swoim kanale włącznika). Wybierz grupę żarówek jako światło, a włączniki w polu **Zasilanie (kilka przekaźników)**. Powstaje jedna karta:
 
 - **Małe przyciski na karcie**, po jednym na włącznik, włączają i wyłączają każdy z nich osobno. Tylko one sterują prądem.
 - **Dotknięcie karty** nic nie robi.
-- **Gdy świeci choć jeden kinkiet**, przesunięcie palcem ustawia jasność, a kółko i ikona barwę całej grupy. Karta pisze wtedy np. „1 z 2 włączone”.
+- **Gdy świeci choć jeden kinkiet**, przesunięcie palcem ustawia jasność, a kółko i ikona barwę całej grupy. Karta pisze wtedy np. „Włączone: 1 z 2”.
 - **Gdy oba są wyłączone**, karta jest wyłączona, a jasności i barwy nie da się zmienić. Żarówka bez prądu nie odbierze polecenia.
 
 Żarówka, która w chwili zmiany była bez prądu, po włączeniu może mieć poprzednią jasność i barwę.
@@ -150,15 +150,15 @@ Domownik: zdjęcie (albo pierwsza litera imienia na kolorze dobranym do imienia)
 
 <img src="docs/images/alarm.png" alt="Alarm uzbrojony i rozbrojony" width="480">
 
-Stan alarmu w jednym spojrzeniu. Każdy tryb uzbrojenia jest zielony (ikona i podpis mówią: w domu, poza domem, noc, urlop), uzbrajanie ma żółty pasek odliczania z przyciskiem **Anuluj**, czas na wejście jest pomarańczowy i pulsuje, a wzbudzony alarm barwi kartę na czerwono.
+Stan alarmu w jednym spojrzeniu. Każdy tryb uzbrojenia jest zielony (ikona i podpis mówią: w domu, poza domem, noc, urlop), uzbrajanie ma żółty pasek odliczania z przyciskiem **Anuluj**, czas na wejście jest pomarańczowy i pulsuje, a trwający alarm barwi kartę na czerwono.
 
 **Uzbrój** otwiera klawiaturę z trybami, które obsługuje Twój alarm, **Rozbrój** samą klawiaturę. Przy błędnym kodzie kropki się trzęsą. Alarmy bez kodu przełączają się od razu.
 
 <img src="docs/images/alarm-keypad.png" alt="Klawiatura z trybami W domu, Poza domem i Noc" width="260">
 
-Kiedy alarm się włączy, cały ekran dodatkowo pulsuje na czerwono:
+Podczas alarmu cały ekran dodatkowo pulsuje na czerwono:
 
-<img src="docs/images/alarm-triggered.png" alt="Wzbudzony alarm" width="480">
+<img src="docs/images/alarm-triggered.png" alt="Trwający alarm" width="480">
 
 Wolisz własny skrypt? Ustaw go w `tap_action`, a karta i jej przyciski uruchomią skrypt zamiast klawiatury.
 
@@ -166,7 +166,7 @@ Wolisz własny skrypt? Ustaw go w `tap_action`, a karta i jej przyciski uruchomi
 
 <img src="docs/images/lock.png" alt="Zamek auta i zamek drzwi" width="480">
 
-Czy zamek jest zamknięty, z przyciskami **Zablokuj** i **Odblokuj** (oraz **Otwórz**, jeśli zamek umie otworzyć drzwi). Pokazuje też, kiedy zamek pracuje, jest otwarty albo zablokowany mechanicznie (czerwona ramka). **Zablokuj** działa od razu; jeśli zamek wymaga PIN-u, **Odblokuj** i **Otwórz** najpierw o niego poproszą:
+Czy zamek jest zamknięty, z przyciskami **Zablokuj** i **Odblokuj** (oraz **Otwórz**, jeśli zamek umie otworzyć drzwi). Pokazuje też, kiedy zamek pracuje, jest otwarty albo zacięty (czerwona ramka). **Zablokuj** działa od razu; jeśli zamek wymaga PIN-u, **Odblokuj** i **Otwórz** najpierw o niego poproszą:
 
 <img src="docs/images/lock-code.png" alt="Wpisywanie kodu zamka" width="260">
 
@@ -186,15 +186,15 @@ Mały okrągły przycisk po prawej to **dodatkowy przycisk** (`sub_buttons`). Mo
 
 ### Sensor
 
-<img src="docs/images/sensor.png" alt="Dwa sensory temperatury z wykresami" width="480">
+<img src="docs/images/sensor.png" alt="Dwa czujniki temperatury z wykresami" width="480">
 
 Temperatura (albo dowolna inna liczba) z małym wykresem z ostatnich godzin w tle. Dotknięcie pokazuje pełną historię. Gdy czujnik dawno nic nie wysłał, karta dostaje przerywaną ramkę i mówi, jak stara jest wartość.
 
-### Klimatyzacja
+### Klimat
 
 <img src="docs/images/climate.png" alt="Karta klimatyzacji" width="480">
 
-Klimatyzator albo termostat: temperatura docelowa z przyciskami **−** i **+**, tryby i prędkości nadmuchu, które ma Twoje urządzenie, kierunek nawiewu, presety i znacznik, co urządzenie robi teraz (grzeje, chłodzi, czeka). Termostaty z zakresem pokazują dwa pola: „Grzej do” i „Chłodź od”.
+Klimatyzator albo termostat: temperatura docelowa z przyciskami **−** i **+**, tryby i prędkości nawiewu, które ma Twoje urządzenie, kierunek nawiewu, ustawienia wstępne i znacznik, co urządzenie robi teraz (grzeje, chłodzi, utrzymuje). Termostaty z zakresem pokazują dwa pola: „Grzej do” i „Chłodź od”.
 
 Na telefonie karta może zmienić się w **pływający okrągły przycisk** z temperaturą. Dotknięcie otwiera sterowanie, a przytrzymanie włącza lub wyłącza urządzenie:
 
@@ -205,13 +205,13 @@ Na telefonie karta może zmienić się w **pływający okrągły przycisk** z te
 
 <img src="docs/images/air-quality.png" alt="Jakość powietrza: dobra" width="480">
 
-Zamienia PM2.5 / PM10 (albo czujnik AQI) na sześć prostych poziomów, od „Bardzo dobra” do „Bardzo zła”, według Europejskiego Indeksu Jakości Powietrza. Dotknięcie pokazuje wykres z 24 godzin. Gdy czujnik przestanie wysyłać dane, karta dostaje przerywaną ramkę i napis „Nieaktualne dane”.
+Zamienia PM2.5 / PM10 (albo czujnik AQI) na sześć prostych poziomów, od „Bardzo dobra” do „Bardzo zła”, według Europejskiego Indeksu Jakości Powietrza dla PM2.5 i PM10 oraz zakresów US EPA dla czujnika AQI. Dotknięcie pokazuje wykres z 24 godzin. Gdy czujnik przestanie wysyłać dane, karta dostaje przerywaną ramkę i napis „Nieaktualne dane”.
 
 ### Przypomnienie
 
 <img src="docs/images/reminder.png" alt="Pigułka przypomnienia" width="480">
 
-Mała pigułka, która pojawia się **tylko wtedy, gdy coś wymaga uwagi**, np. „Rower – bateria 18%”. Może też wyskoczyć okienko w chwili startu i potem przy każdym otwarciu dashboardu, aż dotkniesz **Gotowe**:
+Mała pigułka, która pojawia się **tylko wtedy, gdy coś wymaga uwagi**, np. „Rower – bateria 18%”. Może też wyskoczyć okno w chwili startu i potem przy każdym otwarciu dashboardu, aż przypomnienie się skończy. Przycisk **Gotowe** może je zakończyć od razu:
 
 <img src="docs/images/reminder-dialog.png" alt="Okno przypomnienia" width="260">
 
@@ -225,7 +225,7 @@ Nagłówki dzielące dashboard na części, w trzech stylach: mały napis wersal
 
 <img src="docs/images/greeting.png" alt="Powitanie" width="480">
 
-„Dzień dobry” albo „Dobry wieczór” z imieniem zalogowanej osoby i dzisiejszą datą.
+Powitanie według zegara z imieniem zalogowanej osoby i dzisiejszą datą: „Dzień dobry” od 05:00, „Dobry wieczór” od 18:00 i „Dobranoc” od 22:00.
 
 ### Tło pogodowe
 
@@ -278,6 +278,10 @@ Pasek z przyciskami do widoków dashboardu (albo pop-upów). Może przykleić si
 
 Okno z dowolnymi kartami, Lumen albo innymi, otwierane linkiem w stylu `#salon` (np. z paska nawigacji albo przycisku). Zamykasz je ×, klawiszem Esc, dotknięciem obok albo przesunięciem w dół. Sama karta jest na dashboardzie niewidoczna, chyba że chcesz wiersz, który ją otwiera.
 
+### Pogoda
+
+Bieżąca pogoda z dowolnej encji `weather.*` (Met.no, Google Weather, OpenWeatherMap…): smukła linia 44 px, sama ikona z temperaturą (obok powitania) albo karta z najbliższymi godzinami. Dotknięcie otwiera okno szczegółów: teraz (odczuwalna, wiatr, wilgotność, ciśnienie, UV, widoczność, wschód i zachód słońca), dziś godzinowo z wykresem temperatury i odczuwalnej, kolejne dni (dotknij dnia, żeby zobaczyć jego godziny) i ostrzeżenia pogodowe, np. z IMGW-PIB Monitor. Każdy kafelek pojawia się tylko wtedy, gdy encja pogody ma tę wartość.
+
 ### Stosy
 
 Stos pionowy i poziomy jak wbudowane w Home Assistant (karty jedna pod drugą albo obok siebie po równo), z tym samym edytorem kart, ale z jedną maksymalną szerokością dla całej grupy – w procentach miejsca albo w pikselach, wyśrodkowaną albo przy brzegu. Karty w środku mogą mieć własne warunki widoczności, tak jak we wbudowanych stosach.
@@ -286,13 +290,17 @@ Stos pionowy i poziomy jak wbudowane w Home Assistant (karty jedna pod drugą al
 
 Oczyszczacz (także z nawilżaniem) na dowolnej encji `fan`. Sama encja wystarczy: karta pokazuje zasilanie oraz tryby i prędkości, które urządzenie ma. PM2.5, temperaturę, wilgotność, wodę i filtry znajduje sama na tym samym urządzeniu albo w atrybutach. Zmiany widać od razu, a jeśli urządzenie ich nie potwierdzi, karta je cofa i proponuje **Ponów**. Dotknięcie bloku PM2.5 albo przytrzymanie nagłówka otwiera wykresy i dodatkowe sterowanie.
 
+### Pasek
+
+Jeden szklany rząd małych kafli: drzwi, alarmy, zamki i przyciski obok siebie, po równo. Każdy kafel działa jak jego karta.
+
 ### Odstęp
 
 Niewidoczna karta z pustym miejscem. Dodaj ją na końcu dashboardu, a pływające przyciski nie zasłonią ostatniej karty: odstęp sam dopasowuje się do ich wysokości na ekranie, a gdy ich nie ma, np. na komputerze, nie zajmuje miejsca. Możesz też ustawić stałą wysokość. Podczas edycji dashboardu widać jej obrys.
 
 ### Pływający panel
 
-Jeden pływający okrągły przycisk, który otwiera arkusz z dowolnymi kartami – najczęściej wszystkimi termostatami w jednym miejscu zamiast osobnego przycisku dla każdego. Przycisk pokazuje, ile z nich grzeje, przy grzaniu robi się pomarańczowy i delikatnie pulsuje, a o słabej baterii głowicy albo niedostępnym urządzeniu ostrzega znaczkiem w rogu. W arkuszu każdy termostat to jeden wiersz (−/+ zmienia temperaturę), a gdy termostaty mają te same presety, na górze jest **Wszystkie: Komfort / Eco / Wył.** dla wszystkich naraz. Na komputerze karta jest wierszem w siatce, który otwiera ten sam arkusz.
+Jeden pływający okrągły przycisk, który otwiera panel z dowolnymi kartami – najczęściej wszystkimi termostatami w jednym miejscu zamiast osobnego przycisku dla każdego. Przycisk pokazuje, ile z nich grzeje, przy grzaniu robi się pomarańczowy i delikatnie pulsuje, a o słabej baterii głowicy albo niedostępnym urządzeniu ostrzega znaczkiem w rogu. W panelu każdy termostat to jeden wiersz (−/+ zmienia temperaturę), a gdy termostaty mają te same ustawienia wstępne, na górze jest **Wszystkie: Komfort / Eko / Wył.** dla wszystkich naraz. Na komputerze karta jest wierszem w siatce, który otwiera ten sam panel.
 
 ---
 
@@ -300,8 +308,8 @@ Jeden pływający okrągły przycisk, który otwiera arkusz z dowolnymi kartami 
 
 To te dwa dashboardy z góry strony. Żeby użyć jednego z nich:
 
-1. Utwórz nowy dashboard: **Ustawienia → Dashboardy → + Dodaj dashboard → Nowy dashboard od zera**.
-2. Otwórz go, kliknij **ołówek**, potem **⋮ → Edytor konfiguracji w trybie surowym**.
+1. Utwórz nowy dashboard: **Ustawienia → Panele → + Dodaj panel → Nowy panel od podstaw**.
+2. Otwórz go, kliknij **ołówek**, potem **⋮ → Edytor konfiguracji YAML**.
 3. Usuń wszystko, wklej przykład i kliknij **Zapisz**.
 4. **Zamień przykładowe urządzenia na swoje.** Na przykład `light.sofa` zmień na nazwę swojego światła. Możesz to też zrobić później, karta po karcie, ołówkiem.
 
@@ -505,25 +513,25 @@ views:
 
 Wszystko to zmienisz w edytorze karty. Nazwy zapisane `takim krojem` to nazwy w YAML, gdybyś tam zajrzał.
 
-### Ustawienia każdej karty
+### Ustawienia większości kart
 
-Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
+Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora. Karta pokazuje tylko te, które coś na niej zmieniają.
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
-| `layout` | **Auto** sam wybiera wygląd: kompaktowy, gdy karta jest mała. **Pełny** albo **Kompaktowy** wymusza jeden wygląd. | Auto |
+| `layout` | **Auto** sam wybiera wygląd: kompaktowy, gdy karta jest mała (czujnik i oczyszczacz zostają pełne, chyba że wybierzesz **Kompaktowy**). **Pełny** albo **Kompaktowy** wymusza jeden wygląd. | Auto |
 | `color_scheme` | Karta jasna albo ciemna, albo **Auto**, czyli jak w Home Assistant | Auto |
-| `accent_color` | Kolor przycisków i wyróżnień (włączone urządzenia, dodatkowe przyciski, suwaki, pływający przycisk, pigułka przypomnienia – ma pierwszeństwo przed jej polem `color`). Nie ma go w kartach bez niczego do pokolorowania (powitanie, tytuł, jakość powietrza, kalendarz, pop-up). | z motywu |
+| `accent_color` | Kolor przycisków i wyróżnień (włączone urządzenia, dodatkowe przyciski, suwaki, pływający przycisk chipów, pigułka przypomnienia – ma pierwszeństwo przed jej polem `color`). Nie ma go w kartach bez niczego do pokolorowania (powitanie, tytuł, jakość powietrza, kalendarz, pop-up, pasek, pływający panel, stosy, odstęp). | z motywu |
 | `glow_color` | Kolor poświaty włączonych świateł (karty światła i chipów) | kolor światła |
 | `weather_effects` | Krople, śnieg itp. na tej karcie. Wymaga karty tła pogodowego w tym samym widoku. | wł. |
 | `max_width` | Karta nie będzie szersza niż ta wartość i zostanie wyśrodkowana w swoim miejscu: piksele albo procent miejsca w siatce z `max_width_unit: "%"` (lub `max_width: 80%`). Przydaje się w widoku „Panel” i w bardzo szerokich sekcjach; w zwykłym widoku sekcji kolumny i tak trzymają karty wąsko. | cała szerokość |
 | `max_width_unit` | `px` albo `%` dla liczbowego `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | Co dzieje się po dotknięciu, przytrzymaniu albo dwukrotnym dotknięciu: przełączenie, szczegóły, inna strona, skrypt… | zależy od karty |
-| `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach światła, encji, przycisku, osoby i alarmu. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej); o nadmiarze ostrzega edytor. | brak |
+| `sub_buttons` | Małe dodatkowe okrągłe przyciski po prawej stronie karty, każdy z własnym urządzeniem i akcją. Są w kartach światła, encji, przycisku, osoby i alarmu. Dotknięcie przełącza to, co da się przełączyć, a w innym wypadku pokazuje szczegóły; uruchomienie skryptu albo sceny wymaga akcji dotknięcia. Widać najwyżej 4 (2 na wąskiej karcie, 1 na kompaktowej, gdzie karta światła może pokazać 2); o nadmiarze ostrzega edytor. | brak |
 | — | **Podgląd układu w edycji:** przełącznik na dole widoku (Wszystko / Telefon / Komputer) ukrywa karty i sekcje drugiego rozmiaru ekranu, więc każdy układ edytujesz osobno. Sprawdza warunki ekranu HA (min. / maks. szerokość), zapamiętuje wybór na urządzeniu i znika po wyjściu z edycji. Pojawia się, gdy w widoku jest choć jedna karta Lumen. | – |
 | `edit_note` | Opis widoczny na karcie tylko podczas edycji dashboardu. Karty z warunkiem ekranu (swoim albo sekcji) dostają tam też automatycznie etykietę „Telefon” / „Komputer” (z dopiskiem „sekcja”, gdy warunek jest na sekcji, a nie na karcie): HA w trybie edycji pokazuje wszystkie, nie odróżniając ich. | brak |
 | `styles` | Dla majsterkowiczów: własny CSS wewnątrz karty | brak |
-| `haptics` | Delikatne wibracje przy dotknięciu, przytrzymaniu i przeciąganiu (najlżejsze tyknięcie co 1 %, nieco mocniejsze na końcach skali). Działa w aplikacji HA i w przeglądarce na Androidzie. | wł. |
+| `haptics` | Delikatne wibracje przy dotknięciu, przytrzymaniu i przeciąganiu (najlżejsze tyknięcie co 1 %, nieco mocniejsze na końcach skali). Działa w aplikacji HA i w przeglądarce na Androidzie. W kartach z suwakiem `haptic_tick` wybiera typ tyknięcia. | wł. |
 
 **Kolory.** `accent_color` i `glow_color` przyjmują nazwy kolorów z Home Assistanta (`blue`, `pink`…), hex albo rgb. Z tego jednego koloru karta buduje cały komplet: wypełnienie, poświatę, tło ikony i czytelny kolor tekstu, w trybie jasnym i ciemnym.
 
@@ -540,8 +548,9 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `entity` | Światło | – |
 | `name`, `icon` | Nazwa i ikona na kaflu | z urządzenia |
 | `power_entity` | Włącznik albo przekaźnik, który zasila żarówkę. Gdy jest wyłączony, żarówka jest „wyłączona”, a nie „niedostępna”, a dotknięcie przełącza przekaźnik. | brak |
-| `power_entities` | Kilka włączników zasilających to światło, zwykle grupę żarówek (zobacz niżej). Zastępuje `power_entity`. | brak |
+| `power_entities` | Kilka włączników zasilających to światło, zwykle grupę żarówek (zobacz [Światło](#światło)). Zastępuje `power_entity`. | brak |
 | `sub_buttons` | Małe dodatkowe przyciski na kaflu. Przy `power_entities` domyślnie po jednym na włącznik. | brak |
+| `height` | Wysokość kafla w pikselach, co najmniej 40 | 64 (kompakt 44) |
 | `show_state` | Pokazuj linię z jasnością | wł. |
 | `show_color_button` | Pokazuj kółko barwy | wł. |
 
@@ -551,13 +560,14 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
-| `chips` | Lista chipów. Każdy ma `type`: **action** (scena, skrypt, przycisk…) albo **light** (światło). Każdy ma też `entity`, a opcjonalnie `name`, `icon` i `tap_action`. Chip światła może mieć `power_entity`. | – |
+| `chips` | Lista chipów. Każdy ma `type`: **action** (scena, skrypt, przycisk…) albo **light** (światło). Każdy ma też `entity`, a opcjonalnie `name`, `icon`, `tap_action`, `hold_action` i `double_tap_action`. Chip światła może mieć `power_entity`. | – |
 | `active_value`, `active_attribute` (w chipie) | Chip akcji jest podświetlony, gdy stan encji albo ten atrybut ma tę wartość, np. tryb dźwięku | – |
 | `alignment` | Do lewej, do środka, do prawej albo rozłożone | do lewej |
-| `fab` | **Pokaż jako pływający przycisk**: akcje przechodzą do okrągłego przycisku w prawym dolnym rogu | wył. |
+| `fab` | **Pokaż jako pływający przycisk**: akcje przechodzą do okrągłego przycisku w dolnym rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie.** Pływający przycisk pojawia się tylko na telefonie i tablecie w pionie, a na szerszych ekranach zostaje zwykły rząd chipów. Odznacz, żeby przycisk pływał zawsze. | wł. |
 | `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
 | `title` | Nagłówek nad pozycjami pływającego przycisku | „Sceny” |
+| `fab_icon` | **Ikona przycisku** pływającego przycisku | `mdi:palette-outline` |
 
 <a id="lumen-person-card"></a>
 
@@ -582,11 +592,12 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 |---|---|---|
 | `entity` | Centrala alarmu | – |
 | `name`, `icon` | Nazwa oraz ikona zamiast tarczy (np. garaż) | z urządzenia |
-| `banner` | Czerwony baner, gdy alarm się włączy | wł. |
+| `banner` | Czerwony baner u góry ekranu przy alarmie (karta kompaktowa) | wł. |
 | `banner_text` | Tekst banera | „Alarm: *nazwa*!” |
-| `screen_ring` | Czerwona pulsująca ramka wokół całego ekranu, gdy alarm się włączy | wł. |
+| `screen_ring` | Czerwona pulsująca ramka wokół całego ekranu przy alarmie | wł. |
 | `show_state` | Pokazuj linię stanu | wł. |
 | `show_buttons` | Przycisk Uzbrój / Rozbrój na karcie | wł. |
+| `disarmed_color` | Kolor stanu rozbrojenia, np. czerwony, żeby rzucał się w oczy | neutralny |
 | `arm_modes` | Które tryby oferuje klawiatura (`armed_home`, `armed_away`, `armed_night`, `armed_vacation`, `armed_custom_bypass`) | wszystkie, które ma alarm |
 | `arming_time`, `pending_time` | Długość odliczania przy uzbrajaniu i czasu na wejście w sekundach, jeśli alarm ich nie podaje | z alarmu |
 
@@ -611,6 +622,7 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy kar
 |---|---|---|
 | `entity` | Dowolne urządzenie albo czujnik | – |
 | `name`, `icon` | Nazwa i ikona | z urządzenia |
+| `device_class` | Traktuj czujnik jak ten rodzaj (drzwi, okno, dym…): zmienia ikony i kolory | jak w Home Assistant |
 | `show_name`, `show_icon`, `show_state` | Pokazuj albo ukryj każdą część | wł. |
 
 <a id="lumen-button-card"></a>
@@ -621,8 +633,9 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy kar
 |---|---|---|
 | `entity` | Co przycisk uruchamia: skrypt, scenę, przycisk albo cokolwiek, co da się przełączyć | – |
 | `name`, `icon` | Nazwa i ikona | z urządzenia |
+| `color` | Kolor ikony i kafla kompaktowego w spoczynku | neutralny |
 | `feedback` | **Czekaj na odpowiedź urządzenia** po dotknięciu. Wypełnij `status_entity` (czujnik z kodem odpowiedzi), `success_state` (kod oznaczający sukces, domyślnie `"200"`), `message_entity` (czujnik z treścią błędu) i `success_text` (tekst po sukcesie). | wył. |
-| `last_used_entity` | Pomocnik „data i godzina”, w którym zapisuje się ostatnie użycie | brak |
+| `last_used_entity` | Pomocnik „data i godzina” albo czujnik z datą, w którym jest ostatnie użycie. Aktualizuje go Twoja automatyzacja; karta tylko odczytuje czas. | brak |
 | `secondary_info` | Druga linia: **Auto** (ostatnie użycie), stan, ostatnie uruchomienie, ostatnia zmiana albo nic | Auto |
 | `show_name`, `show_icon`, `show_state` | Pokazuj albo ukryj każdą część | wł. |
 
@@ -637,28 +650,29 @@ Wskazówka: ustaw `tap_action` na swój skrypt uzbrajania/rozbrajania, wtedy kar
 | `hours` | Ile godzin obejmuje wykres | 12 |
 | `color` | Kolor wykresu | kolor akcentu |
 | `show_name`, `show_graph` | Pokazuj nazwę / wykres | wł. |
-| `stale_after` | Po ilu godzinach bez nowego odczytu karta pokaże wartość jako nieaktualną | 2 |
+| `height` | Wysokość karty w px. Poniżej 48 px staje się jednym wierszem: nazwa po lewej, wartość po prawej, wykres w tle. | 52 (kompakt 36) |
+| `stale_after` | Po ilu godzinach bez nowego odczytu karta pokaże wartość jako nieaktualną. Puste lub 0 = nigdy (wiele termometrów wysyła odczyt tylko przy zmianie temperatury). | brak |
 
 <a id="lumen-climate-card"></a>
 
-### Klimatyzacja (`lumen-climate-card`)
+### Klimat (`lumen-climate-card`)
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `entity` | Klimatyzator albo termostat | – |
 | `name`, `icon` | Nazwa i ikona | z urządzenia |
-| `hvac_modes` | Które przyciski trybu pokazać | wszystkie, które ma urządzenie |
-| `fan_modes` | Które przyciski nadmuchu pokazać (więcej niż 5 zamienia się w listę) | wszystkie, które ma urządzenie |
-| `preset_modes` | Które presety pokazać | wszystkie, które ma urządzenie |
+| `hvac_modes` | Które przyciski trybu pokazać, w tej kolejności | wszystkie, które ma urządzenie |
+| `fan_modes` | Które przyciski nawiewu pokazać (więcej niż 5 zamienia się w listę), w tej kolejności | wszystkie, które ma urządzenie |
+| `preset_modes` | Które ustawienia wstępne pokazać | wszystkie, które ma urządzenie |
 | `min_temp`, `max_temp` | Zawęża zakres temperatur (puste = zakres urządzenia) | zakres urządzenia |
 | `step` | O ile zmieniają nastawę − i + (np. `0.5`, gdy termostat podaje 0,1). Nastawa idzie do urządzenia 1 s po ostatnim dotknięciu. | krok z urządzenia |
 | `fab` | **Pokaż jako pływający przycisk** w rogu | wył. |
 | `fab_narrow_only` | **Auto: tylko na wąskim ekranie**: pływający przycisk na telefonie, zwykła karta na dużym ekranie | wł. |
 | `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
 | `power_action` | Co robi przycisk zasilania, jeśli wolisz własny skrypt | włącza ostatni tryb / wyłącza |
-| `show_current_temp`, `show_modes`, `show_fan_modes` | Pokazuj temperaturę w pokoju / przyciski trybu / przyciski nadmuchu | wł. |
+| `show_current_temp`, `show_modes`, `show_fan_modes` | Pokazuj temperaturę w pokoju / przyciski trybu / przyciski nawiewu | wł. |
 | `battery_entity`, `battery_low`, `show_battery` | Znacznik słabej baterii („Bateria 9%”). Domyślnie czyta informację o bateriach z Better Thermostat na samym termostacie (najsłabsza głowica); można też podać czujnik w % albo czujnik binarny baterii. Słaba poniżej `battery_low` % (domyślnie 15). | wł. |
-| `show_swing`, `show_presets`, `show_action` | Pokazuj kierunek nawiewu / presety / znacznik „grzeje, chłodzi, czeka” | wł. |
+| `show_swing`, `show_presets`, `show_action` | Pokazuj kierunek nawiewu / ustawienia wstępne / znacznik „grzeje, chłodzi, utrzymuje” | wł. |
 | `show_range` | Zakres temperatur urządzenia pod temperaturą docelową | wył. |
 
 Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakresem „od–do” też działają: dotknij dolnej albo górnej liczby, żeby wybrać, którą zmieniają **−** i **+**.
@@ -670,9 +684,9 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `pm25`, `pm10`, `aqi_entity` | Twoje czujniki powietrza. Wystarczy jeden z trzech. | – |
-| `stale_hours` | Po ilu godzinach bez nowych danych karta pokaże „Nieaktualne dane” | 1 |
+| `stale_hours` | Po ilu godzinach bez nowych danych karta pokaże „Nieaktualne dane” | 2 |
 | `footer` | Krótka notka na dole okna z wykresem, np. „Czujnik na balkonie” | brak |
-| `levels` | Własne nazwy sześciu poziomów (tylko w YAML) | Bardzo dobra … Bardzo zła |
+| `levels` | Własne nazwy i wskazówki sześciu poziomów, od najlepszego: lista `title` i `hint` (tylko w YAML) | Bardzo dobra … Bardzo zła |
 | `show_values`, `show_bar` | Pokazuj liczby / kolorowy pasek poziomów | wł. |
 
 <a id="lumen-reminder-card"></a>
@@ -685,9 +699,9 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | `state` | Przypomnienie działa, dopóki urządzenie ma ten stan | `on` |
 | `name`, `icon`, `color` | Napis, ikona i kolor pigułki (informacja, OK, ostrzeżenie, alarm) | z urządzenia, informacja |
 | `value`, `value_entity` | Dodatkowy tekst na pigułce; `{value}` zamienia się w liczbę z `value_entity`, np. „Bateria {value}%” | brak |
-| `show_chip` | Czy w ogóle pokazywać pigułkę (wył. = tylko okienko) | wł. |
-| `dialog` | Okienko w chwili, gdy przypomnienie startuje | wł. |
-| `title`, `message` | Nagłówek i tekst okienka | nazwa |
+| `show_chip` | Czy w ogóle pokazywać pigułkę (wył. = tylko okno) | wł. |
+| `dialog` | Okno w chwili, gdy przypomnienie startuje | wł. |
+| `title`, `message` | Nagłówek i tekst okna | nazwa |
 | `done` | Przycisk **Gotowe**, który wyłącza przypomnienie | wył. |
 | `done_action` | Inna akcja dla **Gotowe** | wyłączenie encji |
 | `alignment` | Gdzie stoi pigułka: z lewej, na środku, z prawej | z lewej |
@@ -699,7 +713,7 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `title` | Tekst | – |
-| `heading_style` | **Nadtytuł** (małe wersaliki), **Tytuł sekcji** (duży) albo **Nagłówek pokoju** | Nadtytuł |
+| `heading_style` | **Mały napis** (wersaliki), **Tytuł sekcji** (duży) albo **Nagłówek pokoju** | Mały napis |
 | `badges` | Wartości obok tytułu. Każda ma `entity`, a opcjonalnie `state_content` (atrybut zamiast stanu) i `name` (napis przed wartością). | brak |
 | `entity`, `tap_action` | Co otwiera dotknięcie tytułu | nic |
 
@@ -709,9 +723,8 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
-| `show_date` | Data nad powitaniem | wł. |
+| `show_date` | Data nad powitaniem (nie w wersji kompaktowej) | wł. |
 | `name` | Imię po powitaniu | zalogowana osoba |
-| `sun_entity` | Czujnik słońca, po którym karta poznaje porę dnia | `sun.sun` |
 
 <a id="lumen-weather-background-card"></a>
 
@@ -804,8 +817,8 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `items` | Przyciski. Każdy ma `navigation_path` (widok, np. `pokoje`, ścieżkę, np. `/lovelace/pokoje`, albo pop-up, np. `#salon`), `name` i `icon`. | – |
-| `position` | **Na dole**: przyklejony do dołu ekranu (daj tę kartę na koniec). **W treści**: zwykła karta tam, gdzie ją wstawisz. | na dole |
-| `narrow_only` | Pokazuj tylko na telefonach i wąskich ekranach | wył. |
+| `position` | **Dół ekranu**: przyklejony do dołu (daj tę kartę na koniec). **W siatce**: zwykła karta tam, gdzie ją wstawisz. | dół ekranu |
+| `narrow_only` | Na dole ekranu: pokazuj tylko na telefonach i wąskich ekranach | wył. |
 
 <a id="lumen-popup-card"></a>
 
@@ -813,11 +826,14 @@ Karta pokazuje tylko tryby, które urządzenie naprawdę ma. Termostaty z zakres
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
-| `hash` | Link, który go otwiera, np. `#salon` | – |
+| `hash` | **Link**, który go otwiera, np. `#salon` | – |
 | `name`, `icon` | Nagłówek okna | brak |
 | `cards` | Karty w środku (dowolne karty Home Assistanta) | – |
 | `show_trigger` | Pokazuj na dashboardzie wiersz, który otwiera pop-up (inaczej karta jest niewidoczna) | wył. |
 | `auto_close` | Zamknij samo po tylu sekundach (0 = nigdy) | 0 |
+
+<a id="lumen-vertical-stack-card"></a>
+<a id="lumen-horizontal-stack-card"></a>
 
 ### Stosy (`lumen-vertical-stack-card`, `lumen-horizontal-stack-card`)
 
@@ -844,6 +860,15 @@ cards:
 | `align` | Położenie węższego stosu: `center` (na środku), `start` (do lewej), `end` (do prawej); przy `card_width: content` także położenie kart w wierszu | `center` |
 | `card_width` | Tylko stos poziomy: `equal` – karty dzielą szerokość po równo, `content` – każda karta ma szerokość swojej treści i w razie potrzeby przechodzi do następnego wiersza (np. pigułki przypomnień) | `equal` |
 
+<a id="lumen-bar-card"></a>
+
+### Pasek (`lumen-bar-card`)
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `cards` | Karty w środku (dowolne karty Home Assistanta), dodawane i edytowane w tym samym edytorze wizualnym co stosy Home Assistanta. Karty Lumen są tu zawsze kompaktowe. | – |
+| `color_scheme`, `max_width`, `max_width_unit`, `weather_effects`, `edit_note`, `styles` | Jak w większości kart | – |
+
 <a id="lumen-purifier-card"></a>
 
 ### Oczyszczacz powietrza (`lumen-purifier-card`)
@@ -853,7 +878,7 @@ type: custom:lumen-purifier-card
 entity: fan.oczyszczacz
 ```
 
-Wszystkie ustawienia są w edytorze wizualnym. Funkcje specyficzne dla modelu opisujesz konfiguracją:
+Wszystkie ustawienia są w edytorze wizualnym. W YAML funkcje specyficzne dla modelu wyglądają tak:
 
 ```yaml
 type: custom:lumen-purifier-card
@@ -870,6 +895,7 @@ filters:
   - { name: HEPA, entity: sensor.oczyszczacz_hepa, unit: h }
 controls:
   - { entity: switch.oczyszczacz_blokada }
+service_controls:
   - { name: Wyłącznik, attribute: timer, service: moja_integracja.set_timer, field: hours, min: 0, max: 12, min_label: Wył. }
   - { name: Jasność, attribute: brightness, service: moja_integracja.set_brightness, field: level, options: [0, 50, 100] }
 ```
@@ -877,23 +903,24 @@ controls:
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
 | `entity` | Encja `fan` | – |
+| `name`, `icon` | Nazwa i ikona | z urządzenia |
 | `layout` | `wide` albo `compact` (wiersz 58 px) | `wide` |
 | `hours`, `stale_hours` | Okno wykresu w karcie; po ilu godzinach bez odczytu dane są nieaktualne (0 = nigdy) | 24, 2 |
 | `preset_modes` | Które tryby pokazać i w jakiej kolejności | wszystkie z urządzenia |
 | `speeds` | Własne prędkości: `percentage`, `name` | z `percentage_step`, numerowane |
 | `humidifier_entity` | Standardowa encja `humidifier` (`set_humidity`) | brak |
-| `humidity_targets`, `target_humidity_service` | Przyciski celu; usługa dla integracji bez encji nawilżacza | brak |
+| `humidity_targets`, `target_humidity_service` | Przyciski wilgotności docelowej; usługa dla integracji bez encji nawilżacza | brak |
 | `humidifier_when` | Pokazuj nawilżanie, gdy atrybut zawiera tekst | zawsze przy odczycie wilgotności |
 | `show_humidifier`, `show_filters` | Pokazuj te części | wł. |
-| `filters` | `name`, `entity` albo `attribute`, `unit` (`%`, `h`, `d`) | sensory z „filter” w nazwie, potem atrybuty |
+| `filters` | `name`, `entity` albo `attribute`, `unit` (`%`, `h`, `d`) | czujniki z „filter” w nazwie, potem atrybuty |
 | `index` | Drugi wskaźnik: `name`, `entity` albo `attribute`, `thresholds`, `labels`, `max` | brak |
-| `controls` | Sterowanie w szczegółach: encja (`switch`, `light`, `select`, `number`…) albo `attribute` + `service` + `field`, z `options` (wybór) lub `min`/`max`/`step` (− / +) | brak |
+| `controls` | Sterowanie w szczegółach: encja (`switch`, `light`, `select`, `number`…); `options` dotyczą listy, `min`/`max`/`step` liczby | brak |
 | `service_controls` | Sterowanie przez usługę: `attribute` + `service` + `field`, z `options` lub `min`/`max`/`step` | brak |
 | `confirm_timeout` | Sekundy na potwierdzenie zmiany | 45 |
 | `send_delay` | Sekundy ciszy po ostatnim dotknięciu przed wysłaniem polecenia. Seria kliknięć to jedno polecenie, a między poleceniami jest co najmniej 1 s | 0,8 |
-| `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Nadpisania sensorów | szukane na urządzeniu |
+| `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Własne czujniki | znalezione na urządzeniu |
 
-Skala PM2.5 jest taka sama jak w karcie jakości powietrza. Poza HA, bez rejestru encji, działa szukanie po nazwie `sensor.<fan>_pm2_5` i atrybutach.
+Skala PM2.5 jest taka sama jak w karcie jakości powietrza.
 
 <a id="lumen-spacer-card"></a>
 
@@ -924,14 +951,36 @@ cards:
 
 | Ustawienie | Co robi | Domyślnie |
 |---|---|---|
-| `icon`, `title` | Ikona pływającego przycisku i nagłówek arkusza | `mdi:dock-bottom`, „Pływający panel” |
-| `cards` | Karty w środku (dowolne karty Home Assistanta), dodawane i edytowane w tym samym edytorze wizualnym co stosy Home Assistanta. Karty klimatyzacji są tu kompaktowymi wierszami termostatów. Arkusz otwiera się tak wysoko, jak potrzebują karty, aż do góry ekranu. | – |
-| `narrow_only` | Pływający przycisk tylko na telefonie i wąskim ekranie (poniżej 1024 px); szerzej karta jest wierszem w siatce, który otwiera ten sam arkusz. Wył. = przycisk na każdym ekranie. | wł. |
+| `icon`, `title` | Ikona pływającego przycisku i nagłówek panelu | `mdi:dock-bottom`, „Pływający panel” |
+| `cards` | Karty w środku (dowolne karty Home Assistanta), dodawane i edytowane w tym samym edytorze wizualnym co stosy Home Assistanta. Karty klimatu są tu kompaktowymi wierszami termostatów. Panel otwiera się tak wysoko, jak potrzebują karty, aż do góry ekranu. | – |
+| `narrow_only` | Pływający przycisk tylko na telefonie i wąskim ekranie (poniżej 1024 px); szerzej karta jest wierszem w siatce, który otwiera ten sam panel. Wył. = przycisk na każdym ekranie. | wł. |
 | `fab_side` | **Strona przycisku**: prawa (domyślnie) albo lewa, np. dla osoby leworęcznej. Każda strona ma swój stos pływających przycisków. | prawa |
-| `badge_entities` | Co liczy liczba na przycisku. Puste = termostaty z kart, które grzeją; inaczej te encje, gdy grzeją / są włączone. | puste |
-| `color_scheme`, `accent_color`, `styles` | Jak w każdej karcie | – |
+| `badge_entities` | Co liczy liczba na przycisku. Puste = termostaty z kart, które grzeją; inaczej te encje, gdy są aktywne (grzeją, włączone, otwarte, w domu albo grają). | puste |
+| `color_scheme`, `max_width`, `max_width_unit`, `edit_note`, `styles` | Jak w większości kart | – |
 
-Przycisk dołącza do stosu pływających przycisków: nad przyciskiem scen (48 px) albo sam w rogu (64 px), gdy jest jedyny. Kolejność od dołu: sceny, panele (w kolejności z dashboardu), alarm. Znaczek ostrzeżenia to bateria poniżej `battery_low` karty termostatu (domyślnie 15%) albo niedostępna encja. W trybie edycji dashboardu karta zawsze jest wierszem z podpisem „FAB na telefonie”.
+Przycisk dołącza do stosu pływających przycisków: nad przyciskiem scen (48 px) albo sam w rogu (64 px), gdy jest jedyny. Kolejność od dołu: sceny, potem przyciski klimatu i panele, w kolejności z dashboardu. Znaczek ostrzeżenia to bateria poniżej `battery_low` karty termostatu (domyślnie 15%) albo niedostępna encja. W trybie edycji dashboardu karta zawsze jest wierszem z podpisem „Pływa na telefonie”.
+
+<a id="lumen-weather-card"></a>
+
+### Pogoda (`lumen-weather-card`)
+
+```yaml
+type: custom:lumen-weather-card
+entity: weather.dom
+warnings_entity: sensor.ostrzezenia_pogodowe   # opcjonalnie
+```
+
+| Ustawienie | Co robi | Domyślnie |
+|---|---|---|
+| `entity` | Encja pogody (`weather.*`). Prognozy godzinowe i dzienne działają, gdy integracja je podaje. | – |
+| `warnings_entity` | Opcjonalny czujnik z atrybutem-listą `warnings` (IMGW-PIB Monitor i podobne: `event`, `level` 1–3, `valid_from`, `valid_to`, `content`). Ostrzeżenia trwające albo zaczynające się w ciągu 24 h są pigułkami na karcie i paskami w oknie szczegółów. | – |
+| `layout` | **Auto** (linia, gdy karta jest węższa niż 240 px, karta od 240 px), **Linia**, **Karta** albo **Sama ikona i temperatura** (bez tła, np. obok powitania) | auto |
+| `hours` | **Liczba godzin na karcie**: 4–8. Karta pokazuje tylko tyle, ile mieści się po co najmniej 44 px. | 6 |
+| `show_feels`, `show_minmax`, `show_hours`, `show_warnings` | Temperatura odczuwalna, dzisiejsze min. / maks., rząd godzin i ostrzeżenia na karcie | wł. |
+| `sun_entity` | Ikony dnia i nocy dla bieżącej pogody | `sun.sun` |
+| `color_scheme`, `accent_color`, `max_width`, `max_width_unit`, `weather_effects`, `edit_note`, `styles` | Jak w większości kart | – |
+
+Dotknięcie otwiera okno szczegółów, przytrzymanie okno pogody Home Assistanta. Wschód i zachód słońca w tym oknie są liczone z lokalizacji Twojego Home Assistanta.
 
 ---
 
@@ -941,22 +990,22 @@ Przycisk dołącza do stosu pływających przycisków: nad przyciskiem scen (48 
 Odśwież przeglądarkę klawiszami Ctrl+F5 (na Macu Cmd+Shift+R). W aplikacji na telefonie: **Ustawienia → Aplikacja towarzysząca → Debugowanie → Zresetuj pamięć podręczną interfejsu**. Potem przy dodawaniu karty wpisz „Lumen”.
 
 **Widzę „Custom element doesn't exist: lumen-…”.**
-To samo: odśwież przeglądarkę. Jeśli dalej to widać, sprawdź **Ustawienia → Dashboardy → ⋮ → Zasoby**. Powinien tam być jeden wpis kończący się na `lumen-cards.js`.
+To samo: odśwież przeglądarkę. Jeśli dalej to widać, sprawdź **Ustawienia → Panele → ⋮ → Zasoby**. Powinien tam być jeden wpis kończący się na `lumen-cards.js`.
 
 **Na dashboardzie nie pada deszcz ani śnieg.**
-Dodaj kartę **Tło pogodowe** do tego samego widoku (jedna na widok wystarczy) i wybierz w niej swoje urządzenie pogody. Na słabszych tabletach efekty mogą być wyłączone. Włącz `show_controls`, żeby zobaczyć przełączniki.
+Dodaj kartę **Tło pogodowe** do tego samego widoku (jedna na widok wystarczy) i wybierz w niej swoje urządzenie pogody. Animacja zatrzymuje się też, gdy urządzenie prosi o ograniczenie ruchu, albo gdy przełączniki wyłączono na tym urządzeniu. Włącz `show_controls`, żeby zobaczyć przełączniki.
 
 **Na telefonie karty wyglądają inaczej niż na tablecie.**
 Tak ma być: mała karta pokazuje wersję kompaktową. Jeśli chcesz sam zdecydować, co gdzie widać, zajrzyj do wskazówki pod [Przykładowymi dashboardami](#przykładowe-dashboardy): dwie kopie karty i warunek widoczności **Ekran**. Możesz też ustawić `layout` na **Pełny** albo **Kompaktowy**, żeby wyłączyć automatyczne przełączanie.
 
 **Pływający przycisk klimatyzacji coś zasłania.**
-Kilka pływających przycisków samo ustawia się jeden nad drugim. Żeby podnieść je wyżej, np. nad dolny pasek nawigacji, dodaj do motywu Home Assistant `lumen-cards-fab-bottom: 90px`.
+Pływające przyciski same ustawiają się jeden nad drugim, a nad pasek nawigacji Lumen przesuwają się same. Żeby podnieść je jeszcze wyżej, np. nad pasek z innego dodatku, dodaj do motywu Home Assistant `lumen-cards-fab-bottom: 90px`.
 
 **Czy mogę zmienić kolory?**
-Tak: `accent_color` i `glow_color` w każdej karcie albo dla wszystkich kart naraz zmiennymi `lumen-cards-accent` i `lumen-cards-glow-color` w motywie Home Assistant.
+Tak: `accent_color` i `glow_color` w każdej karcie. Poświatę ustawisz też dla wszystkich kart naraz zmienną `lumen-cards-glow-color` w motywie Home Assistant.
 
 **Czy da się obsługiwać karty klawiaturą?**
-Tak. Tab przechodzi między kartami, Enter albo spacja to dotknięcie, Shift+Enter to przytrzymanie (np. otwiera panel światła). Strzałki zmieniają jasność, a Escape zamyka okna.
+Tak. Tab przechodzi między kartami, Enter albo spacja to dotknięcie, Shift+Enter to przytrzymanie (np. otwiera okno światła). Strzałki zmieniają jasność, a Escape zamyka okna.
 
 ---
 

@@ -14,10 +14,10 @@
 
 What you get:
 
-- **Cards for the everyday things in a home:** lights, people, alarm, locks, doors, the gate, temperatures, air quality, the air conditioner, reminders, blinds, music, fans, lists, calendars, a navigation bar and pop-ups.
+- **Cards for the everyday things in a home:** lights, people, alarm, locks, doors, the gate, temperatures, air quality, the air conditioner, reminders, blinds, music, fans, lists, calendars, a navigation bar, pop-ups and stacks.
 - **Weather on the dashboard.** Rain, snow, fog or sunshine move behind the cards, and raindrops or snow settle on the cards themselves.
 - **Big, comfortable controls.** Tap a light to switch it on, slide a finger across it to dim it, and hold it to pick the brightness and colour.
-- **Phone and big screen.** A card squeezed into a small space turns into a low compact tile (44 px, equal in a row).
+- **Phone and big screen.** A card squeezed into a small space turns into a low compact tile.
 - **Light and dark mode.** The cards follow your Home Assistant settings.
 - **English and Polish.** The cards and their settings use the language from your Home Assistant profile.
 
@@ -59,7 +59,7 @@ That's it. HACS tells Home Assistant about the new cards by itself.
 <details>
 <summary>Installing without HACS</summary>
 
-1. Download the latest release from the Releases page, or the files in the `dist/` folder: `lumen-cards.js` and all the `.woff2` font files.
+1. Download the files in the `dist/` folder of this repository: `lumen-cards.js` and all the `.woff2` font files.
 2. Copy them into the folder `config/www/lumen-cards/` on your Home Assistant.
 3. Go to **Settings → Dashboards → ⋮ → Resources → Add resource**, enter `/local/lumen-cards/lumen-cards.js` and choose **JavaScript module**.
 4. Refresh the browser.
@@ -74,7 +74,7 @@ That's it. HACS tells Home Assistant about the new cards by itself.
 4. Pick a card. A settings window opens. Choose your device in the first field and the preview updates straight away.
 5. Click **Save**.
 
-Every setting has a field in this window. You never have to write code.
+Every setting has a field in this window, so you never have to write code. The one exception is your own names for the air quality levels (`levels`), which are YAML only.
 
 > **Tip:** to make a card bigger or smaller, drag its corner while the dashboard is in edit mode. A narrow card switches to its compact look on its own.
 
@@ -97,7 +97,7 @@ A large tile for one light. The tile glows in the colour of the bulb.
 
 A light group shows how many lights are on ("2 of 3 on"). In a small space (under 220 px) the tile gets lower and the name may take two lines.
 
-<img src="docs/images/light-sheet.png" alt="Brightness, white tones and colours panel" width="260">
+<img src="docs/images/light-sheet.png" alt="Window with brightness, white tones and colours" width="260">
 
 **Several bulbs behind separate switches** (for example two wall lamps, each on its own switch channel). Pick the group of bulbs as the light and the switches in the **Power (several relays)** field. You get one card:
 
@@ -205,13 +205,13 @@ On a phone it can shrink to a **floating round button** that shows the temperatu
 
 <img src="docs/images/air-quality.png" alt="Air quality: good" width="480">
 
-Turns PM2.5 / PM10 (or an AQI sensor) into six easy levels, from "Very good" to "Extremely poor", using the European Air Quality Index. Tap it for a 24-hour chart. If the sensor stops sending data, the card shows a dashed border and "Outdated data".
+Turns PM2.5 / PM10 (or an AQI sensor) into six easy levels, from "Very good" to "Extremely poor", using the European Air Quality Index for PM2.5 and PM10, and the US EPA ranges for an AQI sensor. Tap it for a 24-hour chart. If the sensor stops sending data, the card shows a dashed border and "Outdated data".
 
 ### Reminder
 
 <img src="docs/images/reminder.png" alt="Reminder pill" width="480">
 
-A small pill that appears **only when something needs attention**, for example "Bike – battery 18 %". It can also pop up a window when it starts, and again every time you open the dashboard, until you tap **Done**:
+A small pill that appears **only when something needs attention**, for example "Bike – battery 18 %". It can also pop up a window when it starts, and again every time you open the dashboard, until the reminder ends. A **Done** button can end it straight away:
 
 <img src="docs/images/reminder-dialog.png" alt="Reminder window" width="260">
 
@@ -225,7 +225,7 @@ Headings that split your dashboard into parts, in three styles: a small caps lab
 
 <img src="docs/images/greeting.png" alt="Greeting" width="480">
 
-"Good morning / Good afternoon / Good evening" with the name of whoever is logged in, and today's date.
+A greeting by the clock with the name of whoever is logged in, and today's date: "Good morning" from 05:00, "Good afternoon" from 12:00, "Good evening" from 18:00 and "Good night" from 22:00.
 
 ### Weather background
 
@@ -280,7 +280,7 @@ A window with any cards you like, Lumen or not, opened by a link like `#living-r
 
 ### Weather
 
-The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWeatherMap…): a slim 44 px line, just an icon with the temperature (to stand next to the greeting), or a card with the next hours. Tap it for the details sheet: now (feels like, wind, humidity, pressure, UV, visibility, sunrise and sunset), today hourly with a chart of the temperature and the feels-like temperature, the next days (tap a day to see its hours) and weather warnings, e.g. from IMGW-PIB Monitor. Every tile shows only when your weather entity has that value.
+The current weather from any `weather.*` entity (Met.no, Google Weather, OpenWeatherMap…): a slim 44 px line, just an icon with the temperature (to stand next to the greeting), or a card with the next hours. Tap it for the details window: now (feels like, wind, humidity, pressure, UV, visibility, sunrise and sunset), today hourly with a chart of the temperature and the feels-like temperature, the next days (tap a day to see its hours) and weather warnings, e.g. from IMGW-PIB Monitor. Every tile shows only when your weather entity has that value.
 
 ### Stacks
 
@@ -290,13 +290,17 @@ Vertical and horizontal stacks like Home Assistant's own (cards one under anothe
 
 A purifier (also with a humidifier) on any `fan` entity. The entity alone is enough: the card shows power and the presets and speeds the device has. It finds PM2.5, temperature, humidity, water and filters on the same device or in its attributes. Changes show at once; if the device does not confirm one, the card undoes it and offers **Retry**. A tap on the PM2.5 block or a hold on the header opens the charts and extra controls.
 
+### Bar
+
+One glass row of small tiles: doors, alarms, locks and buttons side by side, in equal widths. Each tile works like its own card.
+
 ### Spacer
 
 An invisible card with empty space. Add it at the end of your dashboard and the floating buttons will not cover the last card: it follows their height on screen and takes no space without them, for example on a computer. You can also set a fixed height. While you edit the dashboard you can see its outline.
 
 ### Floating panel
 
-One floating round button that opens a sheet with any cards – typically all your thermostats in one place instead of a floating button for each. The button shows how many of them are heating, turns orange with a soft pulse while something heats, and warns about a weak valve battery or a device that is offline. In the sheet you get one row per thermostat (−/+ to change the temperature) and, when the thermostats share their presets, **All: Comfort / Eco / Off** for all of them at once. On a computer it is a row in the grid that opens the same sheet.
+One floating round button that opens a panel with any cards – typically all your thermostats in one place instead of a floating button for each. The button shows how many of them are heating, turns orange with a soft pulse while something heats, and warns about a weak valve battery or a device that is offline. In the panel you get one row per thermostat (−/+ to change the temperature) and, when the thermostats share their presets, **All: Comfort / Eco / Off** for all of them at once. On a computer it is a row in the grid that opens the same panel.
 
 ---
 
@@ -509,25 +513,25 @@ views:
 
 You can change all of these in the card editor. The names in `code font` are what you see in YAML, if you ever look there.
 
-### Settings that every card has
+### Settings that most cards have
 
-You find them under **Appearance** and **Advanced** at the bottom of the editor.
+You find them under **Appearance** and **Advanced** at the bottom of the editor. A card offers only those that do something on it.
 
 | Setting | What it does | Default |
 |---|---|---|
-| `layout` | **Auto** picks the look by itself: compact when the card is small. **Full** or **Compact** forces one look. | Auto |
+| `layout` | **Auto** picks the look by itself: compact when the card is small (the sensor and the air purifier stay full unless you choose **Compact**). **Full** or **Compact** forces one look. | Auto |
 | `color_scheme` | Light or dark card, or **Auto** to follow Home Assistant | Auto |
-| `accent_color` | Colour of buttons and highlights (switched-on things, extra buttons, sliders; the floating button; the reminder pill – it wins over the reminder's own `color`). Not offered on cards with nothing to colour (greeting, title, air quality, calendar, pop-up). | from the theme |
+| `accent_color` | Colour of buttons and highlights (switched-on things, extra buttons, sliders; the chips' floating button; the reminder pill – it wins over the reminder's own `color`). Not offered on cards with nothing to colour (greeting, title, air quality, calendar, pop-up, bar, floating panel, stacks, spacer). | from the theme |
 | `glow_color` | Colour of the glow around lit lights (light and chips cards) | the light's own colour |
 | `weather_effects` | Raindrops, snow and so on drawn on this card. Needs the weather background card in the same view. | on |
 | `max_width` | The card is never wider than this and stays centred in its place: pixels, or percent of its grid place with `max_width_unit: "%"` (or `max_width: 80%`). Handy in a Panel view or very wide sections; in a normal sections view the columns already keep cards narrow. | full width |
 | `max_width_unit` | `px` or `%` for a numeric `max_width` | `px` |
 | `tap_action`, `hold_action`, `double_tap_action` | What happens when you tap, hold or double-tap: switch, show details, open another page, run a script… | depends on the card |
-| `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on light, entity, button, person and alarm cards. At most 4 are shown (2 on a narrow card, 1 on a compact one); the editor warns about the rest. | none |
+| `sub_buttons` | Small extra round buttons on the right of the card, each with its own device and action. Available on light, entity, button, person and alarm cards. A tap switches what can be switched and shows details otherwise; running a script or scene takes a tap action. At most 4 are shown (2 on a narrow card, 1 on a compact one, where the light card can show 2); the editor warns about the rest. | none |
 | — | **Layout preview while editing:** a switch at the bottom of the view (All / Phone / Computer) hides the cards and sections of the other screen size, so each layout can be edited on its own. It evaluates HA screen conditions (min / max width), is remembered on the device and disappears when you leave edit mode. Appears when the view has at least one Lumen card. | – |
 | `edit_note` | A note shown on the card only while the dashboard is being edited. Cards hidden by a screen condition (their own or their section's) also get a "Phone" / "Computer" label there automatically ("· section" when the condition is on the section, not the card): HA shows them all in edit mode without telling them apart. | none |
 | `styles` | For tinkerers: your own CSS inside the card | none |
-| `haptics` | Gentle vibration on tap, hold and while dragging (the lightest tick every 1 %, slightly firmer at the ends). Works in the HA app and Android browsers. | on |
+| `haptics` | Gentle vibration on tap, hold and while dragging (the lightest tick every 1 %, slightly firmer at the ends). Works in the HA app and Android browsers. On cards with a slider, `haptic_tick` picks the type of the tick. | on |
 
 **Colours.** `accent_color` and `glow_color` accept Home Assistant colour names (`blue`, `pink`…), hex or rgb. From that one colour the card builds the whole set: the fill, the glow, the icon background and a readable text colour, in light and dark mode.
 
@@ -546,6 +550,7 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `power_entity` | The wall switch or relay that powers the bulb. When it is off the bulb is "off", not "unavailable", and a tap switches the relay. | none |
 | `power_entities` | Several switches feeding this light, usually a group of bulbs (see [Light](#light)). Replaces `power_entity`. | none |
 | `sub_buttons` | Small extra buttons on the tile. With `power_entities`, one button per switch by default. | none |
+| `height` | Tile height in pixels, at least 40 | 64 (compact 44) |
 | `show_state` | Show the brightness line | on |
 | `show_color_button` | Show the small white-tone circle | on |
 
@@ -555,10 +560,10 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 
 | Setting | What it does | Default |
 |---|---|---|
-| `chips` | The list of chips. Each one has a `type`: **action** (scene, script, button…) or **light**. Each also has an `entity`, and optionally a `name`, `icon` and `tap_action`. Light chips can have a `power_entity`. | – |
+| `chips` | The list of chips. Each one has a `type`: **action** (scene, script, button…) or **light**. Each also has an `entity`, and optionally a `name`, `icon`, `tap_action`, `hold_action` and `double_tap_action`. Light chips can have a `power_entity`. | – |
 | `active_value`, `active_attribute` (each chip) | The action chip is highlighted while the entity's state, or this attribute, has this value, for example a sound mode | – |
 | `alignment` | Left, centre, right or spread out | left |
-| `fab` | **Show as a floating button**: the action chips move into a round button in the bottom-right corner | off |
+| `fab` | **Show as a floating button**: the action chips move into a round button in a bottom corner | off |
 | `fab_narrow_only` | **Auto: only on narrow screens.** The floating button appears only on phones and portrait tablets; on wider screens the normal row stays. Untick to always use the floating button. | on |
 | `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
 | `title` | Heading above the items of the floating button | "Scenes" |
@@ -587,11 +592,12 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 |---|---|---|
 | `entity` | The alarm panel | – |
 | `name`, `icon` | Name, and an icon instead of the shield (for example a garage) | from the device |
-| `banner` | Red banner when the alarm goes off | on |
+| `banner` | Red banner at the top of the screen when the alarm goes off (compact card) | on |
 | `banner_text` | Text of the banner | "Alarm: *name*!" |
 | `screen_ring` | Red pulsing frame around the whole screen when the alarm goes off | on |
 | `show_state` | Show the state line | on |
 | `show_buttons` | Show the Arm / Disarm button on the card | on |
+| `disarmed_color` | Colour of the disarmed state, for example red to make it stand out | neutral |
 | `arm_modes` | Which modes the keypad offers (`armed_home`, `armed_away`, `armed_night`, `armed_vacation`, `armed_custom_bypass`) | all your alarm supports |
 | `arming_time`, `pending_time` | Length of the arming countdown and the entry delay in seconds, if your alarm does not report them | from the alarm |
 
@@ -616,6 +622,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 |---|---|---|
 | `entity` | Any device or sensor | – |
 | `name`, `icon` | Name and icon | from the device |
+| `device_class` | Treat the sensor as this type (door, window, smoke…): changes the icons and colours | as in Home Assistant |
 | `show_name`, `show_icon`, `show_state` | Show or hide each part | on |
 
 <a id="lumen-button-card"></a>
@@ -626,8 +633,9 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 |---|---|---|
 | `entity` | What the button runs: a script, scene, button, or anything that can be switched | – |
 | `name`, `icon` | Name and icon | from the device |
+| `color` | Colour of the icon and of the compact cell at rest | neutral |
 | `feedback` | **Wait for the device's answer** after a tap. Fill in `status_entity` (the sensor with the answer code), `success_state` (the code that means success), `message_entity` (the sensor with the error text) and `success_text` (what to show on success). | off |
-| `last_used_entity` | A date-and-time helper that stores when it was last used | none |
+| `last_used_entity` | A date-and-time helper or a timestamp sensor that holds the last use. Your automation updates it; the card only reads the time. | none |
 | `secondary_info` | Second line: **Auto** (last use), state, last run, last change, or nothing | Auto |
 | `show_name`, `show_icon`, `show_state` | Show or hide each part | on |
 
@@ -644,7 +652,7 @@ Tip: set `tap_action` to your arm/disarm script and the card and its buttons run
 | `hours` | How many hours the chart covers | 12 |
 | `color` | Colour of the chart | accent colour |
 | `show_name`, `show_graph` | Show the name / the chart | on |
-| `height` | Card height in px. Under 48 px it becomes one line: name left, value right, chart behind (as on the Dom panel's phone layout). | 52 (compact 36) |
+| `height` | Card height in px. Under 48 px it becomes one line: name left, value right, chart behind. | 52 (compact 36) |
 | `stale_after` | After how many hours without a new reading the card shows it as outdated. Empty or 0 = never (many thermometers only report when the temperature changes). | none |
 
 <a id="lumen-climate-card"></a>
@@ -680,7 +688,7 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | `pm25`, `pm10`, `aqi_entity` | Your air sensors. One of the three is enough. | – |
 | `stale_hours` | After how many hours without new data the card says "Outdated data" | 2 |
 | `footer` | A short note at the bottom of the chart window, for example "Sensor on the balcony" | none |
-| `levels` | Your own names for the six levels (YAML only) | Very good … Extremely poor |
+| `levels` | Your own names and hints for the six levels, best to worst: a list of `title` and `hint` (YAML only) | Very good … Extremely poor |
 | `show_values`, `show_bar` | Show the numbers / the coloured level bar | on |
 
 <a id="lumen-reminder-card"></a>
@@ -707,7 +715,7 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | Setting | What it does | Default |
 |---|---|---|
 | `title` | The text | – |
-| `heading_style` | **Overline** (small capitals), **Section title** (large) or **Room header** | Overline |
+| `heading_style` | **Small label** (capitals), **Section title** (large) or **Room header** | Small label |
 | `badges` | Values shown next to the title. Each has an `entity`, and optionally `state_content` (an attribute to show instead of the state) and `name` (a label before the value). | none |
 | `entity`, `tap_action` | What tapping the title opens | nothing |
 
@@ -717,9 +725,8 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 
 | Setting | What it does | Default |
 |---|---|---|
-| `show_date` | Show today's date above the greeting | on |
+| `show_date` | Show today's date above the greeting (not in the compact look) | on |
 | `name` | Name after the greeting | the logged-in user |
-| `sun_entity` | Sun sensor used to tell morning from evening | `sun.sun` |
 
 <a id="lumen-weather-background-card"></a>
 
@@ -812,8 +819,8 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 | Setting | What it does | Default |
 |---|---|---|
 | `items` | The buttons. Each has a `navigation_path` (a view such as `rooms`, a path such as `/lovelace/rooms`, or a pop-up such as `#living-room`), a `name` and an `icon`. | – |
-| `position` | **Bottom**: stuck to the bottom of the screen (put this card last). **Inline**: an ordinary card where you place it. | bottom |
-| `narrow_only` | Show it only on phones and narrow screens | off |
+| `position` | **Bottom of the screen**: stuck to the bottom (put this card last). **In the grid**: an ordinary card where you place it. | bottom of the screen |
+| `narrow_only` | At the bottom of the screen: show it only on phones and narrow screens | off |
 
 <a id="lumen-popup-card"></a>
 
@@ -821,11 +828,14 @@ Only the modes your device really has are shown. Thermostats with a "from–to" 
 
 | Setting | What it does | Default |
 |---|---|---|
-| `hash` | The link that opens it, for example `#living-room` | – |
+| `hash` | **Link**: what opens it, for example `#living-room` | – |
 | `name`, `icon` | Heading of the window | none |
 | `cards` | The cards inside (any Home Assistant cards) | – |
 | `show_trigger` | Show a row on the dashboard that opens the pop-up (otherwise the card is invisible) | off |
 | `auto_close` | Close by itself after this many seconds (0 = never) | 0 |
+
+<a id="lumen-vertical-stack-card"></a>
+<a id="lumen-horizontal-stack-card"></a>
 
 ### Stacks (`lumen-vertical-stack-card`, `lumen-horizontal-stack-card`)
 
@@ -852,6 +862,15 @@ cards:
 | `align` | Where a narrower stack sits: `center`, `start` (left), `end` (right); with `card_width: content` also where the cards sit in the row | `center` |
 | `card_width` | Horizontal stack only: `equal` – the cards share the width, `content` – each card is as wide as its content and wraps to the next row when needed (e.g. reminder pills) | `equal` |
 
+<a id="lumen-bar-card"></a>
+
+### Bar (`lumen-bar-card`)
+
+| Setting | What it does | Default |
+|---|---|---|
+| `cards` | The cards inside (any Home Assistant cards), added and edited in the same visual editor as Home Assistant's stacks. Lumen cards always use their compact look here. | – |
+| `color_scheme`, `max_width`, `max_width_unit`, `weather_effects`, `edit_note`, `styles` | As on most cards | – |
+
 <a id="lumen-purifier-card"></a>
 
 ### Air purifier (`lumen-purifier-card`)
@@ -861,7 +880,7 @@ type: custom:lumen-purifier-card
 entity: fan.purifier
 ```
 
-Every setting is in the visual editor. Model-specific functions are configuration:
+Every setting is in the visual editor. In YAML, model-specific functions look like this:
 
 ```yaml
 type: custom:lumen-purifier-card
@@ -878,6 +897,7 @@ filters:
   - { name: HEPA, entity: sensor.purifier_hepa, unit: h }
 controls:
   - { entity: switch.purifier_child_lock }
+service_controls:
   - { name: Timer, attribute: timer, service: my_integration.set_timer, field: hours, min: 0, max: 12, min_label: "Off" }
   - { name: Brightness, attribute: brightness, service: my_integration.set_brightness, field: level, options: [0, 50, 100] }
 ```
@@ -885,6 +905,7 @@ controls:
 | Setting | What it does | Default |
 |---|---|---|
 | `entity` | A `fan` entity | – |
+| `name`, `icon` | Name and icon | from the device |
 | `layout` | `wide` or `compact` (a 58 px row) | `wide` |
 | `hours`, `stale_hours` | Chart window on the card; hours without a reading until data is outdated (0 = never) | 24, 2 |
 | `preset_modes` | Which presets to show, in what order | all the device has |
@@ -895,13 +916,13 @@ controls:
 | `show_humidifier`, `show_filters` | Show these parts | on |
 | `filters` | `name`, `entity` or `attribute`, `unit` (`%`, `h`, `d`) | sensors with "filter" in the name, then attributes |
 | `index` | A second index: `name`, `entity` or `attribute`, `thresholds`, `labels`, `max` | none |
-| `controls` | Controls in the details: an entity (`switch`, `light`, `select`, `number`…) or `attribute` + `service` + `field`, with `options` (a choice) or `min`/`max`/`step` (− / +) | none |
-| `service_controls` | Controls that call a service: `attribute` + `service` + `field`, with `options` or `min`/`max`/`step` | none |
+| `controls` | Controls in the details: an entity (`switch`, `light`, `select`, `number`…); `options` apply to a list, `min`/`max`/`step` to a number | none |
+| `service_controls` | Controls that call a service: `attribute` + `service` + `field`, with `options` (a choice) or `max` (− / +); with neither it is a switch | none |
 | `confirm_timeout` | Seconds to confirm a change | 45 |
 | `send_delay` | Seconds of quiet after the last tap before a command goes out. A burst of taps is one command, and commands are at least 1 s apart | 0.8 |
 | `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Sensor overrides | found on the device |
 
-The PM2.5 scale is the one of the air quality card. Outside HA, without the entity registry, the card looks for `sensor.<fan>_pm2_5` and attributes.
+The PM2.5 scale is the one of the air quality card.
 
 <a id="lumen-spacer-card"></a>
 
@@ -932,14 +953,14 @@ cards:
 
 | Setting | What it does | Default |
 |---|---|---|
-| `icon`, `title` | Icon of the floating button and heading of the sheet | `mdi:dock-bottom`, "Floating panel" |
-| `cards` | The cards inside (any Home Assistant cards), added and edited in the same visual editor as Home Assistant's stacks. Climate cards show as compact thermostat rows here. The sheet opens as tall as its cards need, up to the top of the screen. | – |
-| `narrow_only` | The floating button only on phones and narrow screens (under 1024 px); wider, the card is a row in the grid that opens the same sheet. Off = the button on every screen. | on |
+| `icon`, `title` | Icon of the floating button and heading of the panel | `mdi:dock-bottom`, "Floating panel" |
+| `cards` | The cards inside (any Home Assistant cards), added and edited in the same visual editor as Home Assistant's stacks. Climate cards show as compact thermostat rows here. The panel opens as tall as its cards need, up to the top of the screen. | – |
+| `narrow_only` | The floating button only on phones and narrow screens (under 1024 px); wider, the card is a row in the grid that opens the same panel. Off = the button on every screen. | on |
 | `fab_side` | **Button side**: right (default) or left, e.g. for a left-handed user. Each side has its own stack of floating buttons. | right |
-| `badge_entities` | What the number on the button counts. Empty = the cards' thermostats that are heating; otherwise these entities when heating / on. | empty |
-| `color_scheme`, `accent_color`, `styles` | As on every card | – |
+| `badge_entities` | What the number on the button counts. Empty = the cards' thermostats that are heating; otherwise these entities when active (heating, on, open, home or playing). | empty |
+| `color_scheme`, `max_width`, `max_width_unit`, `edit_note`, `styles` | As on most cards | – |
 
-The button joins the stack of floating buttons: above the scenes button (48 px), or on its own place in the corner (64 px) when it is the only one. Order from the bottom: scenes, panels (in the dashboard's order), alarm. The warning corner shows a battery below the thermostat card's `battery_low` (15 % by default) or an offline entity. While the dashboard is edited the card is always the row, marked "FAB on phones".
+The button joins the stack of floating buttons: above the scenes button (48 px), or on its own place in the corner (64 px) when it is the only one. Order from the bottom: scenes, then climate buttons and panels, in the order they appear on the dashboard. The warning corner shows a battery below the thermostat card's `battery_low` (15 % by default) or an offline entity. While the dashboard is edited the card is always the row, marked "Floating on phones".
 
 <a id="lumen-weather-card"></a>
 
@@ -954,14 +975,14 @@ warnings_entity: sensor.weather_warnings   # optional
 | Setting | What it does | Default |
 |---|---|---|
 | `entity` | The weather entity (`weather.*`). Hourly and daily forecasts are used when the integration provides them. | – |
-| `warnings_entity` | Optional sensor with a `warnings` list attribute (IMGW-PIB Monitor and similar: `event`, `level` 1–3, `valid_from`, `valid_to`, `content`). Warnings that are on now or start within 24 h show as pills on the card and as bars in the sheet. | – |
+| `warnings_entity` | Optional sensor with a `warnings` list attribute (IMGW-PIB Monitor and similar: `event`, `level` 1–3, `valid_from`, `valid_to`, `content`). Warnings that are on now or start within 24 h show as pills on the card and as bars in the details window. | – |
 | `layout` | **Auto** (a line when the card is narrower than 240 px, the card from 240 px), **Line**, **Card** or **Icon and temperature only** (no background, for next to the greeting) | auto |
 | `hours` | **Hours on the card**: 4–8. The card shows only as many as fit at 44 px or more. | 6 |
 | `show_feels`, `show_minmax`, `show_hours`, `show_warnings` | Feels-like temperature, today's low / high, the row of hours and the warnings on the card | on |
 | `sun_entity` | Day / night icons now | `sun.sun` |
-| `color_scheme`, `accent_color`, `max_width`, `max_width_unit`, `weather_effects`, `styles` | As on every card | – |
+| `color_scheme`, `accent_color`, `max_width`, `max_width_unit`, `weather_effects`, `edit_note`, `styles` | As on most cards | – |
 
-Tap opens the details sheet, hold opens Home Assistant's own weather dialog. Sunrise and sunset in the sheet are calculated from the location of your Home Assistant.
+Tap opens the details window, hold opens Home Assistant's own weather dialog. Sunrise and sunset in that window are calculated from the location of your Home Assistant.
 
 ---
 
@@ -974,19 +995,19 @@ Refresh the browser with Ctrl+F5 (Cmd+Shift+R on a Mac). In the phone app, use *
 Same fix: refresh the browser. If it is still there, check **Settings → Dashboards → ⋮ → Resources**. There should be one entry ending in `lumen-cards.js`.
 
 **There is no rain or snow on my dashboard.**
-Add the **Weather background** card to the same view (one per view is enough), and choose your weather device in it. Some old tablets turn effects off to save power. Turn on `show_controls` to see the switches.
+Add the **Weather background** card to the same view (one per view is enough), and choose your weather device in it. Animation also stops if the device asks for reduced motion, or if the switches were turned off on that device. Turn on `show_controls` to see the switches.
 
 **The cards look different on my phone and on my tablet.**
 That's on purpose: a small card shows its compact look. To decide exactly what appears where, see the tip under [Example dashboards](#example-dashboards) (two copies plus the **Screen** visibility condition). You can also set `layout` to **Full** or **Compact** to stop the automatic switching.
 
 **My air conditioner's floating button covers something.**
-Two floating buttons stack on top of each other automatically. To move them up, for example above a bottom navigation bar, add `lumen-cards-fab-bottom: 90px` to your Home Assistant theme.
+Floating buttons stack on top of each other automatically, and they move above Lumen's own navigation bar by themselves. To move them up further, for example above a bar from another add-on, add `lumen-cards-fab-bottom: 90px` to your Home Assistant theme.
 
 **Can I change the colours?**
-Yes: `accent_color` and `glow_color` on each card, or for all cards at once with `lumen-cards-accent` and `lumen-cards-glow-color` in a Home Assistant theme.
+Yes: `accent_color` and `glow_color` on each card. The glow can also be set for all cards at once with `lumen-cards-glow-color` in a Home Assistant theme.
 
 **Can I use it with a keyboard?**
-Yes. Tab moves between cards. Enter or Space taps. Shift+Enter holds (for example to open the light panel). The arrow keys change brightness, and Escape closes windows.
+Yes. Tab moves between cards. Enter or Space taps. Shift+Enter holds (for example to open the light's window). The arrow keys change brightness, and Escape closes windows.
 
 ---
 
