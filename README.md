@@ -19,13 +19,13 @@ What you get:
 - **Light and dark mode.** The cards follow your Home Assistant settings.
 - **English and Polish.** The cards and their settings use the language from your Home Assistant profile.
 
-### What it looks like in a real home
+### The same home in the evening
 
-The author's own dashboard in the evening, in dark mode. On the desktop, the version built from Lumen Cards. On the phone, the "Dom" panel that Lumen Cards grew out of (the cards look the same). Names and some states are changed for privacy:
+A made-up home, with invented names and data, in dark mode:
 
 <p align="center">
-  <img src="docs/images/real-home-desktop.jpg" alt="A real home dashboard made of Lumen Cards on a desktop, in the evening" width="820"><br>
-  <img src="docs/images/real-home-phone.jpg" alt="The same dashboard on a phone" width="300">
+  <img src="docs/images/evening-desktop.jpg" alt="A dashboard made of Lumen Cards on a desktop, in the evening" width="820"><br>
+  <img src="docs/images/evening-phone.jpg" alt="The same dashboard on a phone" width="300">
 </p>
 
 ---
