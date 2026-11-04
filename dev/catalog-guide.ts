@@ -17,7 +17,7 @@ export interface Guide {
 export const GUIDE: Record<string, Guide> = {
   swiatlo: {
     tagline: "Duży kafel lampy, który świeci jej kolorem.",
-    about: "Jedna lampa albo grupa lamp na dużym kaflu. Kafel świeci kolorem żarówki, a grupa pokazuje, ile lamp świeci („2 z 3 włączone”). Żarówki za osobnymi włącznikami, np. dwa kinkiety, też zmieszczą się na jednej karcie: przyciski włączają każdy z nich, a karta ustawia jasność i barwę obu.",
+    about: "Jedna lampa albo grupa lamp na dużym kaflu. Kafel świeci kolorem żarówki, a grupa pokazuje, ile lamp świeci („Włączone: 2 z 3”). Żarówki za osobnymi włącznikami, np. dwa kinkiety, też zmieszczą się na jednej karcie: przyciski włączają każdy z nich, a karta ustawia jasność i barwę obu.",
     need: "Lampa albo grupa świateł",
     controls: [
       ["tap", "Dotknij, żeby włączyć albo wyłączyć."],
@@ -42,7 +42,7 @@ export const GUIDE: Record<string, Guide> = {
   },
   alarm: {
     tagline: "Stan alarmu i uzbrajanie kodem.",
-    about: "Stan alarmu w jednym spojrzeniu. Uzbrojony jest zielony, uzbrajanie ma żółty pasek odliczania z przyciskiem Anuluj, a włączony alarm barwi kartę na czerwono.",
+    about: "Stan alarmu w jednym spojrzeniu. Uzbrojony jest zielony, uzbrajanie ma żółty pasek odliczania z przyciskiem Anuluj, a trwający alarm barwi kartę na czerwono.",
     need: "Centrala alarmowa",
     controls: [
       ["tap", "Uzbrój otwiera klawiaturę z trybami: w domu, poza domem, noc."],
@@ -62,7 +62,7 @@ export const GUIDE: Record<string, Guide> = {
     tagline: "Drzwi, okna, gniazdka – wszystko, co ma stan.",
     about: "Mały kafel dla czegokolwiek, co ma stan. Otwarte drzwi i okna robią się czerwone, włączone urządzenia dostają kolor akcentu. Po prawej zmieszczą się małe dodatkowe przyciski, np. do lampy obok.",
     need: "Dowolne urządzenie albo czujnik",
-    controls: [["tap", "Dotknij, żeby przełączyć urządzenie albo zobaczyć szczegóły czujnika."]],
+    controls: [["tap", "Dotknij, żeby zobaczyć szczegóły. Przełączanie ustawisz w akcji dotknięcia."]],
   },
   przycisk: {
     tagline: "Uruchamia skrypt albo scenę i czeka na odpowiedź.",
@@ -84,7 +84,7 @@ export const GUIDE: Record<string, Guide> = {
   },
   klimatyzacja: {
     tagline: "Klimatyzator albo termostat: temperatura i tryby.",
-    about: "Temperatura docelowa z przyciskami − i +, tryby i prędkości nawiewu, które ma Twoje urządzenie, oraz znacznik, co urządzenie robi teraz: grzeje, chłodzi albo czeka. Na telefonie może zmienić się w pływający przycisk z temperaturą.",
+    about: "Temperatura docelowa z przyciskami − i +, tryby i prędkości nawiewu, które ma Twoje urządzenie, oraz znacznik, co urządzenie robi teraz: grzeje, chłodzi albo utrzymuje temperaturę. Na telefonie może zmienić się w pływający przycisk z temperaturą.",
     need: "Klimatyzator, termostat albo głowica grzejnika",
     controls: [
       ["tap", "− i + zmieniają temperaturę."],
@@ -95,11 +95,11 @@ export const GUIDE: Record<string, Guide> = {
     tagline: "Pogoda teraz i na najbliższe godziny.",
     about: "Aktualna pogoda: cienka linijka, sama ikona z temperaturą albo karta z prognozą godzinową. Pokazuje też ostrzeżenia, np. o burzach.",
     need: "Prognoza pogody (np. Met.no)",
-    controls: [["tap", "Dotknij: odczuwalna temperatura, wiatr, prognoza na dziś i na 7 dni."]],
+    controls: [["tap", "Dotknij: odczuwalna temperatura, wiatr, prognoza na dziś i 3 kolejne dni."]],
   },
   przypomnienie: {
     tagline: "Pojawia się tylko wtedy, gdy coś wymaga uwagi.",
-    about: "Mała pigułka, która pojawia się tylko wtedy, gdy trzeba coś zrobić, np. „Rower – bateria 18%”. Może też wyskoczyć okienko, które wraca przy każdym otwarciu dashboardu, aż dotkniesz Gotowe.",
+    about: "Mała pigułka, która pojawia się tylko wtedy, gdy trzeba coś zrobić, np. „Rower – bateria 18%”. Może też wyskoczyć okno, które wraca przy każdym otwarciu dashboardu, aż dotkniesz Gotowe.",
     need: "Przełącznik pomocnika (input_boolean)",
     controls: [["tap", "Dotknij pigułki: Przypomnij później albo Gotowe."]],
   },
@@ -168,11 +168,11 @@ export const GUIDE: Record<string, Guide> = {
     tagline: "„Dzień dobry” z imieniem i datą.",
     about: "Powitanie według pory dnia z imieniem zalogowanej osoby i dzisiejszą datą.",
     need: "Nic",
-    controls: [["see", "Zmienia się samo rano, po południu i wieczorem."]],
+    controls: [["see", "Zmienia się samo: rano, po południu, wieczorem i w nocy."]],
   },
   stosy: {
     tagline: "Kilka kart w jednej kolumnie albo w rzędzie.",
-    about: "Karty jedna pod drugą albo obok siebie, jak w zwykłym Home Assistant, ale z jedną szerokością dla całej grupy, np. 70% ekranu, wyśrodkowaną albo przy brzegu.",
+    about: "Karty jedna pod drugą albo obok siebie, jak w zwykłym Home Assistant, ale z jedną szerokością dla całej grupy, np. 70% swojego miejsca, wyśrodkowaną albo przy brzegu.",
     need: "Inne karty do zgrupowania",
     controls: [["see", "W edytorze dodajesz karty zakładkami, tak jak w zwykłym stosie."]],
   },
@@ -190,12 +190,18 @@ export const GUIDE: Record<string, Guide> = {
   },
   "plywajacy-panel": {
     tagline: "Wszystkie termostaty pod jednym przyciskiem.",
-    about: "Jeden okrągły przycisk, który otwiera arkusz z kartami – najczęściej wszystkimi termostatami naraz. Przycisk mówi, ile z nich grzeje, i ostrzega o słabej baterii głowicy. Na komputerze jest wierszem w siatce.",
+    about: "Jeden okrągły przycisk, który otwiera panel z kartami – najczęściej wszystkimi termostatami naraz. Przycisk mówi, ile z nich grzeje, i ostrzega o słabej baterii głowicy. Na komputerze jest wierszem w siatce.",
     need: "Termostaty albo inne karty",
     controls: [
-      ["tap", "Dotknij, żeby otworzyć arkusz."],
-      ["tap", "W arkuszu „Wszystkie: Komfort / Eco” zmienia wszystkie naraz."],
+      ["tap", "Dotknij, żeby otworzyć panel."],
+      ["tap", "W panelu „Wszystkie: Komfort / Eko” zmienia wszystkie naraz."],
     ],
+  },
+  "tlo-pogodowe": {
+    tagline: "Prawdziwa pogoda za kartami.",
+    about: "Niebo za kartami pokazuje prawdziwą pogodę: słońce, chmury, deszcz, śnieg, mgłę, wiatr i burzę, w dzień i w nocy. Krople i śnieg pojawiają się też na innych kartach Lumen. Wystarczy jedna karta na widok, a sama nie zajmuje miejsca, chyba że pokaże przełączniki dla danego urządzenia.",
+    need: "Prognoza pogody (np. Met.no)",
+    controls: [["see", "Działa samo. Opcjonalne przełączniki wyłączają efekty na jednym urządzeniu."]],
   },
   odstep: {
     tagline: "Miejsce, żeby przewinąć ponad pływające przyciski.",

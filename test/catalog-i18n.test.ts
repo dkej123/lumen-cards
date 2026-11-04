@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
-import { SECTIONS } from "../dev/catalog-data";
+import { SECTIONS, sectionCards } from "../dev/catalog-data";
 import { EN, GUIDE_EN, translated } from "../dev/catalog-en";
 import { GUIDE } from "../dev/catalog-guide";
 import { PAGE_PL } from "../dev/catalog-page-pl";
@@ -43,6 +43,16 @@ describe("catalog page languages", () => {
   it("every section links to an agent file that exists", () => {
     const files = readdirSync("docs/agents/cards");
     expect(SECTIONS.map((s) => `lumen-${s.card}-card.md`).filter((f) => !files.includes(f))).toEqual([]);
+  });
+
+  it("the page shows every card, so its count and \"every card\" are true", () => {
+    const shown = [...new Set(SECTIONS.flatMap(sectionCards))].map((c) => `lumen-${c}-card.md`).sort();
+    expect(shown).toEqual(readdirSync("docs/agents/cards").sort());
+  });
+
+  it("a tab's own card is a real card with its own YAML type", () => {
+    const stacks = SECTIONS.find((s) => s.id === "stosy")!;
+    expect(stacks.variants.find((v) => v.label === "Poziomy")!.card).toBe("horizontal-stack");
   });
 
   it("every section has a guide entry", () => {

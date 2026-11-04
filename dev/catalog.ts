@@ -31,7 +31,7 @@ import {
 } from "@mdi/js";
 import type { HassLike } from "../src/hass/types";
 import overviewMd from "../docs/agents/overview.md?raw";
-import { SECTIONS as SECTIONS_PL, type Section, type Variant } from "./catalog-data";
+import { SECTIONS as SECTIONS_PL, sectionCards, type Section, type Variant } from "./catalog-data";
 import { EN, GUIDE_EN, translated } from "./catalog-en";
 import { GUIDE as GUIDE_PL, type Gesture } from "./catalog-guide";
 import { PAGE_PL } from "./catalog-page-pl";
@@ -88,7 +88,7 @@ customElements.define(
 );
 
 // The settings lists and the picker names read their labels before any card has set the language from hass.
-const { setLanguage } = await import("../src/core/i18n");
+const { plural, setLanguage } = await import("../src/core/i18n");
 setLanguage(lang);
 await import("../src/lumen-cards");
 
@@ -128,7 +128,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", text = ""):
 };
 
 const tagOf = (card: string) => `custom:lumen-${card}-card`;
-const yamlOf = (s: Section, v: Variant) => jsyaml.dump({ type: tagOf(s.card), ...v.config }, { lineWidth: 96, noRefs: true, quotingType: '"' }).trimEnd();
+const yamlOf = (s: Section, v: Variant) => jsyaml.dump({ type: tagOf(v.card ?? s.card), ...v.config }, { lineWidth: 96, noRefs: true, quotingType: '"' }).trimEnd();
 
 /** The card's name in HA's card picker ("Lumen · Światło"). */
 function pickerName(card: string): string {
@@ -142,7 +142,8 @@ function makeCard(card: string, cfg: Record<string, unknown>): Card {
   c.setConfig({ ...cfg, type: tagOf(card) });
   // The floating panel's button would float over the whole page on a phone: show its row instead.
   // The spacer shows nothing on a dashboard: show its outline from edit mode.
-  if (card === "fab-sheet" || card === "spacer") (c as Card & { preview: boolean }).preview = true;
+  // The weather background would take over the page: show its preview strip.
+  if (card === "fab-sheet" || card === "spacer" || card === "weather-background") (c as Card & { preview: boolean }).preview = true;
   c.hass = home.hass();
   cards.add(c);
   return c;
@@ -184,7 +185,8 @@ const GESTURE: Record<Gesture, [string, string]> = {
 
 /** What the settings window of the card offers, in its own words (labels and help of its editor). */
 function settings(s: Section): { count: number; body: HTMLElement } | null {
-  const ctor = customElements.get(`lumen-${s.card}-card`) as unknown as { getConfigForm?(): CardForm } | undefined;
+  // The horizontal stack's form is the vertical one's plus the card width.
+  const ctor = customElements.get(`lumen-${s.card === "vertical-stack" ? "horizontal-stack" : s.card}-card`) as unknown as { getConfigForm?(): CardForm } | undefined;
   const form = ctor?.getConfigForm?.();
   if (!form) return null;
   const body = el("div", "settings");
@@ -241,7 +243,7 @@ function fold(title: string, note: string, content: HTMLElement): HTMLDetailsEle
 }
 
 function howToAdd(s: Section): HTMLElement {
-  const names = s.card === "vertical-stack" ? [pickerName("vertical-stack"), pickerName("horizontal-stack")] : [pickerName(s.card)];
+  const names = sectionCards(s).map(pickerName);
   const ol = el("ol", "steps");
   const step = (html: string) => {
     const li = el("li");
@@ -363,7 +365,7 @@ function sectionView(s: Section): HTMLElement {
     current = v;
     looks.querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", String(x === btn)));
     if (live) drop(live);
-    live = makeCard(s.card, v.config);
+    live = makeCard(v.card ?? s.card, v.config);
     grid.style.setProperty("--span", String(v.span ?? 12));
     grid.append(live);
     hint.textContent = v.hint ?? "";
@@ -381,7 +383,7 @@ function sectionView(s: Section): HTMLElement {
   const more = el("div", "more");
   more.append(fold(tr("How to add it to your dashboard", "Jak dodać na swój dashboard"), tr("4 steps, no code", "4 kroki, bez pisania kodu"), howToAdd(s)));
   const set = settings(s);
-  if (set) more.append(fold(tr("What you can set", "Co możesz ustawić"), tr(`${set.count} ${set.count === 1 ? "setting" : "settings"} in the card's window`, `${set.count} ${set.count < 5 ? "ustawienia" : "ustawień"} w oknie karty`), set.body));
+  if (set) more.append(fold(tr("What you can set", "Co możesz ustawić"), tr(`${set.count} ${set.count === 1 ? "setting" : "settings"} in the card's window`, `${set.count} ${({ one: "ustawienie", few: "ustawienia", many: "ustawień" })[plural(set.count)]} w oknie karty`), set.body));
   more.append(fold(tr("YAML code", "Kod YAML"), tr("for advanced users", "dla zaawansowanych"), yaml));
 
   sec.append(head, body, more);
@@ -395,7 +397,7 @@ function tile(s: Section): HTMLElement {
   const prev = el("div", "tile-prev");
   prev.inert = true;
   const v = s.variants.find((x) => !x.config.layout) ?? s.variants[0];
-  prev.append(makeCard(s.card, v.config));
+  prev.append(makeCard(v.card ?? s.card, v.config));
   const words = el("div", "tile-words");
   words.append(el("b", "", s.name), el("span", "", GUIDE[s.id].tagline));
   a.append(prev, words);
@@ -445,7 +447,7 @@ for (const name of [ALL, ...groups.map(([n]) => n)]) {
   });
   filters.append(b);
 }
-document.getElementById("count")!.textContent = String(SECTIONS.length);
+document.getElementById("count")!.textContent = String(new Set(SECTIONS.flatMap(sectionCards)).size);
 
 // one section per card
 const main = document.getElementById("cards")!;

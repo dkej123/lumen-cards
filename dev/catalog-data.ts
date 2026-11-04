@@ -4,6 +4,8 @@
 export interface Variant {
   /** Tab label. */
   label: string;
+  /** A different card than the section's (`lumen-<card>-card`), e.g. the horizontal stack. */
+  card?: string;
   /** Card config without `type` (the section's card). */
   config: Record<string, unknown>;
   /** Width in the 12-column preview grid (default 12). */
@@ -41,6 +43,9 @@ const purifierFull = {
   ],
 };
 const thermostats = ["th_living", "th_bedroom", "th_bathroom"].map((id) => ({ type: "custom:lumen-climate-card", entity: `climate.${id}` }));
+
+/** Every card a section shows: the section's own and those of its tabs. */
+export const sectionCards = (s: Section): string[] => [...new Set([s.card, ...s.variants.map((v) => v.card ?? s.card)])];
 
 export const SECTIONS: Section[] = [
   {
@@ -94,7 +99,7 @@ export const SECTIONS: Section[] = [
     variants: [
       { label: "Rozbrojony", config: { entity: "alarm_control_panel.demo" }, hint: "Uzbrój, kod 1234. Po 10 s alarm przechodzi z uzbrajania w uzbrojony." },
       { label: "Uzbrajanie", config: { entity: "alarm_control_panel.arming", screen_ring: false, banner: false } },
-      { label: "Wzbudzony", config: { entity: "alarm_control_panel.triggered", screen_ring: false, banner: false } },
+      { label: "Trwa alarm", config: { entity: "alarm_control_panel.triggered", screen_ring: false, banner: false } },
       { label: "Mała", config: { entity: "alarm_control_panel.home_mode", layout: "compact" }, span: 4 },
     ],
   },
@@ -119,7 +124,7 @@ export const SECTIONS: Section[] = [
     lead: "Stan dowolnej encji: drzwi, okna, gniazdka, z małymi przyciskami po prawej.",
     variants: [
       { label: "Drzwi", config: { entity: "binary_sensor.back_door" }, span: 6 },
-      { label: "Gniazdko", config: { entity: "switch.coffee" }, span: 6, hint: "Dotknij, żeby przełączyć." },
+      { label: "Gniazdko", config: { entity: "switch.coffee", tap_action: { action: "toggle" } }, span: 6, hint: "Tu ustawiona akcja dotknięcia przełącza gniazdko. Bez niej dotknięcie otwiera szczegóły." },
       { label: "Z przyciskami", config: { entity: "fan.purifier", sub_buttons: [{ entity: "input_boolean.purifier_night" }, { entity: "fan.purifier", icon: "mdi:power" }] } },
       { label: "Mała", config: { entity: "binary_sensor.front_door", layout: "compact" }, span: 3 },
     ],
@@ -163,10 +168,10 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "klimatyzacja",
-    name: "Klimatyzacja",
+    name: "Klimat",
     card: "climate",
     group: "Klimat",
-    lead: "Temperatura, tryby i nawiew. Zmiana temperatury idzie do urządzenia 0,8 s po ostatnim dotknięciu.",
+    lead: "Temperatura, tryby i nawiew. Zmiana temperatury idzie do urządzenia 1 s po ostatnim dotknięciu.",
     variants: [
       { label: "Klimatyzator", config: { entity: "climate.bedroom_ac", fan_modes: ["auto", "low", "medium", "high"] } },
       { label: "Zakres", config: { entity: "climate.heat_cool" } },
@@ -181,7 +186,7 @@ export const SECTIONS: Section[] = [
     group: "Klimat",
     lead: "Linijka, ikona albo karta z prognozą godzinową; dotknięcie otwiera pełną prognozę i ostrzeżenia.",
     variants: [
-      { label: "Karta", config: { entity: "weather.home", warnings_entity: "sensor.weather_warnings", layout: "wide" }, hint: "Dotknij karty: prognoza godzinowa i na 7 dni." },
+      { label: "Karta", config: { entity: "weather.home", warnings_entity: "sensor.weather_warnings", layout: "wide" }, hint: "Dotknij karty: prognoza godzinowa i na 3 kolejne dni." },
       { label: "Linijka", config: { entity: "weather.home", warnings_entity: "sensor.weather_warnings", layout: "compact" } },
       { label: "Ikona", config: { entity: "weather.home", layout: "icon" }, span: 4 },
     ],
@@ -277,11 +282,11 @@ export const SECTIONS: Section[] = [
     name: "Tytuł",
     card: "title",
     group: "Układ",
-    lead: "Nagłówek sekcji albo pokoju, z temperaturą i stanem obok.",
+    lead: "Mały napis, tytuł sekcji albo nagłówek pokoju, z wartościami obok, np. temperaturą.",
     variants: [
-      { label: "Sekcja", config: { title: "Bezpieczeństwo" } },
-      { label: "Pokój", config: { title: "Salon", heading_style: "section", badges: ["sensor.living_temp"] } },
-      { label: "Mały pokój", config: { title: "Kuchnia", heading_style: "room", badges: ["sensor.living_temp"] } },
+      { label: "Mały napis", config: { title: "Bezpieczeństwo" } },
+      { label: "Tytuł sekcji", config: { title: "Salon", heading_style: "section", badges: ["sensor.living_temp"] } },
+      { label: "Nagłówek pokoju", config: { title: "Kuchnia", heading_style: "room", badges: ["sensor.living_temp"] } },
     ],
   },
   {
@@ -303,7 +308,7 @@ export const SECTIONS: Section[] = [
     lead: "Stos pionowy i poziomy z jedną maksymalną szerokością (px albo %) dla całej grupy kart.",
     variants: [
       { label: "Pionowy 70 %", config: { max_width: 70, max_width_unit: "%", title: "Salon", cards: [{ type: "custom:lumen-light-card", entity: "light.sofa", icon: "mdi:sofa" }, { type: "custom:lumen-horizontal-stack-card", cards: [{ type: "custom:lumen-sensor-card", entity: "sensor.living_temp" }, { type: "custom:lumen-sensor-card", entity: "sensor.outside_temp", color: "light-blue" }] }] } },
-      { label: "Poziomy", config: { cards: [{ type: "custom:lumen-person-card", entity: "person.alex", layout: "compact" }, { type: "custom:lumen-person-card", entity: "person.sam", layout: "compact" }] } },
+      { label: "Poziomy", card: "horizontal-stack", config: { cards: [{ type: "custom:lumen-person-card", entity: "person.alex", layout: "compact" }, { type: "custom:lumen-person-card", entity: "person.sam", layout: "compact" }] } },
     ],
   },
   {
@@ -335,8 +340,16 @@ export const SECTIONS: Section[] = [
     name: "Pływający panel",
     card: "fab-sheet",
     group: "Układ",
-    lead: "Na telefonie pływający przycisk, szerzej wiersz; oba otwierają arkusz z kartami, np. wszystkimi termostatami.",
-    variants: [{ label: "Ogrzewanie", config: { title: "Ogrzewanie", icon: "mdi:radiator", cards: thermostats }, hint: "Na tej stronie widać podgląd. Na Twoim telefonie to okrągły przycisk w rogu ekranu, na komputerze wiersz, który otwiera arkusz." }],
+    lead: "Na telefonie pływający przycisk, szerzej wiersz; oba otwierają panel z kartami, np. wszystkimi termostatami.",
+    variants: [{ label: "Ogrzewanie", config: { title: "Ogrzewanie", icon: "mdi:radiator", cards: thermostats }, hint: "Na tej stronie widać podgląd. Na Twoim telefonie to okrągły przycisk w rogu ekranu, na komputerze wiersz, który otwiera panel." }],
+  },
+  {
+    id: "tlo-pogodowe",
+    name: "Tło pogodowe",
+    card: "weather-background",
+    group: "Układ",
+    lead: "Niebo, opady, mgła i wiatr za kartami całego widoku oraz efekty pogodowe na kartach Lumen.",
+    variants: [{ label: "Pogoda", config: { weather_entity: "weather.home" }, hint: "Na tej stronie widać podgląd. Na dashboardzie niebo wypełnia całe tło za kartami, a sama karta nie zajmuje miejsca." }],
   },
   {
     id: "odstep",

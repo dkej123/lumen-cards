@@ -266,7 +266,7 @@ body.ready .loading { display: none; }
     <div>
       <span class="eyebrow" data-i18n="heroEyebrow">Cards for Home Assistant</span>
       <h1 data-i18n="heroTitle">A home that looks good on every screen.</h1>
-      <p data-i18n="heroText">Lumen is <span id="count">25</span> cards for your Home Assistant dashboard: lights, alarm, air conditioning, weather, people and more. You set them up in the regular edit window, without writing code.</p>
+      <p data-i18n="heroText">Lumen is <span id="count">a set of</span> cards for your Home Assistant dashboard: lights, alarm, air conditioning, weather, people and more. You set them up in the regular edit window, without writing code.</p>
       <div class="cta">
         <a class="btn main" href="#all-cards" data-i18n="heroAll">See all cards</a>
         <a class="btn" href="#get-started" data-i18n="heroInstall">How to install</a>
@@ -312,7 +312,7 @@ body.ready .loading { display: none; }
     <div class="section-head">
       <span class="eyebrow" data-i18n="cardsEyebrow">Cards</span>
       <h2 data-i18n="cardsTitle">Pick a card to see what it can do</h2>
-      <p data-i18n="cardsText">Every card shrinks by itself in a narrow space, such as on a phone or in a row of several cards.</p>
+      <p data-i18n="cardsText">Most cards shrink by themselves in a narrow space, such as on a phone or in a row of several cards.</p>
     </div>
     <div id="filters" role="group" aria-label="Show cards"></div>
     <div id="gallery"></div>
@@ -341,8 +341,8 @@ body.ready .loading { display: none; }
       <details><summary data-i18n="q2">I see “Custom element doesn't exist: lumen-…”.</summary><p data-i18n="a2">The same fix: refresh your browser. If you still see it, check Settings → Dashboards → ⋮ → Resources. There should be one entry ending in lumen-cards.js.</p></details>
       <details><summary data-i18n="q3">Cards look different on a phone and on a tablet.</summary><p data-i18n="a3">That is intended: a small card shows its compact version. In the card's settings you can choose the Full or Compact look so it does not switch.</p></details>
       <details><summary data-i18n="q4">How do I get a background with the real weather?</summary><p data-i18n="a4">Add the Lumen · Weather background card once per view and pick your forecast in it. The sky behind the cards shows the sun, clouds, rain or snow, by day and by night.</p></details>
-      <details><summary data-i18n="q5">A floating button covers something.</summary><p data-i18n="a5">Several floating buttons stack above each other by themselves. To lift them higher, for example above a bottom navigation bar, add lumen-cards-fab-bottom: 90px to your Home Assistant theme.</p></details>
-      <details><summary data-i18n="q6">Can I change the colours?</summary><p data-i18n="a6">Yes. Each card has accent and glow colours in its settings. To change them for all cards at once, set them in your Home Assistant theme.</p></details>
+      <details><summary data-i18n="q5">A floating button covers something.</summary><p data-i18n="a5">Several floating buttons stack above each other by themselves. To lift them higher, for example above a bar from another add-on, add lumen-cards-fab-bottom: 90px to your Home Assistant theme.</p></details>
+      <details><summary data-i18n="q6">Can I change the colours?</summary><p data-i18n="a6">Yes. Cards have an accent colour in their settings, and cards with lights also a glow colour. To change the glow for all cards at once, set lumen-cards-glow-color in your Home Assistant theme.</p></details>
       <details><summary data-i18n="q7">Can I use the cards with a keyboard?</summary><p data-i18n="a7">Yes. Tab moves between cards, Enter or Space is a tap, and Shift+Enter is a hold. Arrow keys change the brightness, and Escape closes windows.</p></details>
     </div>
   </section>
