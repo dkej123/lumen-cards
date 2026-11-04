@@ -56,7 +56,7 @@ tap_action:
 | `input_boolean` as a "needs attention" flag | `lumen-reminder-card` | `entity` | Picker. Shows only while `state` matches (default `on`) |
 | `climate` | `lumen-climate-card` | `entity` | Picker. Several: put them in `lumen-fab-sheet-card` |
 | `cover` | `lumen-cover-card` | `entity` | Picker |
-| `fan` | `lumen-fan-card` | `entity` | Picker |
+| `fan` | `lumen-fan-card` | `entity` | Picker. A fan with a `pm25` attribute or a purifier icon: also `lumen-purifier-card` |
 | `media_player` | `lumen-media-card` | `entity` | Picker |
 | `lock` | `lumen-lock-card` | `entity` | Picker. Real device |
 | `alarm_control_panel` | `lumen-alarm-card` | `entity` | Picker. Real device |
@@ -155,7 +155,7 @@ Three cards can float, always in a corner of the screen:
 |---|---|---|---|
 | `lumen-chips-card` | `fab: true` | `fab_narrow_only: false` | the normal row |
 | `lumen-climate-card` | `fab: true` | `fab_narrow_only: false` | the normal card |
-| `lumen-fab-sheet-card` | always, when it has `cards` | `narrow_only: false` | a row in the grid opening the same sheet |
+| `lumen-fab-sheet-card` | always, when it has `cards` | `narrow_only: false` | a row in the grid opening the same panel |
 
 With `fab: true` you need no second copy of the card for desktop. On chips, only `type: action` chips float; `type: light` chips stay in the row.
 
@@ -225,8 +225,8 @@ All take `cards`: a list of complete card configs, Lumen or not. Inside `lumen-b
 | `lumen-vertical-stack-card` | One under another, one width for the group | `title`, `max_width`, `max_width_unit`, `align` |
 | `lumen-horizontal-stack-card` | Side by side | same, plus `card_width: equal` (default) or `content` (own width, wraps) |
 | `lumen-bar-card` | One 52 px glass row of compact cells with equal widths, e.g. doors and locks | none |
-| `lumen-popup-card` | Sheet opened by a URL hash | `hash` (required), `name`, `icon`, `show_trigger`, `auto_close` |
-| `lumen-fab-sheet-card` | Floating button opening a sheet, typically all thermostats | `icon`, `title`, `narrow_only`, `fab_side`, `badge_entities` |
+| `lumen-popup-card` | Window opened by a URL hash | `hash` (required), `name`, `icon`, `show_trigger`, `auto_close` |
+| `lumen-fab-sheet-card` | Floating button opening a panel, typically all thermostats | `icon`, `title`, `narrow_only`, `fab_side`, `badge_entities` |
 
 ```yaml
 - type: custom:lumen-horizontal-stack-card
@@ -287,7 +287,7 @@ my_theme:
 | `lumen-cards-fab-right`, `lumen-cards-fab-left` | Distance of the floating buttons from the edge of the view | 16px |
 | `lumen-cards-glow-color` | Glow of lit lights, for all cards; a card's `glow_color` wins | the light's own colour |
 
-No theme variable sets the accent. Use `accent_color` per card, despite the `lumen-cards-accent` mentioned in the README.
+No theme variable sets the accent. Use `accent_color` per card.
 
 ## Rules
 
@@ -311,7 +311,7 @@ No theme variable sets the accent. Use `accent_color` per card, despite the `lum
 | `src/core/form.ts` | Editor schema helpers, `LABELS`, `HELPERS` |
 | `src/core/register.ts` | `registerCard`: element + `window.customCards` entry |
 | `src/core/layer.ts` | Body-level layer for overlays, floating-button stacks |
-| `src/core/controllers/` | ReactiveControllers: `code-pad`, `host-look`, `pending`, `tween`, `user-styles` |
+| `src/core/controllers/` | ReactiveControllers: `code-pad`, `host-look`, `optimistic`, `pending`, `tween`, `user-styles` |
 | `src/core/` others | Actions, sheets, presses, sub-buttons, i18n, visibility labels, shared parts |
 | `src/core/icons.ts` | **Generated** by `scripts/gen-icons.mjs` from `mdi:` literals in `src/`. Do not edit |
 | `src/lights/controller.ts` | `LightsController`: tile, pill, sheet, relay logic, shared by light and chips cards |
@@ -371,7 +371,7 @@ No theme variable sets the accent. Use `accent_color` per card, despite the `lum
 5. Add labels and help to `src/core/form.ts`.
 6. Add tests in `test/`.
 7. Document it in `README.md` and `README.pl.md`, with `<a id="lumen-<name>-card"></a>` above the settings table: the picker's documentation link points at that anchor.
-8. Add a section to `SECTIONS` in `dev/catalog-data.ts` and an entry under the same id in `GUIDE` in `dev/catalog-guide.ts` (both in Polish). Add demo entities to `dev/mock-hass.ts` if needed.
+8. Add a section to `SECTIONS` in `dev/catalog-data.ts` and an entry under the same id in `GUIDE` in `dev/catalog-guide.ts` (both in Polish), and their English in `dev/catalog-en.ts`. Add demo entities to `dev/mock-hass.ts` if needed.
 9. Run `npm run docs:agents`, `npx vitest run` and `npm run build`. Commit everything, `dist/` and `docs/agents/cards.md` included.
 
 Change a form or a threshold: run `npm run docs:agents` too. `test/agent-docs.test.ts` fails until you do.

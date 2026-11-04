@@ -9,7 +9,7 @@ Lumen · Floating panel: A floating button that opens a panel with any cards, e.
 - Starting config: `{"icon":"mdi:radiator","title":"Heating","cards":[{"type":"custom:lumen-climate-card","entity":"climate.example","layout":"compact"}]}`
 - `cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.
 - Inner `custom:lumen-climate-card` cards get `layout: compact` unless they set it, and always `fab: false`.
-- Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it.
+- Inner cards are built only while the panel is open. Inner Lumen cards get `weather_effects: false` unless they set it.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|

@@ -389,7 +389,7 @@ Lumen · Floating panel: A floating button that opens a panel with any cards, e.
 - Starting config: `{"icon":"mdi:radiator","title":"Heating","cards":[{"type":"custom:lumen-climate-card","entity":"climate.example","layout":"compact"}]}`
 - `cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.
 - Inner `custom:lumen-climate-card` cards get `layout: compact` unless they set it, and always `fab: false`.
-- Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it.
+- Inner cards are built only while the panel is open. Inner Lumen cards get `weather_effects: false` unless they set it.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
@@ -694,7 +694,7 @@ Lumen · Pop-up: A window with any cards, opened from a button or the navigation
 - Starting config: `{"hash":"#living-room","name":"Living room","show_trigger":true,"cards":[]}`
 - `cards` is a list of complete card configs (any HA card, each with its own `type`), not one object as its selector suggests.
 - Editor: own `getConfigElement`: `cards` and the title (`name`) are edited in HA's stack editor, the other fields above it.
-- Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: "#living-room"`.
+- Inner cards are built only while the window is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: "#living-room"`.
 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|

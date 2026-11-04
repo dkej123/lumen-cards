@@ -13,7 +13,7 @@ Lumen Cards is a library of glass-style custom cards for Home Assistant Lovelace
 
 - A full dashboard in a `sections` view, with cards for lights, people, alarm, locks, doors, sensors, air quality, climate, weather, covers, media, fans, numbers, selects, calendars and purifiers.
 - One-tap scenes and scripts as chips or buttons, including buttons that wait for a device's response.
-- Floating buttons on phones, stacking by themselves, with a sheet that can hold any cards.
+- Floating buttons on phones, stacking by themselves, with a panel that can hold any cards.
 - Pop-ups opened by a URL hash, a navigation bar, section titles and a greeting.
 - Stacks with one maximum width for a whole group, and a glass bar of compact tiles.
 - An animated weather background for a view, with optional effects on the cards.

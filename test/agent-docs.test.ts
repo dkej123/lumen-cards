@@ -73,12 +73,12 @@ const SUPPLEMENT: Record<string, Supplement> = {
     notes: [
       CARDS_KEY_NOTE,
       "Inner `custom:lumen-climate-card` cards get `layout: compact` unless they set it, and always `fab: false`.",
-      "Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it.",
+      "Inner cards are built only while the panel is open. Inner Lumen cards get `weather_effects: false` unless they set it.",
     ],
   },
   "lumen-horizontal-stack-card": { notes: STACK_NOTES },
   "lumen-popup-card": {
-    notes: [CARDS_KEY_NOTE, CARDS_EDITOR("and the title (`name`) are"), "Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: \"#living-room\"`."],
+    notes: [CARDS_KEY_NOTE, CARDS_EDITOR("and the title (`name`) are"), "Inner cards are built only while the window is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: \"#living-room\"`."],
   },
   "lumen-purifier-card": { notes: ["A control that calls a service goes in `service_controls`. One written in `controls` keeps working; the editor shows the service fields of `controls` only then."] },
   "lumen-title-card": { notes: ["An item of `badges` may also be a plain entity id string."] },
@@ -276,7 +276,7 @@ function overview(): string {
     "",
     "- A full dashboard in a `sections` view, with cards for lights, people, alarm, locks, doors, sensors, air quality, climate, weather, covers, media, fans, numbers, selects, calendars and purifiers.",
     "- One-tap scenes and scripts as chips or buttons, including buttons that wait for a device's response.",
-    "- Floating buttons on phones, stacking by themselves, with a sheet that can hold any cards.",
+    "- Floating buttons on phones, stacking by themselves, with a panel that can hold any cards.",
     "- Pop-ups opened by a URL hash, a navigation bar, section titles and a greeting.",
     "- Stacks with one maximum width for a whole group, and a glass bar of compact tiles.",
     "- An animated weather background for a view, with optional effects on the cards.",
