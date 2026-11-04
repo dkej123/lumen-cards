@@ -1,4 +1,5 @@
 import { LitElement, html, nothing } from "lit";
+import { keyed } from "lit/directives/keyed.js";
 import type { Schema } from "./form";
 
 /** What a card's getConfigForm() returns (see form() in form.ts). */
@@ -52,7 +53,7 @@ export class LumenFormEditor extends LitElement {
   hass?: unknown;
   form!: CardForm;
   private _config: Record<string, unknown> = {};
-  private shown?: { key: string; schema: Schema[] };
+  private shown?: { key: string; schema: Schema[]; shape: string };
 
   setConfig(config: Record<string, unknown>) {
     // Throwing makes HA switch to the YAML editor (same contract as assertConfig).
@@ -64,12 +65,36 @@ export class LumenFormEditor extends LitElement {
     return formDefaults(this.form.schema);
   }
 
-  /** The fields of the current config; the same array until they change, so ha-form is not rebuilt on every key. */
-  private get schema(): Schema[] {
+  /**
+   * The fields of the current config; the same array until they change, so ha-form is not rebuilt
+   * on every key. ha-form reuses its rows by position, so an open group would pass its open state
+   * to whatever slides into its place: when the rows above move, ha-form is built anew (`shape`)
+   * and each group opens as it was.
+   */
+  private get current() {
     const schema = this.form.schemaFor?.(this._config) ?? this.form.schema;
     const key = JSON.stringify(schema);
-    if (this.shown?.key !== key) this.shown = { key, schema };
-    return this.shown.schema;
+    if (this.shown?.key !== key) {
+      const open = this.openGroups();
+      this.shown = {
+        key,
+        schema: schema.map((f) => (f.type === "expandable" && typeof f.title === "string" && open.has(f.title) ? { ...f, expanded: open.get(f.title) } : f)),
+        shape: schema.map((f) => `${f.type}:${f.name}:${f.title}`).join(),
+      };
+    }
+    return this.shown;
+  }
+
+  /** Which of the groups on screen are open now, by title. */
+  private openGroups(): Map<string, boolean> {
+    const open = new Map<string, boolean>();
+    const rows = this.renderRoot?.querySelector("ha-form")?.shadowRoot?.querySelectorAll("ha-form-expandable") ?? [];
+    for (const row of rows) {
+      const title = (row as HTMLElement & { schema?: Schema }).schema?.title;
+      const panel = row.shadowRoot?.querySelector("ha-expansion-panel") as (HTMLElement & { expanded?: boolean }) | null | undefined;
+      if (typeof title === "string" && panel) open.set(title, !!panel.expanded);
+    }
+    return open;
   }
 
   private changed(e: CustomEvent<{ value: Record<string, unknown> }>) {
@@ -81,8 +106,9 @@ export class LumenFormEditor extends LitElement {
 
   render() {
     if (!this.form) return nothing;
-    return html`<ha-form .hass=${this.hass} .data=${withDefaults(this._config, this.defaults)} .schema=${this.schema}
-      .computeLabel=${this.form.computeLabel} .computeHelper=${this.form.computeHelper} @value-changed=${this.changed}></ha-form>`;
+    const { schema, shape } = this.current;
+    return keyed(shape, html`<ha-form .hass=${this.hass} .data=${withDefaults(this._config, this.defaults)} .schema=${schema}
+      .computeLabel=${this.form.computeLabel} .computeHelper=${this.form.computeHelper} @value-changed=${this.changed}></ha-form>`);
   }
 }
 customElements.get("lumen-form-editor") || customElements.define("lumen-form-editor", LumenFormEditor);

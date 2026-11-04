@@ -93,6 +93,52 @@ describe("form editor", () => {
   });
 });
 
+describe("open groups when the rows above them come and go", () => {
+  const group = { name: "", type: "expandable", flatten: true, title: "Look", schema: [{ name: "x", selector: { text: {} } }] };
+  const setup = async () => {
+    const el = document.createElement("lumen-form-editor") as LumenFormEditor;
+    el.form = form((c) => hide(c, [{ name: "mode", selector: { boolean: {} } }, { name: "extra", selector: { text: {} } }, group], [[!!c?.mode, ["extra"]]]));
+    el.setConfig({ type: "x" });
+    document.body.append(el);
+    await el.updateComplete;
+    return el;
+  };
+  type FakeForm = HTMLElement & { schema: Field[]; data: Record<string, unknown> };
+  const haForm = (el: LumenFormEditor) => el.shadowRoot!.querySelector("ha-form") as FakeForm;
+  /** What HA's ha-form renders for the group: a row with a panel the user can open. */
+  const fakeGroup = (f: FakeForm, expanded: boolean) => {
+    const row = document.createElement("ha-form-expandable") as HTMLElement & { schema?: Schema };
+    row.schema = f.schema.find((x) => x.type === "expandable");
+    const panel = document.createElement("ha-expansion-panel") as HTMLElement & { expanded?: boolean };
+    panel.expanded = expanded;
+    row.attachShadow({ mode: "open" }).append(panel);
+    f.attachShadow({ mode: "open" }).append(row);
+  };
+  const change = async (el: LumenFormEditor, patch: Record<string, unknown>) => {
+    haForm(el).dispatchEvent(new CustomEvent("value-changed", { detail: { value: { ...haForm(el).data, ...patch } } }));
+    await el.updateComplete;
+  };
+
+  it("a group stays open and ha-form is built anew when a row above it goes", async () => {
+    const el = await setup();
+    const before = haForm(el);
+    fakeGroup(before, true);
+    await change(el, { mode: true });
+    expect(haForm(el)).not.toBe(before);
+    expect(haForm(el).schema.find((f) => f.type === "expandable")!.expanded).toBe(true);
+    el.remove();
+  });
+
+  it("a change inside a form of the same shape keeps ha-form", async () => {
+    const el = await setup();
+    const before = haForm(el);
+    fakeGroup(before, true);
+    await change(el, { x: "typed" });
+    expect(haForm(el)).toBe(before);
+    el.remove();
+  });
+});
+
 describe("volume tile", () => {
   afterEach(() => vi.useRealTimers());
   const press = async (el: HTMLElement, sel: string, ms: number) => {
