@@ -13,7 +13,7 @@ Lumen · Section title: Heading: overline, section or room title, with entity va
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `title` |  | text |  |  | Title |  |
-| `heading_style` |  | select | `overline` (Overline (caps)), `section` (Section title), `room` (Room header) |  | Style | Default: overline (caps) |
+| `heading_style` |  | select | `overline` (Overline (caps)), `section` (Section title), `room` (Room header) | `overline` | Style | Default: overline (caps) |
 | `badges` |  | object[] |  |  | Values next to the title |  |
 | `badges[].entity` | yes | entity |  |  | Entity |  |
 | `badges[].state_content` |  | text |  |  | Attribute instead of the state (optional) |  |
@@ -21,11 +21,11 @@ Lumen · Section title: Heading: overline, section or room title, with entity va
 | `entity` |  | entity |  |  | Entity |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
-| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact on screens narrower than 1024 px |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 

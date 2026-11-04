@@ -169,7 +169,7 @@ export class LumenNavCard extends LumenBaseCard<NavConfig> {
         type: "grid",
         flatten: true,
         schema: [
-          { name: "position", selector: { select: { mode: "dropdown", options: [{ value: "bottom", label: t("editor.nav_position.bottom") }, { value: "inline", label: t("editor.nav_position.inline") }] } } },
+          { name: "position", default: "bottom", selector: { select: { mode: "dropdown", options: [{ value: "bottom", label: t("editor.nav_position.bottom") }, { value: "inline", label: t("editor.nav_position.inline") }] } } },
           { name: "narrow_only", default: false, selector: { boolean: {} } },
         ],
       },

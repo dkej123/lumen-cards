@@ -2,7 +2,8 @@
 // The visual editors: what each form offers, and which fields it shows in which mode.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { form, hide, type Schema } from "../src/core/form";
-import { LumenFormEditor } from "../src/core/form-editor";
+import { formDefaults, LumenFormEditor } from "../src/core/form-editor";
+import { t } from "../src/core/i18n";
 import "../src/lumen-cards";
 import { lastUsedMs } from "../src/cards/button";
 import { purifierFormConfig } from "../src/cards/purifier";
@@ -301,5 +302,54 @@ describe("behaviour behind the fields", () => {
   it("a badges value that is not a list still goes to YAML", () => {
     const ed = (customElements.get("lumen-title-card") as unknown as { getConfigElement(): LumenFormEditor }).getConfigElement();
     expect(() => ed.setConfig({ badges: "x" })).toThrow();
+  });
+});
+
+describe("schema defaults match what the card does", () => {
+  /** [card, field, what the code falls back to]. */
+  const DEFAULTS: [string, string, unknown][] = [
+    ["light", "layout", "auto"],
+    ["light", "color_scheme", "auto"],
+    ["fan", "haptic_tick", "selection"],
+    ["button", "secondary_info", "auto"],
+    ["chips", "alignment", "start"],
+    ["reminder", "alignment", "start"],
+    ["reminder", "color", "info"],
+    ["nav", "position", "bottom"],
+    ["title", "heading_style", "overline"],
+    ["media", "volume_step", 4],
+    ["climate", "battery_low", 15],
+    ["popup", "auto_close", 0],
+    ["purifier", "layout", "wide"],
+  ];
+  it.each(DEFAULTS)("%s.%s defaults to %s", (card, field, value) => {
+    expect(formDefaults(formOf(card).schema)[field]).toEqual(value);
+  });
+
+  it("a new chip starts as an action chip", () => {
+    const chips = formOf("chips").schema.find((f) => f.name === "chips") as Field & { selector: { object: { fields: { type: { default?: string } } } } };
+    expect(chips.selector.object.fields.type.default).toBe("action");
+  });
+});
+
+describe("help texts", () => {
+  const help = (card: string, name: string) => {
+    const form = formOf(card) as unknown as Form & { computeHelper(s: Field): string | undefined };
+    const find = (list: Field[]): Field | undefined => list.flatMap((f) => (f.name === name ? [f] : f.schema ? [find(f.schema)].filter(Boolean) as Field[] : []))[0];
+    return form.computeHelper(find(form.schema)!);
+  };
+
+  it("the sensor card does not promise a compact look when narrow", () => {
+    expect(help("sensor", "layout")).toBe(t("editor.help.layout_manual"));
+    expect(help("light", "layout")).toBe(t("editor.help.layout_width"));
+  });
+
+  it("empty lists say they mean all", () => {
+    expect(help("alarm", "arm_modes")).toBeTruthy();
+    expect(help("climate", "preset_modes")).toBeTruthy();
+  });
+
+  it("the floating button no longer names one corner", () => {
+    expect(help("climate", "fab")).not.toMatch(/right/);
   });
 });

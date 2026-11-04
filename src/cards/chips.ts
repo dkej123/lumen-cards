@@ -270,7 +270,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
               label_field: "name",
               description_field: "entity",
               fields: {
-                type: { label: t("editor.type"), required: true, selector: { select: { mode: "dropdown", options: types } } },
+                type: { label: t("editor.type"), required: true, default: "action", selector: { select: { mode: "dropdown", options: types } } },
                 entity: { label: t("editor.entity"), required: true, selector: { entity: {} } },
                 name: { label: t("editor.name"), selector: { text: {} } },
                 icon: { label: t("editor.icon"), selector: { icon: {} } },
@@ -286,6 +286,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
         },
         {
           name: "alignment",
+          default: "start",
           selector: {
             select: {
               mode: "dropdown",

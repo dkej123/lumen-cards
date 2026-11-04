@@ -202,7 +202,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
   static getConfigForm() {
     return form((c) => hide(c, [
       { name: "entity", required: true, selector: { entity: {} } },
-      { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", selector: select([["info", "tone.info"], ["ok", "common.ok"], ["warning", "tone.warning"], ["danger", "tone.danger"]]) }] },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "state", default: "on", selector: { text: {} } }, { name: "color", default: "info", selector: select([["info", "tone.info"], ["ok", "common.ok"], ["warning", "tone.warning"], ["danger", "tone.danger"]]) }] },
       nameIcon(),
       { name: "", type: "grid", flatten: true, schema: [{ name: "value", selector: { text: {} } }, { name: "value_entity", selector: { entity: {} } }] },
       { name: "show_chip", default: true, selector: { boolean: {} } },
@@ -222,6 +222,7 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
       },
       {
         name: "alignment",
+        default: "start",
         selector: { select: { mode: "dropdown", options: [["start", "align.start"], ["center", "align.center"], ["end", "align.end"]].map(([value, label]) => ({ value, label: t(label) })) } },
       },
       advanced(),

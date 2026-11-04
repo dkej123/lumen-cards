@@ -107,7 +107,6 @@ const LABELS: Record<string, string> = {
   show_battery: "editor.show_battery",
   dialog: "editor.dialog",
   done: "editor.done",
-  snooze_minutes: "editor.snooze_minutes",
   show_chip: "editor.show_chip",
   show_name: "editor.show_name",
   show_icon: "editor.show_icon",
@@ -160,6 +159,7 @@ const LABELS: Record<string, string> = {
 const HELPERS: Record<string, string> = {
   layout_width: "editor.help.layout_width",
   layout_screen: "editor.help.layout_screen",
+  layout_manual: "editor.help.layout_manual",
   color_scheme: "editor.help.color_scheme",
   heading_style: "editor.help.heading_style",
   glow_color: "editor.help.glow_color",
@@ -167,7 +167,9 @@ const HELPERS: Record<string, string> = {
   weather_effects: "editor.help.weather_effects",
   hvac_modes: "editor.help.hvac_modes",
   fan_modes: "editor.help.fan_modes",
+  preset_modes: "editor.help.preset_modes",
   power_action: "editor.help.power_action",
+  arm_modes: "editor.help.arm_modes",
   arming_time: "editor.help.arming_time",
   pending_time: "editor.help.arming_time",
   stale_after: "editor.help.stale_after",
@@ -241,8 +243,8 @@ interface AppearanceOpts {
   glow?: boolean;
   /** Weather effects toggle. */
   effects?: boolean;
-  /** `layout` field: "width" (auto by card width), "screen" (auto by screen width) or none. */
-  layout?: "width" | "screen" | false;
+  /** `layout` field: "width" (auto by card width), "screen" (auto by screen width), "manual" (auto is never compact) or none. */
+  layout?: "width" | "screen" | "manual" | false;
   /** Accent colour field (off for cards with nothing in the accent colour). */
   accent?: boolean;
 }
@@ -260,8 +262,8 @@ export const appearance = ({ glow = false, effects = true, layout = "screen", ac
       type: "grid",
       flatten: true,
       schema: [
-        ...(layout ? [{ name: "layout", helper: `layout_${layout}`, selector: select([["auto", "common.auto"], ["wide", "editor.layout.wide"], ["compact", "editor.layout.compact"]]) }] : []),
-        { name: "color_scheme", selector: select([["auto", "common.auto"], ["light", "editor.scheme.light"], ["dark", "editor.scheme.dark"]]) },
+        ...(layout ? [{ name: "layout", default: "auto", helper: `layout_${layout}`, selector: select([["auto", "common.auto"], ["wide", "editor.layout.wide"], ["compact", "editor.layout.compact"]]) }] : []),
+        { name: "color_scheme", default: "auto", selector: select([["auto", "common.auto"], ["light", "editor.scheme.light"], ["dark", "editor.scheme.dark"]]) },
       ],
     },
     {
@@ -313,7 +315,7 @@ export const hapticsField: Schema = {
   flatten: true,
   schema: [
     { name: "haptics", default: true, selector: { boolean: {} } },
-    { name: "haptic_tick", selector: select(["selection", "light", "medium", "heavy", "success", "warning", "failure"].map((k): [string, string] => [k, `editor.haptic_tick.${k}`])) },
+    { name: "haptic_tick", default: "selection", selector: select(["selection", "light", "medium", "heavy", "success", "warning", "failure"].map((k): [string, string] => [k, `editor.haptic_tick.${k}`])) },
   ],
 };
 

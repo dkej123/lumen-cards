@@ -13,7 +13,7 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `chips` |  | object[] |  |  | Chips |  |
-| `chips[].type` | yes | select | `action` (Action (scene, script, button…)), `light` (Light (pill)) |  | Type |  |
+| `chips[].type` | yes | select | `action` (Action (scene, script, button…)), `light` (Light (pill)) | `action` | Type |  |
 | `chips[].entity` | yes | entity |  |  | Entity |  |
 | `chips[].name` |  | text |  |  | Name |  |
 | `chips[].icon` |  | icon |  |  | Icon |  |
@@ -23,18 +23,18 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `chips[].active_value` |  | text |  |  | Active when the state is |  |
 | `chips[].active_attribute` |  | text |  |  | Read an attribute instead of the state (optional) |  |
 | `chips[].power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) – only when the bulb sits behind a relay / plug; empty = always powered |  |
-| `alignment` |  | select | `start` (Left), `center` (Centre), `end` (Right), `justify` (Spread) |  | Alignment |  |
-| `fab` |  | boolean |  | `false` | Show as a floating button | The card leaves the grid and becomes a round button in the bottom-right corner of the screen |
+| `alignment` |  | select | `start` (Left), `center` (Centre), `end` (Right), `justify` (Spread) | `start` | Alignment |  |
+| `fab` |  | boolean |  | `false` | Show as a floating button | The card leaves the grid and becomes a round button in a corner of the screen |
 | `fab_narrow_only` |  | boolean |  | `true` | Auto: only on narrow screens | On: floating button only on screens narrower than 1024 px (phone, portrait tablet), a regular card on wider ones. Off: always a floating button |
 | `fab_side` |  | select | `right` (Right), `left` (Left (left-handed)) | `right` | Button side | Which screen edge the floating button sits at. Each side has its own stack of buttons |
 | `fab_icon` |  | icon |  |  | Button icon |  |
 | `title` |  | text |  |  | Title |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
-| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact on screens narrower than 1024 px |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `glow_color` |  | ui_color |  |  | Glow colour | Default: the light's own colour |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |

@@ -14,7 +14,7 @@ Lumen · Bar: Access bar as in the Dom panel: several cards (doors, alarms, lock
 | Field | Req | Selector | Allowed values | Default | Label | Help |
 |---|---|---|---|---|---|---|
 | `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |

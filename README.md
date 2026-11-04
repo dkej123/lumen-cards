@@ -896,6 +896,7 @@ controls:
 | `filters` | `name`, `entity` or `attribute`, `unit` (`%`, `h`, `d`) | sensors with "filter" in the name, then attributes |
 | `index` | A second index: `name`, `entity` or `attribute`, `thresholds`, `labels`, `max` | none |
 | `controls` | Controls in the details: an entity (`switch`, `light`, `select`, `number`…) or `attribute` + `service` + `field`, with `options` (a choice) or `min`/`max`/`step` (− / +) | none |
+| `service_controls` | Controls that call a service: `attribute` + `service` + `field`, with `options` or `min`/`max`/`step` | none |
 | `confirm_timeout` | Seconds to confirm a change | 45 |
 | `send_delay` | Seconds of quiet after the last tap before a command goes out. A burst of taps is one command, and commands are at least 1 s apart | 0.8 |
 | `pm25_entity`, `temperature_entity`, `humidity_entity`, `target_humidity_entity`, `water_level_entity`, `water_empty_entity` | Sensor overrides | found on the device |

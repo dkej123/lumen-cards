@@ -16,8 +16,8 @@ Lumen · Weather background: Sky, rain, fog and wind behind the view's cards plu
 | `weather_entity` | yes | entity (domain: weather) |  |  | Weather entity |  |
 | `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
 | `show_controls` |  | boolean |  |  | “On this device” switches |  |
-| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact on screens narrower than 1024 px |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact on screens narrower than 1024 px |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |

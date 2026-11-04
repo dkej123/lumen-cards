@@ -342,7 +342,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
           advanced([["volume_only", false], ["show_playback"], ["show_progress"], ["show_volume"], ["show_source"]], {
             extra: [
               { name: "volume_remote", helper: "volume_remote", selector: { entity: { domain: "remote" } } },
-              { name: "volume_step", helper: "volume_step", selector: { number: { min: 1, max: 25, step: 1, mode: "box", unit_of_measurement: "%" } } },
+              { name: "volume_step", default: DEFAULT_VOLUME_STEP, helper: "volume_step", selector: { number: { min: 1, max: 25, step: 1, mode: "box", unit_of_measurement: "%" } } },
             ],
           }),
           appearance({ layout: "width" }),

@@ -21,7 +21,7 @@ Lumen · Climate: Air conditioner or thermostat: temperature, mode and fan; opti
 | `step` |  | number (min: 0.1; max: 5; step: 0.1; unit: °) |  |  | Temperature step | How much − and + change the setpoint. Empty = the device's step |
 | `hvac_modes` |  | select[] | `auto` (Auto), `heat_cool` (Heat/cool), `cool` (Cool), `heat` (Heat), `dry` (Dry), `fan_only` (Fan), `off` (Off) |  | Mode buttons | Nothing selected = every mode of the device (up to 4 in one row, more in a grid of 3) |
 | `fan_modes` |  | select[] | `auto` (Auto), `low` (Low), `medium` (Medium), `high` (High), `mute` (Quiet), `turbo` (Turbo) |  | Fan buttons | Nothing selected = every fan speed of the device (more than 5 become a drop-down list) |
-| `preset_modes` |  | select[] | `none` (None), `eco` (Eco), `comfort` (Comfort), `away` (Away), `home` (Home), `sleep` (Sleep), `boost` (Boost), `activity` (Activity) |  | Presets |  |
+| `preset_modes` |  | select[] | `none` (None), `eco` (Eco), `comfort` (Comfort), `away` (Away), `home` (Home), `sleep` (Sleep), `boost` (Boost), `activity` (Activity) |  | Presets | Nothing selected = every preset of the device |
 | `show_modes` |  | boolean |  | `true` | Show modes |  |
 | `show_fan_modes` |  | boolean |  | `true` | Show fan |  |
 | `show_presets` |  | boolean |  | `true` | Presets |  |
@@ -30,17 +30,17 @@ Lumen · Climate: Air conditioner or thermostat: temperature, mode and fan; opti
 | `show_action` |  | boolean |  | `true` | Activity badge |  |
 | `show_battery` |  | boolean |  | `true` | Low-battery badge |  |
 | `show_range` |  | boolean |  | `false` | Range and step |  |
-| `fab` |  | boolean |  | `false` | Show as a floating button | The card leaves the grid and becomes a round button in the bottom-right corner of the screen |
+| `fab` |  | boolean |  | `false` | Show as a floating button | The card leaves the grid and becomes a round button in a corner of the screen |
 | `fab_narrow_only` |  | boolean |  | `true` | Auto: only on narrow screens | On: floating button only on screens narrower than 1024 px (phone, portrait tablet), a regular card on wider ones. Off: always a floating button |
 | `fab_side` |  | select | `right` (Right), `left` (Left (left-handed)) | `right` | Button side | Which screen edge the floating button sits at. Each side has its own stack of buttons |
 | `power_action` |  | ui_action |  |  | Power button action | Default: turns on the last mode or turns the device off |
 | `battery_entity` |  | entity (domain: sensor, binary_sensor) |  |  | Battery sensor | A % sensor or a battery binary sensor. Empty = Better Thermostat's battery info on the thermostat itself |
-| `battery_low` |  | number (min: 1; max: 99; step: 1; unit: %) |  |  | Low battery below |  |
+| `battery_low` |  | number (min: 1; max: 99; step: 1; unit: %) |  | `15` | Low battery below |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
-| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |

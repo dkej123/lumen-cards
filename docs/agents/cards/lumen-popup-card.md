@@ -17,11 +17,11 @@ Lumen · Pop-up: Pop-up with any cards, opened by a #hash
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `show_trigger` |  | boolean |  | `false` | Trigger row | A row in the dashboard that opens the pop-up; off = the card is invisible |
-| `auto_close` |  | number (min: 0; max: 600; step: 5; unit: s) |  |  | Close after | Seconds; 0 keeps it open |
+| `auto_close` |  | number (min: 0; max: 600; step: 5; unit: s) |  | `0` | Close after | Seconds; 0 keeps it open |
 | `cards` |  | object |  |  | Cards (YAML) | A list of card configs, as in a vertical stack |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 

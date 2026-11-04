@@ -488,7 +488,7 @@
   "editor.help.device_class": "Zmienia ikony i kolory, np. „Drzwi” dla czujnika otwarcia na drzwiach. Puste = jak w HA",
   "editor.help.disarmed_color": "Domyślnie neutralny; np. czerwony jak w panelu Dom",
   "editor.help.edit_note": "Widoczny tylko podczas edycji dashboardu, np. „kopia na telefon”. Karty z warunkiem ekranu (swoim lub sekcji) dostają w edycji etykietę automatycznie",
-  "editor.help.fab": "Karta znika z siatki i staje się okrągłym przyciskiem w prawym dolnym rogu ekranu",
+  "editor.help.fab": "Karta znika z siatki i staje się okrągłym przyciskiem w rogu ekranu",
   "editor.help.fab_narrow_only": "Włączone: pływający przycisk tylko na ekranach węższych niż 1024 px (telefon, tablet w pionie), na szerszych zwykła karta. Wyłączone: zawsze pływający przycisk",
   "editor.help.fab_sheet_cards": "Karty w panelu (lista YAML); karty klimatyzacji jako kompaktowe wiersze termostatów",
   "editor.help.fab_side": "Przy której krawędzi ekranu stoi pływający przycisk. Każda strona ma swój stos przycisków",
@@ -694,7 +694,6 @@
   "editor.volume_step": "Jedno naciśnięcie zmienia o",
   "editor.volume_only": "Tylko suwak głośności",
   "editor.show_warnings": "Pokaż ostrzeżenia",
-  "editor.snooze_minutes": "„Przypomnij później” po (min)",
   "editor.stale_after": "Nieaktualne po",
   "editor.stale_hours": "Dane nieaktualne po (h)",
   "editor.state": "Stan, przy którym pokazać",
@@ -756,5 +755,8 @@
   "editor.device_class.problem": "Problem",
   "editor.device_class.battery": "Bateria",
   "editor.device_class.plug": "Gniazdko",
-  "editor.device_class.power": "Zasilanie"
+  "editor.device_class.power": "Zasilanie",
+  "editor.help.layout_manual": "Auto: pełny wygląd w każdym rozmiarze. Kompaktowy tylko po wybraniu",
+  "editor.help.arm_modes": "Nic nie zaznaczone = każdy tryb obsługiwany przez alarm",
+  "editor.help.preset_modes": "Nic nie zaznaczone = każdy preset urządzenia"
 }

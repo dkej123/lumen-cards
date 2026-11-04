@@ -133,7 +133,7 @@ export class LumenSensorCard extends LumenBaseCard<SensorConfig> {
       { name: "stale_after", selector: { number: { min: 0, max: 168, step: 0.5, mode: "box", unit_of_measurement: "h" } } },
       actions(),
       advanced([["show_name"], ["show_graph"]]),
-      appearance({ layout: "width" }),
+      appearance({ layout: "manual" }),
     ]);
   }
 }

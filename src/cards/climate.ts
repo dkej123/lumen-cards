@@ -681,7 +681,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
             flatten: true,
             schema: [
               { name: "battery_entity", selector: { entity: { domain: ["sensor", "binary_sensor"] } } },
-              { name: "battery_low", selector: { number: { min: 1, max: 99, step: 1, mode: "box", unit_of_measurement: "%" } } },
+              { name: "battery_low", default: BATTERY_LOW, selector: { number: { min: 1, max: 99, step: 1, mode: "box", unit_of_measurement: "%" } } },
             ],
           },
           hapticsField,

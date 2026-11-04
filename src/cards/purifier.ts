@@ -712,7 +712,7 @@ export class LumenPurifierCard extends LumenBaseCard<PurifierConfig> {
         return [
           { name: "entity", required: true, selector: { entity: { domain: "fan" } } },
           nameIcon(),
-          { name: "layout", helper: "purifier_layout", selector: select([["wide", "editor.layout.wide"], ["compact", "editor.layout.compact"]]) },
+          { name: "layout", default: "wide", helper: "purifier_layout", selector: select([["wide", "editor.layout.wide"], ["compact", "editor.layout.compact"]]) },
           { name: "", type: "grid", flatten: true, schema: [{ name: "hours", default: 24, selector: { number: { min: 6, max: 48, step: 6, mode: "box", unit_of_measurement: "h" } } }, { name: "stale_hours", default: 2, selector: { number: { min: 0, max: 48, mode: "box", unit_of_measurement: "h" } } }] },
           { name: "preset_modes", helper: "purifier_preset_modes", selector: { select: { multiple: true, custom_value: true, reorder: true, mode: "list", options: modes } } },
           { name: "speeds", helper: "purifier_speeds", selector: { object: { multiple: true, label_field: "name", description_field: "percentage", fields: { percentage: { label: lab("speed_percentage"), required: true, selector: { number: { min: 1, max: 100, mode: "box", unit_of_measurement: "%" } } }, name: { label: t("editor.name"), selector: text } } } } },

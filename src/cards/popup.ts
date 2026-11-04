@@ -168,7 +168,7 @@ export class LumenPopupCard extends LumenContainerCard<PopupConfig> {
           ...(withName ? [{ name: "name", selector: { text: {} } }] : []),
           { name: "icon", selector: { icon: {} } },
           { name: "show_trigger", default: false, selector: { boolean: {} } },
-          { name: "auto_close", selector: { number: { min: 0, max: 600, step: 5, mode: "box", unit_of_measurement: "s" } } },
+          { name: "auto_close", default: 0, selector: { number: { min: 0, max: 600, step: 5, mode: "box", unit_of_measurement: "s" } } },
         ],
       },
       ...cards,

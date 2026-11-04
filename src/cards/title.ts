@@ -126,6 +126,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
         { name: "title", selector: { text: {} } },
         {
           name: "heading_style",
+          default: "overline",
           selector: {
             select: {
               mode: "dropdown",

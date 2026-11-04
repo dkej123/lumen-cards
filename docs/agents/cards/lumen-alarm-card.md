@@ -16,7 +16,7 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 | `entity` | yes | entity (domain: alarm_control_panel) |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
-| `arm_modes` |  | select[] | `armed_home` (Home), `armed_away` (Away), `armed_night` (Night), `armed_vacation` (Vacation), `armed_custom_bypass` (Custom) |  | Arm modes |  |
+| `arm_modes` |  | select[] | `armed_home` (Home), `armed_away` (Away), `armed_night` (Night), `armed_vacation` (Vacation), `armed_custom_bypass` (Custom) |  | Arm modes | Nothing selected = every mode the alarm supports |
 | `arming_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Exit delay | Length of the countdown bars when the alarm does not report it (arming_time / delay attributes) |
 | `pending_time` |  | number (min: 0; max: 600; step: 1; unit: s) |  |  | Entry delay | Length of the countdown bars when the alarm does not report it (arming_time / delay attributes) |
 | `banner` |  | boolean |  | `true` | Banner when triggered |  |
@@ -36,11 +36,11 @@ Lumen · Alarm: Alarm state with a pulsing banner and a screen ring when trigger
 | `sub_buttons[].tap_action` |  | ui_action |  |  | Tap action (default: toggle or details) |  |
 | `sub_buttons[].hold_action` |  | ui_action |  |  | Hold action |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
-| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) | `auto` | Layout | Auto: compact when the card is narrow (e.g. 3 grid columns) |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |

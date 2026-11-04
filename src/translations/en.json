@@ -488,7 +488,7 @@
   "editor.help.device_class": "Changes the icons and colours, e.g. “Door” for an opening contact on a door. Empty = as in HA",
   "editor.help.disarmed_color": "Neutral by default; e.g. red as in the Dom panel",
   "editor.help.edit_note": "Shown only while editing the dashboard, e.g. \"phone copy\". Cards with a screen condition (their own or their section's) get a label in edit mode automatically",
-  "editor.help.fab": "The card leaves the grid and becomes a round button in the bottom-right corner of the screen",
+  "editor.help.fab": "The card leaves the grid and becomes a round button in a corner of the screen",
   "editor.help.fab_narrow_only": "On: floating button only on screens narrower than 1024 px (phone, portrait tablet), a regular card on wider ones. Off: always a floating button",
   "editor.help.fab_sheet_cards": "Cards inside the panel (YAML list); climate cards show as compact thermostat rows",
   "editor.help.fab_side": "Which screen edge the floating button sits at. Each side has its own stack of buttons",
@@ -694,7 +694,6 @@
   "editor.volume_step": "One volume key changes",
   "editor.volume_only": "Volume slider only",
   "editor.show_warnings": "Show warnings",
-  "editor.snooze_minutes": "“Remind me later” after (min)",
   "editor.stale_after": "Stale after",
   "editor.stale_hours": "Data outdated after (h)",
   "editor.state": "Show while the state is",
@@ -756,5 +755,8 @@
   "editor.device_class.problem": "Problem",
   "editor.device_class.battery": "Battery",
   "editor.device_class.plug": "Plug",
-  "editor.device_class.power": "Power"
+  "editor.device_class.power": "Power",
+  "editor.help.layout_manual": "Auto: the full look at any size. Compact only when you choose it",
+  "editor.help.arm_modes": "Nothing selected = every mode the alarm supports",
+  "editor.help.preset_modes": "Nothing selected = every preset of the device"
 }

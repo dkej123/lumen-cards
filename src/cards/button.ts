@@ -294,6 +294,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
         { name: "color", selector: { ui_color: {} } },
         {
           name: "secondary_info",
+          default: "auto",
           selector: {
             select: {
               mode: "dropdown",

@@ -14,7 +14,7 @@ Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity |  |  | Entity |  |
 | `state` |  | text |  | `on` | Show while the state is |  |
-| `color` |  | select | `info` (Info), `ok` (OK), `warning` (Warning), `danger` (Alarm) |  | Colour |  |
+| `color` |  | select | `info` (Info), `ok` (OK), `warning` (Warning), `danger` (Alarm) | `info` | Colour |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
 | `value` |  | text |  |  | Value in the pill |  |
@@ -25,12 +25,12 @@ Lumen · Reminder: A pill and a reminder dialog while an entity has a state (e.g
 | `message` |  | text (multiline) |  |  | Message |  |
 | `done` |  | boolean |  | `false` | “Done” button (turns the reminder off) |  |
 | `done_action` |  | ui_action |  |  | “Done” action |  |
-| `alignment` |  | select | `start` (Left), `center` (Centre), `end` (Right) |  | Alignment |  |
+| `alignment` |  | select | `start` (Left), `center` (Centre), `end` (Right) | `start` | Alignment |  |
 | `haptics` |  | boolean |  | `true` | Vibration | Gentle vibration on tap, hold and drag (HA app and Android browsers) |
-| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) |  | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
+| `haptic_tick` |  | select | `selection` (Lightest (selection)), `light` (Light), `medium` (Medium), `heavy` (Heavy), `success` (Success), `warning` (Warning), `failure` (Failure) | `selection` | Drag tick strength | Vibration type every 1 % while dragging. How strong each type feels is up to the HA app and the phone. Empty = lightest |
 | `edit_note` |  | text |  |  | Edit-mode note | Shown only while editing the dashboard, e.g. "phone copy". Cards with a screen condition (their own or their section's) get a label in edit mode automatically |
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
-| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) | `auto` | Colour scheme | Auto: like Home Assistant |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
