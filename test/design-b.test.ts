@@ -570,3 +570,76 @@ describe("09 climate: a refused setpoint", () => {
     }
   });
 });
+
+describe("alarm and lock going offline", () => {
+  const press = (el: HTMLElement) => {
+    el.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+    el.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+  };
+
+  it("wide alarm row, unavailable: a command action does not run, navigating and details still do", async () => {
+    const h = hass(ent("alarm_control_panel.h", "unavailable"));
+    const run = await mount("alarm", { entity: "alarm_control_panel.h", layout: "wide", tap_action: { action: "perform-action", perform_action: "script.x" }, double_tap_action: { action: "toggle" } }, h);
+    const fired: unknown[] = [];
+    run.addEventListener("hass-action", (e) => fired.push(e));
+    press(root(run).querySelector<HTMLElement>('[role="button"]')!);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(fired).toEqual([]);
+    expect((run as unknown as { pending: { active: boolean } }).pending.active).toBe(false);
+
+    const nav = await mount("alarm", { entity: "alarm_control_panel.h", layout: "wide", tap_action: { action: "navigate", navigation_path: "/x" } }, h);
+    const seen: unknown[] = [];
+    nav.addEventListener("hass-action", (e) => seen.push(e));
+    press(root(nav).querySelector<HTMLElement>('[role="button"]')!);
+    expect(seen.length).toBe(1);
+
+    const plain = await mount("alarm", { entity: "alarm_control_panel.h", layout: "wide" }, h);
+    const info: unknown[] = [];
+    plain.addEventListener("hass-more-info", (e) => info.push(e));
+    press(root(plain).querySelector<HTMLElement>('[role="button"]')!);
+    expect(info.length).toBe(1);
+  });
+
+  const offline = (h: ReturnType<typeof hass>, id: string) => ({ ...h, states: { ...h.states, [id]: ent(id, "unavailable") } });
+
+  it("an alarm pad left open sends nothing once the alarm is unavailable, and says why", async () => {
+    const h = hass(ent("alarm_control_panel.h", "armed_home", { code_format: "number", supported_features: 7 }));
+    const el = await mount("alarm", { entity: "alarm_control_panel.h", layout: "wide" }, h);
+    button(root(el), "Disarm")!.click();
+    await settle(el);
+    button(layer(), "1")!.click();
+    await settle(el);
+    el.hass = offline(h, "alarm_control_panel.h");
+    await settle(el);
+    expect(layer()!.querySelector('[role="dialog"]')).not.toBeNull();
+    [...layer()!.querySelectorAll("button")].at(-1)!.click();
+    await settle(el);
+    expect(h.calls).toEqual([]);
+    expect(layer()!.querySelector('[role="alert"]')!.textContent).toContain("Unavailable");
+  });
+
+  it("a lock pad left open too", async () => {
+    const h = hass(ent("lock.l", "locked", { code_format: "^\\d+$" }));
+    const el = await mount("lock", { entity: "lock.l", layout: "wide" }, h);
+    button(root(el), "Unlock")!.click();
+    await settle(el);
+    button(layer(), "1")!.click();
+    await settle(el);
+    el.hass = offline(h, "lock.l");
+    await settle(el);
+    [...layer()!.querySelectorAll("button")].at(-1)!.click();
+    await settle(el);
+    expect(h.calls).toEqual([]);
+    expect(layer()!.querySelector('[role="alert"]')!.textContent).toContain("Unavailable");
+  });
+
+  it("the alarm row shows as many sub-buttons as its width has room for", async () => {
+    const h = hass(ent("alarm_control_panel.h", "disarmed", { supported_features: 7 }), ent("switch.a", "on"));
+    const subs = Array.from({ length: 4 }, () => ({ entity: "switch.a" }));
+    const el = await mount("alarm", { entity: "alarm_control_panel.h", layout: "wide", sub_buttons: subs }, h);
+    expect(root(el).querySelectorAll(".subbtns > [aria-disabled]").length).toBe(4);
+    (el as unknown as { _width: number })._width = 250;
+    await settle(el);
+    expect(root(el).querySelectorAll(".subbtns > [aria-disabled]").length).toBe(2);
+  });
+});

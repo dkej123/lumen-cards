@@ -1,12 +1,12 @@
 import { html, nothing } from "lit";
 import { handleAction, type ActionConfig } from "../core/actions";
-import { LumenBaseCard, type BaseConfig } from "../core/base-card";
+import { LumenBaseCard, type BaseConfig, type CardActions } from "../core/base-card";
 import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
 import { Pending } from "../core/controllers/pending";
 import { deviceStore } from "../core/device-store";
 import { actions, advanced, appearance, entityStub, form, hide, nameIcon } from "../core/form";
-import { SubButtons, subButtonEntities } from "../core/sub-buttons";
+import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import { LayerController } from "../core/layer";
 import { pressable, spinnerStyle } from "../core/press";
@@ -67,6 +67,12 @@ const seconds = (e: HassEntity | undefined, keys: string[], fallback?: number): 
     if (Number.isFinite(v) && v > 0) return v;
   }
   return typeof fallback === "number" && fallback > 0 ? fallback : undefined;
+};
+
+/** The card's actions without those that send a command. */
+const withoutCommands = (c: CardActions): CardActions => {
+  const keep = (a?: ActionConfig) => (a && !sendsCommand(a.action) ? a : undefined);
+  return { tap_action: keep(c.tap_action), hold_action: keep(c.hold_action), double_tap_action: keep(c.double_tap_action) };
 };
 
 /** Countdown of arming (exit delay) / pending (entry delay): seconds left and the bar, or null when unknown. */
@@ -134,6 +140,10 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
 
   private get alarm() {
     return this.entity(this._config?.entity);
+  }
+
+  private get offline() {
+    return !this.alarm || this.alarm.state === "unavailable";
   }
 
   private get triggered() {
@@ -214,6 +224,11 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
   /** alarm_arm_<mode> / alarm_disarm; a rejected call (wrong code) keeps the pad open with the error. */
   private async send(kind: "arm" | "disarm", code: string, mode = "") {
     if (!this._hass) return;
+    // The pad may have stayed open while the alarm went away.
+    if (this.offline) {
+      this.pad.failed(t("common.unavailable"));
+      return;
+    }
     const c = this._config;
     const service = kind === "arm" ? `alarm_arm_${mode.replace("armed_", "")}` : "alarm_disarm";
     this.pad.sending();
@@ -302,13 +317,16 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
     const c = this._config;
     const e = this.alarm;
     const s = alarmStatus(e, c.icon);
-    const handlers = this.actions(`alarm:${c.entity}`, c, c.entity, { tap: () => this.tap() });
+    // Unavailable: nothing that sends a command runs, details and navigation still do.
+    const una = s.tone === "unavailable";
+    const handlers = una
+      ? this.actions(`alarm:${c.entity}`, withoutCommands(c), c.entity)
+      : this.actions(`alarm:${c.entity}`, c, c.entity, { tap: () => this.tap() });
     // Owner 2026-10-29: compact is the access bar cell again (no square / icon-only tiles).
     if (this.compact) {
       // Catalog correction 2026-10-30: hold 500 ms = the main command (arm / cancel / the
       // disarm pad), a tap = the tap action or more-info.
       // Unavailable: nothing to send, the cell is disabled like the lock's.
-      const una = s.tone === "unavailable";
       const cell = una
         ? this.presses.handlers(`alarmcell:${c.entity}`)
         : this.actions(`alarmcell:${c.entity}`, c, c.entity, { tap: this.hasTapAction ? () => this.tap() : () => this.moreInfo(c.entity), hold: () => this.primary() });
@@ -326,7 +344,7 @@ export class LumenAlarmCard extends LumenBaseCard<AlarmConfig> {
       <div style="position:relative;display:flex;align-items:center;gap:10px;min-height:34px">
         ${rowIcon(l)}${rowText(this.name, l, c.show_state !== false)}
         ${this.pending.active && !btns.length ? html`<span style=${spinnerStyle(16)}></span>` : nothing}
-        ${btns.length ? segs(btns, false, "rowbtns") : nothing}${this.subs.render(c.sub_buttons)}${l.una ? unplugged() : nothing}
+        ${btns.length ? segs(btns, false, "rowbtns") : nothing}${this.subs.render(c.sub_buttons, { max: subButtonLimit(false, this._width) })}${l.una ? unplugged() : nothing}
       </div>${bar}
     </div>`;
   }

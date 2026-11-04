@@ -177,6 +177,11 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     const c = this._config;
     // Taps while a command is on its way are ignored in logic, not only by `disabled`.
     if (this.busy() || !this._hass) return;
+    // The pad may have stayed open while the lock went away.
+    if (this.offline) {
+      this.pad.failed(t("common.unavailable"));
+      return;
+    }
     this.haptic();
     this._cmd = { cmd, sawBusy: false, since: Date.now() };
     this.pad.sending();
