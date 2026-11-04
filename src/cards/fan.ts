@@ -55,7 +55,10 @@ export class LumenFanCard extends LumenBaseCard<FanConfig> {
     hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
       const s = fanSpeed(this.fan);
-      this.setPct(s.pct + d * (big ? 25 : Math.max(s.step, 10)));
+      const shown = this.drag.value();
+      const next = (shown !== null ? shown * 100 : s.pct) + d * (big ? 25 : Math.max(s.step, 10));
+      this.drag.show(Math.max(0, Math.min(1, next / 100)));
+      this.setPct(next);
     },
   });
 

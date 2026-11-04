@@ -415,7 +415,7 @@ describe("media volume_only", () => {
     const { h, root } = await open();
     const s = root.querySelector<HTMLElement>('[role="slider"]')!;
     for (const key of ["End", "Home", "PageUp"]) s.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
-    expect(h.calls.map((c) => (c[2] as { volume_level: number }).volume_level)).toEqual([1, 0, 0.3]);
+    expect(h.calls.map((c) => (c[2] as { volume_level: number }).volume_level)).toEqual([1, 0, 0.1]);
   });
 
   it("no buttons, slider or percentage when the player is off", async () => {
@@ -791,5 +791,77 @@ describe("slider tiles for the keyboard and screen readers", () => {
     key(c, "Home");
     expect(h.calls.at(-1)).toEqual(["cover", "set_cover_position", { position: 0 }, { entity_id: "cover.c" }]);
     [n, f, c].forEach((x) => x.remove());
+  });
+});
+
+describe("keyboard steps", () => {
+  const tile = (el: Card) => el.shadowRoot!.querySelector<HTMLElement>(".ltile")!;
+  const key = (el: HTMLElement, k: string, o: KeyboardEventInit = {}) => el.dispatchEvent(new KeyboardEvent("keydown", { key: k, ...o }));
+
+  it("two quick presses add up before HA answers, and the tile shows it", async () => {
+    const h = mockHass([ent("input_number.n", "10", { min: 0, max: 100, step: 1 }), ent("fan.f", "on", { percentage: 10, supported_features: 1 }), ent("cover.c", "open", { current_position: 20, current_tilt_position: 20, supported_features: 15 | 128 }), ent("media_player.m", "playing", { supported_features: 4, volume_level: 0.1 })]);
+    const twice = async (type: string, config: Record<string, unknown>, target: (el: Card) => HTMLElement) => {
+      const el = await mountCard(type, config, h);
+      key(target(el), "ArrowRight");
+      await el.updateComplete;
+      key(target(el), "ArrowRight");
+      await el.updateComplete;
+      const out = h.calls.slice(-2).map((c) => Object.values(c[2] as object)[0]);
+      const text = el.shadowRoot!.textContent!.replace(/\s+/g, " ");
+      const now = target(el).getAttribute("aria-valuenow");
+      el.remove();
+      return { out, text, now };
+    };
+    const n = await twice("number", { entity: "input_number.n" }, tile);
+    expect(n.out).toEqual([11, 12]);
+    expect(n.text).toContain("12 of 100");
+    const f = await twice("fan", { entity: "fan.f" }, tile);
+    expect(f.out).toEqual([20, 30]);
+    expect(f.text).toContain("30%");
+    const c = await twice("cover", { entity: "cover.c", show_buttons: false }, tile);
+    expect(c.out).toEqual([30, 40]);
+    const t = await twice("cover", { entity: "cover.c", show_buttons: false }, (el) => tile(el).querySelector<HTMLElement>('[role="slider"]')!);
+    expect(t.out).toEqual([30, 40]);
+    const v = await twice("media", { entity: "media_player.m", volume_only: true }, tile);
+    expect(v.out).toEqual([0.15, 0.2]);
+    expect(v.now).toBe("20");
+  });
+
+  it("a held key does not repeat the tap on a light; the same keys step it", async () => {
+    const h = mockHass([ent("light.a", "on", { brightness: 128, supported_color_modes: ["brightness"] })]);
+    const el = await mountCard("light", { entity: "light.a" }, h);
+    const t = el.shadowRoot!.querySelector<HTMLElement>(".tile")!;
+    key(t, "Enter");
+    key(t, "Enter", { repeat: true });
+    key(t, "Enter", { repeat: true });
+    expect(h.calls.length).toBe(1);
+    h.calls.length = 0;
+    const lvl = () => (h.calls.at(-1)![2] as { brightness_pct?: number }).brightness_pct;
+    (el as unknown as { lights: { overrides: Map<string, unknown>; pending: Map<string, unknown> } }).lights.overrides.clear();
+    key(t, "ArrowUp");
+    expect(lvl()).toBe(60);
+    key(t, "ArrowDown");
+    expect(lvl()).toBe(50);
+    key(t, "PageUp");
+    expect(lvl()).toBe(75);
+    key(t, "End");
+    expect(lvl()).toBe(100);
+    key(t, "Home");
+    expect(h.calls.at(-1)![1]).toBe("turn_off");
+    el.remove();
+  });
+
+  it("volume_only: a tap on the tile sets the volume, whatever tap_action says", async () => {
+    const h = mockHass([ent("media_player.m", "playing", { supported_features: 4, volume_level: 0.1 })]);
+    const el = await mountCard("media", { entity: "media_player.m", volume_only: true, tap_action: { action: "more-info" } }, h);
+    const fired: unknown[] = [];
+    el.addEventListener("hass-action", (e) => fired.push(e));
+    const t = tile(el);
+    t.getBoundingClientRect = () => ({ left: 0, width: 100, top: 0, height: 40, right: 100, bottom: 40, x: 0, y: 0, toJSON: () => ({}) });
+    t.dispatchEvent(new PointerEvent("pointerdown", { button: 0, clientX: 60, clientY: 0 }));
+    t.dispatchEvent(new PointerEvent("pointerup", { button: 0, clientX: 60, clientY: 0 }));
+    expect(h.calls.at(-1)).toEqual(["media_player", "volume_set", { volume_level: 0.6 }, { entity_id: "media_player.m" }]);
+    expect(fired).toEqual([]);
+    el.remove();
   });
 });

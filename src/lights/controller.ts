@@ -421,21 +421,24 @@ export class LightsController implements ReactiveController {
       this.drag = null;
       this.requestUpdate();
     };
-    // Keyboard: Enter / Space = tap, Shift+Enter or the menu key = hold (sheet), arrows = ±10 % brightness.
+    // Keyboard: Enter / Space = tap, Shift+Enter or the menu key = hold (sheet), arrows = ±10 %, Page keys = ±25 %, Home / End = the ends.
     const key = (e: KeyboardEvent) => {
-      if (e.target !== e.currentTarget) return;
+      if (e.target !== e.currentTarget || e.repeat) return;
       if (e.key === "ContextMenu" || (e.key === "Enter" && e.shiftKey)) {
         e.preventDefault();
+        this.haptic("medium");
         this.hold(item);
       } else if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         this.tap(item);
-      } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      } else if (["ArrowRight", "ArrowUp", "ArrowLeft", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key)) {
         const l = this.light(item);
         if (!l.dim || l.una || (severalRelays(item) && !l.on)) return;
         e.preventDefault();
-        const b = Math.max(0, Math.min(100, (l.on ? l.b : 0) + (e.key === "ArrowRight" ? 10 : -10)));
-        this.setBrightness(item, b);
+        const cur = l.on ? l.b : 0;
+        const by = e.key.startsWith("Page") ? 25 : 10;
+        const b = e.key === "Home" ? 0 : e.key === "End" ? 100 : cur + (e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "PageUp" ? by : -by);
+        this.setBrightness(item, Math.max(0, Math.min(100, b)));
       }
     };
     return { down, move, up, cancel, key };

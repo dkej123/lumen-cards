@@ -86,6 +86,11 @@ export class SlideDrag implements ReactiveController {
     this.opts.commit(f);
   }
 
+  /** A value set from the keyboard shows like a committed one, so the next key press steps from it. */
+  show(f: number): void {
+    this.pend.set(f);
+  }
+
   /** The command failed: show the entity's own value again. */
   clear(): void {
     this.pend.clear();
@@ -184,7 +189,7 @@ export class SlideDrag implements ReactiveController {
         o.tap();
       } else if (o.ends && o.enabled() && (e.key === "Home" || e.key === "End")) {
         e.preventDefault();
-        o.commit(e.key === "End" ? 1 : 0);
+        this.finish(e.key === "End" ? 1 : 0);
       } else if (o.step && o.enabled() && ["ArrowRight", "ArrowUp", "ArrowLeft", "ArrowDown", "PageUp", "PageDown"].includes(e.key)) {
         e.preventDefault();
         o.step(e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "PageUp" ? 1 : -1, e.key.startsWith("Page"));

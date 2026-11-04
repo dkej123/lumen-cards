@@ -72,7 +72,15 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     holdEnabled: () => !!this._config?.volume_only,
     live: (f) => this.followFinger(f),
     commit: (f) => (this.keysOnly ? this.keys.to(f) : this.call("volume_set", { volume_level: Math.round(f * 100) / 100 })),
-    step: (d, big) => this.keysOnly ? this.call(d > 0 ? "volume_up" : "volume_down") : this.call("volume_set", { volume_level: Math.max(0, Math.min(1, Math.round(((volumeLevel(this.player) ?? 0) + d * (big ? 0.1 : 0.05)) * 100) / 100)) }),
+    step: (d, big) => {
+      if (this.keysOnly) {
+        this.call(d > 0 ? "volume_up" : "volume_down");
+        return;
+      }
+      const next = Math.max(0, Math.min(1, Math.round(((this.vol.value() ?? volumeLevel(this.player) ?? 0) + d * (big ? 0.1 : 0.05)) * 100) / 100));
+      this.vol.show(next);
+      this.call("volume_set", { volume_level: next });
+    },
   });
 
   /** Volume keys for a `volume_only` tile on a player that cannot be set to a level. */
@@ -213,7 +221,7 @@ export class LumenMediaCard extends LumenBaseCard<MediaConfig> {
     }} style="flex:none;width:36px;height:36px;margin-left:${opts.gap ? "6px" : "0"};border:0;border-radius:12px;background:transparent;padding:0;display:grid;place-items:center;font-size:18px;color:${color};opacity:${opts.dim ? 0.38 : 1};cursor:${enabled ? "pointer" : "default"}">${icon(ic, "display:block")}</button>`;
   }
 
-  /** `volume_only` (design section 14): the whole tile is the volume slider, playback buttons on the right. */
+  /** `volume_only` (design section 14): the whole tile is the volume slider, so a tap sets the volume and `tap_action` does not apply; playback buttons on the right. */
   private volumeTile() {
     const c = this._config;
     const e = this.player;

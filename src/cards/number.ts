@@ -49,9 +49,12 @@ export class LumenNumberCard extends LumenBaseCard<NumberConfig> {
     hold: () => this.holdAction(this._config, this._config.entity)(),
     step: (d, big) => {
       const r = numberRange(this.num?.attributes);
-      const cur = Number(this.num?.state);
+      const shown = this.drag.value();
+      const cur = shown !== null ? valueAt(shown, r.min, r.max, r.step) : Number(this.num?.state);
       const by = big ? Math.max(r.step, (r.max - r.min) / 10) : r.step;
-      this.setValue(snap((Number.isFinite(cur) ? cur : r.min) + d * by, r.min, r.max, r.step));
+      const next = snap((Number.isFinite(cur) ? cur : r.min) + d * by, r.min, r.max, r.step);
+      this.drag.show(fractionOf(next, r.min, r.max));
+      this.setValue(next);
     },
   });
 

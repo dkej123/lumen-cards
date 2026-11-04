@@ -49,7 +49,9 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     step: (d, big) => {
       const f = this.pos.value();
       const p = f !== null ? f * 100 : (coverState(this.cover).position ?? 0);
-      this.setPosition(Math.max(0, Math.min(100, Math.round(p) + d * (big ? 25 : 10))));
+      const next = Math.max(0, Math.min(100, Math.round(p) + d * (big ? 25 : 10)));
+      this.pos.show(next / 100);
+      this.setPosition(next);
     },
   });
 
@@ -59,8 +61,11 @@ export class LumenCoverCard extends LumenBaseCard<CoverConfig> {
     tapSets: true,
     commit: (f) => this.call("set_cover_tilt_position", { tilt_position: Math.round(f * 100) }),
     step: (d, big) => {
-      const cur = coverState(this.cover).tilt ?? 0;
-      this.call("set_cover_tilt_position", { tilt_position: Math.max(0, Math.min(100, cur + d * (big ? 25 : 10))) });
+      const shown = this.tilt.value();
+      const cur = shown !== null ? Math.round(shown * 100) : (coverState(this.cover).tilt ?? 0);
+      const next = Math.max(0, Math.min(100, cur + d * (big ? 25 : 10)));
+      this.tilt.show(next / 100);
+      this.call("set_cover_tilt_position", { tilt_position: next });
     },
   });
 
