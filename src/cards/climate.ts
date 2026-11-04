@@ -12,7 +12,7 @@ import { WFX } from "../core/parts";
 import { Sheet } from "../core/sheet";
 import { pressable, spinnerStyle } from "../core/press";
 import { registerCard } from "../core/register";
-import { glass, ink, prevent } from "../core/styles";
+import { glass, ink } from "../core/styles";
 import { toast } from "../core/toast";
 import { requireEntity } from "../core/validate";
 import type { HassEntity } from "../hass/types";
@@ -159,7 +159,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private acTimer?: number;
   /** A setpoint waits for the debounce (catalog section 19: sent 800 ms after the last tap). */
   private acQueued = false;
-  private acHold?: number;
   private acHeld = false;
   private tweens = new Tweens(this);
   /** The setpoint as shown (gliding to a new value). */
@@ -204,7 +203,6 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     // A pending setpoint is still sent (acTimer): the user chose it.
-    window.clearTimeout(this.acHold);
   }
 
   protected willUpdate(changed: Map<string, unknown>): void {
@@ -424,7 +422,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const num = (v: string, side?: "low" | "high") => {
       const on = !side || this._side === side;
       return side
-        ? html`<button aria-pressed=${on} aria-label=${side === "low" ? t("card.climate.low") : t("card.climate.high")} @click=${() => (this._side = side)} style="border:0;background:transparent;padding:0 2px;cursor:pointer;font:300 ${size}px/1 var(--lumen-font);letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:${color};opacity:${on ? 1 : 0.4};transition:opacity 200ms">${v}</button>`
+        ? html`<button ?disabled=${a.off || a.una} aria-pressed=${on} aria-label=${side === "low" ? t("card.climate.low") : t("card.climate.high")} @click=${() => (this._side = side)} style="border:0;background:transparent;padding:0 2px;cursor:pointer;font:300 ${size}px/1 var(--lumen-font);letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:${color};opacity:${on ? 1 : 0.4};transition:opacity 200ms">${v}</button>`
         : html`<span style="font-size:${size}px;font-weight:300;letter-spacing:-0.04em;line-height:1;font-variant-numeric:tabular-nums;color:${color}">${v}</span>`;
     };
     return a.range ? html`<span style="display:inline-flex;align-items:baseline;gap:2px">${num(a.range.low, "low")}<span style="font-size:${size * 0.6}px;opacity:.5">–</span>${num(a.range.high, "high")}</span>` : num(a.target);
@@ -434,14 +432,14 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private rangeFields(a: ReturnType<LumenClimateCard["ac"]>) {
     const field = (side: "low" | "high", label: string, color: string, v: string) => {
       const on = this._side === side;
-      return html`<button aria-pressed=${on ? "true" : "false"} aria-label="${label} ${v}" @click=${() => (this._side = side)}
+      return html`<button ?disabled=${a.off || a.una} aria-pressed=${on ? "true" : "false"} aria-label="${label} ${v}" @click=${() => (this._side = side)}
         style="display:flex;flex-direction:column;align-items:center;padding:6px 4px;border:0;border-radius:16px;background:${on ? "var(--lumen-surface-solid)" : "transparent"};box-shadow:${on ? "var(--lumen-shadow-1)" : "none"};color:var(--lumen-text-1);cursor:pointer;font-family:inherit;transition:background-color 200ms, box-shadow 200ms">
         <span style="font-size:11px;font-weight:700;color:${color}">${label}</span><span style="font-size:30px;font-weight:300;letter-spacing:-0.04em;line-height:1.1;font-variant-numeric:tabular-nums">${v}</span></button>`;
     };
     return html`<div style="display:flex;align-items:center;gap:8px;opacity:${a.off ? 0.4 : 1};transition:opacity 400ms">
-      <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${STEP_BTN};flex:none;width:44px">${icon("mdi:minus")}</button>
+      <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${STEP_BTN};flex:none;width:44px">${icon("mdi:minus")}</button>
       <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px">${field("low", t("card.climate.heat_to"), "var(--lumen-orange)", a.range!.low)}${field("high", t("card.climate.cool_from"), "var(--lumen-info)", a.range!.high)}</div>
-      <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${STEP_BTN};flex:none;width:44px">${icon("mdi:plus")}</button>
+      <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${STEP_BTN};flex:none;width:44px">${icon("mdi:plus")}</button>
     </div>`;
   }
 
@@ -449,7 +447,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const a = this.ac();
     const cfg = this._config;
     const seg = (o: { label: string; ic: string; active: boolean; on: () => void }, color: string, column = false) =>
-      html`<button aria-pressed=${o.active} @click=${o.on} style="${column ? "flex:1;min-width:0;flex-direction:column;gap:1px;font:700 11px var(--lumen-font);" : "gap:6px;font:700 12px var(--lumen-font);"}min-height:44px;padding:0 4px;display:flex;align-items:center;justify-content:center;border:0;border-radius:12px;${a.sel(o.active, color)};cursor:pointer;white-space:nowrap;transition:background-color 300ms, color 300ms">${icon(o.ic, column ? "font-size:17px;line-height:18px" : "font-size:16px")}<span style="overflow:hidden;text-overflow:ellipsis">${o.label}</span></button>`;
+      html`<button ?disabled=${a.una} aria-pressed=${o.active} @click=${o.on} style="${column ? "flex:1;min-width:0;flex-direction:column;gap:1px;font:700 11px var(--lumen-font);" : "gap:6px;font:700 12px var(--lumen-font);"}min-height:44px;padding:0 4px;display:flex;align-items:center;justify-content:center;border:0;border-radius:12px;${a.sel(o.active, color)};cursor:pointer;white-space:nowrap;transition:background-color 300ms, color 300ms">${icon(o.ic, column ? "font-size:17px;line-height:18px" : "font-size:16px")}<span style="overflow:hidden;text-overflow:ellipsis">${o.label}</span></button>`;
     // Up to 4 modes in one row, more in a grid of 3 (catalog section 09).
     const cols = a.modes.length <= 4 ? a.modes.length : 3;
     const fanSelect = html`<label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1}">
@@ -457,11 +455,11 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       <select aria-label=${t("card.climate.fans")} ?disabled=${a.off || a.una} @change=${(ev: Event) => a.fans.find((o) => o.k === (ev.target as HTMLSelectElement).value)?.on()}
         style="flex:1;min-width:0;height:40px;border:0;background:transparent;color:var(--lumen-text-1);font:700 13px var(--lumen-font);cursor:pointer;outline:none">${a.fans.map((o) => html`<option value=${o.k} ?selected=${o.active}>${o.label}</option>`)}</select>
     </label>`;
-    return html`<div data-fx style="padding:16px;border-radius:22px;background:var(--lumen-surface);border:1px solid var(--lumen-border);${glass};box-shadow:var(--lumen-shadow-1);display:flex;flex-direction:column;gap:14px">${WFX}
+    return html`<div data-fx style="padding:16px;border-radius:22px;background:${a.una ? "var(--lumen-surface-2)" : "var(--lumen-surface)"};border:${a.una ? "1px dashed var(--lumen-border-strong)" : "1px solid var(--lumen-border)"};${a.una ? "" : glass};box-shadow:${a.una ? "none" : "var(--lumen-shadow-1)"};display:flex;flex-direction:column;gap:14px">${WFX}
       <div style="display:flex;align-items:center;gap:12px">
         <div style="flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb, ${a.c} 16%, transparent);color:${a.c};transition:background-color 500ms, color 500ms">${icon(a.ic)}</div>
         <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${this.name}</div><div style="font-size:12px;font-weight:600;line-height:16px;color:var(--lumen-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.state}</div></div>
-        <button class="press" @click=${a.power} aria-label=${t("card.climate.power")} aria-pressed=${a.off ? "false" : "true"} style="flex:none;width:48px;height:48px;border-radius:50%;border:0;display:grid;place-items:center;font-size:22px;background:${a.off ? "var(--lumen-surface-2)" : "var(--lumen-accent)"};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms, color 400ms, transform 220ms var(--lumen-ease-spring)">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>
+        <button class="press" ?disabled=${a.una} @click=${a.power} aria-label=${t("card.climate.power")} aria-pressed=${a.off ? "false" : "true"} style="flex:none;width:48px;height:48px;border-radius:50%;border:0;display:grid;place-items:center;font-size:22px;background:${a.off ? "var(--lumen-surface-2)" : "var(--lumen-accent)"};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms, color 400ms, transform 220ms var(--lumen-ease-spring)">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>
       </div>
       ${(a.action && cfg.show_action !== false) || a.battery
         ? html`<div style="display:flex;flex-wrap:wrap;gap:6px;margin:-6px 0 -2px 52px">${a.action && cfg.show_action !== false
@@ -471,9 +469,9 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       ${a.range
         ? this.rangeFields(a)
         : html`<div style="display:flex;align-items:center;justify-content:space-between;opacity:${a.off ? 0.4 : 1};transition:opacity 400ms">
-            <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${STEP_BTN};width:48px">${icon("mdi:minus")}</button>
+            <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style="${STEP_BTN};width:48px">${icon("mdi:minus")}</button>
             <div style="text-align:center"><div style="font-size:40px;font-weight:300;letter-spacing:-0.04em;line-height:1;font-variant-numeric:tabular-nums">${a.target}</div><div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);margin-top:4px">${t("card.climate.target")}</div></div>
-            <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${STEP_BTN};width:48px">${icon("mdi:plus")}</button>
+            <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style="${STEP_BTN};width:48px">${icon("mdi:plus")}</button>
           </div>`}
       ${cfg.show_modes !== false && a.modes.length ? html`<div style=${SECTION}>${t("card.climate.modes")}</div>
       <div class="modes" role="group" aria-label=${t("card.climate.modes")} style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2)">${a.modes.map((o) => seg(o, o.color))}</div>` : nothing}
@@ -483,7 +481,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
       <div role="group" aria-label=${t("card.climate.swing")} style="display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.4 : 1}">${a.swings.map((o) => html`<div style="flex:1;min-width:0;display:flex">${seg(o, "var(--lumen-text-1)")}</div>`)}</div>` : nothing}
       ${cfg.show_presets !== false && a.presets.some((o) => o.k !== "none") ? html`<div style=${SECTION}>${t("card.climate.preset")}</div>
       <div role="group" aria-label=${t("card.climate.preset")} style="display:flex;flex-wrap:wrap;gap:6px">${a.presets.map(
-        (o) => html`<button aria-pressed=${o.active} @click=${o.on} style="display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px 0 10px;border-radius:999px;background:${o.active ? "var(--lumen-accent-soft)" : "transparent"};color:${o.active ? "var(--lumen-accent)" : "var(--lumen-text-2)"};border:${o.active ? "1px solid color-mix(in srgb, var(--lumen-accent) 40%, transparent)" : "1px solid var(--lumen-border)"};font:700 12px var(--lumen-font);cursor:pointer">${icon(o.ic, "font-size:15px")}${o.label}</button>`,
+        (o) => html`<button ?disabled=${a.una} aria-pressed=${o.active} @click=${o.on} style="display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px 0 10px;border-radius:999px;background:${o.active ? "var(--lumen-accent-soft)" : "transparent"};color:${o.active ? "var(--lumen-accent)" : "var(--lumen-text-2)"};border:${o.active ? "1px solid color-mix(in srgb, var(--lumen-accent) 40%, transparent)" : "1px solid var(--lumen-border)"};font:700 12px var(--lumen-font);cursor:pointer">${icon(o.ic, "font-size:15px")}${o.label}</button>`,
       )}</div>` : nothing}
       ${cfg.show_range && a.rangeLine ? html`<div style="font:500 11px var(--lumen-mono);color:var(--lumen-text-3)">${a.rangeLine}</div>` : nothing}
     </div>`;
@@ -547,39 +545,34 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   private fab() {
     const a = this.ac();
     const place = this.floating.place();
+    const big = place.size > 48;
     // the setpoint to the nearest half degree: 21.76 → "22°", 21.5 → "21,5°" (smaller digits)
     const half = this.disp === undefined ? undefined : Math.round(this.disp * 2) / 2;
     const whole = half === undefined || Number.isInteger(half);
     const short = half === undefined ? "—" : `${whole ? String(half) : formatNumber(half)}°`;
     const anim = `animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`;
-    const down = (e: PointerEvent) => {
-      if (e.button !== 0) return;
-      this.acHeld = false;
-      window.clearTimeout(this.acHold);
-      this.acHold = window.setTimeout(() => {
-        this.acHeld = true;
-        const was = this.ac();
-        if (was.busy || was.una) return;
-        was.power();
-        const heat = this.acLast === "heat";
-        toast(this, { icon: this._config.icon ?? "mdi:air-conditioner", tone: was.off ? (heat ? "orange" : "info") : "unavailable", title: this.name, text: was.off ? (heat ? t("card.climate.on_heat") : t("card.climate.on_cool")) : t("card.climate.turning_off") });
-      }, 550);
+    const hold = () => {
+      this.acHeld = true;
+      const was = this.ac();
+      if (was.busy || was.una) return;
+      was.power();
+      const heat = this.acLast === "heat";
+      toast(this, { icon: this._config.icon ?? "mdi:air-conditioner", tone: was.off ? (heat ? "orange" : "info") : "unavailable", title: this.name, text: was.off ? (heat ? t("card.climate.on_heat") : t("card.climate.on_cool")) : t("card.climate.turning_off") });
     };
-    const cancel = () => window.clearTimeout(this.acHold);
-    const tap = () => {
-      if (this.acHeld) {
-        this.acHeld = false;
-        return;
-      }
+    // The click at the end of a hold is not a tap; a click from the keyboard (detail 0) always is.
+    const tap = (e: MouseEvent) => {
+      const held = this.acHeld;
+      this.acHeld = false;
+      if (held && e.detail !== 0) return;
       this.haptic();
       this.sheet.show();
     };
-    return html`<button class="press acfab" @pointerdown=${down} @pointerup=${cancel} @pointerleave=${cancel} @click=${tap} @pointercancel=${cancel} @contextmenu=${prevent}
+    return html`<button class="press acfab" ${pressable(this.presses.handlers(`acfab:${this._config.entity}`, undefined, hold))} @click=${tap}
       aria-label="${this.name} · ${t("card.climate.fab_hint")}" aria-haspopup="dialog" title="${this.name} · ${a.off ? t("card.climate.hold_on") : t("card.climate.hold_off")}"
-      style="position:absolute;${place.edge};bottom:${place.bottom};z-index:5;width:48px;height:48px;padding:0;border-radius:50%;border:0;background:${a.off ? "var(--lumen-surface-solid)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;touch-action:none;${glass};box-shadow:var(--lumen-shadow-2);transition:background-color 400ms, color 400ms, transform 260ms var(--lumen-ease-spring)">
+      style="position:absolute;${place.edge};bottom:${place.bottom};z-index:5;width:${place.size}px;height:${place.size}px;padding:0;border-radius:50%;border:0;background:${a.off ? "var(--lumen-surface-solid)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};font-size:${Math.round(place.size * 0.42)}px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;touch-action:none;${glass};box-shadow:var(--lumen-shadow-2);transition:background-color 400ms, color 400ms, transform 260ms var(--lumen-ease-spring)">
       ${a.off
         ? icon(this._config.icon ?? "mdi:air-conditioner", `display:block;${anim}`)
-        : html`<span style="display:flex;flex-direction:column;align-items:center;gap:1px;${anim}">${icon(a.mode === "heat" ? "mdi:fire" : "mdi:snowflake", "font-size:13px;line-height:13px;opacity:.85")}<span style="font-size:${whole ? 14 : 12}px;font-weight:800;line-height:15px;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">${short}</span></span>`}
+        : html`<span style="display:flex;flex-direction:column;align-items:center;gap:1px;${anim}">${icon(a.mode === "heat" ? "mdi:fire" : "mdi:snowflake", `font-size:${big ? 16 : 13}px;line-height:${big ? 16 : 13}px;opacity:.85`)}<span style="font-size:${big ? (whole ? 18 : 16) : whole ? 14 : 12}px;font-weight:800;line-height:${big ? 19 : 15}px;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">${short}</span></span>`}
     </button>`;
   }
 
@@ -588,18 +581,21 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
     const a = this.ac();
     const cfg = this._config;
     const seg = (o: { label: string; ic: string; active: boolean; on: () => void }, color: string) =>
-      html`<button aria-pressed=${o.active} @click=${o.on} style="flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:13px;${a.sel(o.active, color)};font:700 11px var(--lumen-font);cursor:pointer;transition:background-color 300ms, color 300ms">${icon(o.ic, "font-size:17px")}${o.label}</button>`;
+      html`<button ?disabled=${a.una} aria-pressed=${o.active} @click=${o.on} style="flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:13px;${a.sel(o.active, color)};font:700 11px var(--lumen-font);cursor:pointer;transition:background-color 300ms, color 300ms">${icon(o.ic, "font-size:17px")}${o.label}</button>`;
     const step = "width:56px;height:56px;border-radius:18px;border:0;background:var(--lumen-surface-2);color:var(--lumen-text-1);font-size:24px;display:grid;place-items:center;cursor:pointer";
     return this.sheet.render(
-      { title: this.name, sub: a.state, lead: html`<button class="press" @click=${a.power} aria-label=${t("card.climate.power")} style="flex:none;width:44px;height:44px;border-radius:14px;border:0;display:grid;place-items:center;font-size:20px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>` },
+      { title: this.name, sub: a.state, lead: html`<button class="press" ?disabled=${a.una} @click=${a.power} aria-label=${t("card.climate.power")} style="flex:none;width:44px;height:44px;border-radius:14px;border:0;display:grid;place-items:center;font-size:20px;background:${a.off ? "var(--lumen-surface-2)" : a.c};color:${a.off ? "var(--lumen-text-2)" : "var(--lumen-on-accent)"};cursor:pointer;transition:background-color 400ms">${icon("mdi:power", `display:block;animation:${a.busy ? "lumenBreath 1200ms ease-in-out infinite" : "none"}`)}</button>` },
       html`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;opacity:${a.off ? 0.45 : 1};transition:opacity 400ms">
-          <button class="press" aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style=${step}>${icon("mdi:minus")}</button>
+          <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.decrease")} @click=${() => this.step(-1)} style=${step}>${icon("mdi:minus")}</button>
           <div style="display:flex;flex-direction:column;align-items:center"><div style="line-height:1">${this.setpoint(a, 52, a.c)}</div>${cfg.show_current_temp !== false ? html`<div style="font-size:12px;font-weight:600;color:var(--lumen-text-3);margin-top:6px">${a.roomLine}</div>` : nothing}</div>
-          <button class="press" aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style=${step}>${icon("mdi:plus")}</button>
+          <button class="press" ?disabled=${a.off || a.una} aria-label=${t("card.climate.increase")} @click=${() => this.step(1)} style=${step}>${icon("mdi:plus")}</button>
         </div>
         ${cfg.show_modes !== false && a.modes.length ? html`<div role="group" aria-label=${t("card.climate.modes")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.modes.map((o) => seg(o, o.color))}</div>` : nothing}
-        ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style="opacity:${a.off ? 0.45 : 1};transition:opacity 400ms"><div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.fans.map((o) => seg(o, a.c))}</div></div>` : nothing}`,
+        ${cfg.show_fan_modes !== false && a.fans.length ? html`<div style="opacity:${a.off ? 0.45 : 1};transition:opacity 400ms"><div role="group" aria-label=${t("card.climate.fans")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.fans.map((o) => seg(o, a.c))}</div></div>` : nothing}
+        ${cfg.show_swing !== false && a.swings.length ? html`<div role="group" aria-label=${t("card.climate.swing")} style="display:flex;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2);opacity:${a.off ? 0.45 : 1};transition:opacity 400ms">${a.swings.map((o) => seg(o, "var(--lumen-text-1)"))}</div>` : nothing}
+        ${cfg.show_presets !== false && a.presets.some((o) => o.k !== "none") ? html`<div role="group" aria-label=${t("card.climate.preset")} style="display:flex;flex-wrap:wrap;gap:2px;padding:3px;border-radius:16px;background:var(--lumen-surface-2)">${a.presets.map((o) => seg(o, "var(--lumen-accent)"))}</div>` : nothing}
+        ${a.battery ? html`<div style="display:flex">${batteryBadge(a.battery)}</div>` : nothing}`,
       nothing,
       { body: "gap:12px;padding:12px 14px calc(16px + env(safe-area-inset-bottom))" },
     );

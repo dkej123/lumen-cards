@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 // Catalog 2026-10-30: floating panel (section 19), compact heights (sections 01–06, 17), battery.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { ent, layer, mockHass, mount as mountCard, type Card } from "./helpers";
+import { ent, layer, mockHass, mount as mountCard, settle, type Card } from "./helpers";
 import { plural, setLanguage } from "../src/core/i18n";
 import { FAB_ORDER } from "../src/core/layer";
 import type { HassLike } from "../src/hass/types";
@@ -299,5 +299,119 @@ describe("lumen stacks", () => {
     expect(v.shadowRoot!.textContent).toContain("Add cards");
     v.remove();
     expect(customElements.get("lumen-horizontal-stack-card")).toBeTruthy();
+  });
+});
+
+describe("climate floating button", () => {
+  const unit = (extra: Record<string, unknown> = {}) =>
+    ent("climate.ac", "cool", { hvac_modes: ["off", "cool", "heat"], temperature: 22, swing_modes: ["off", "on"], swing_mode: "off", preset_modes: ["eco", "boost"], preset_mode: "eco", fan_modes: ["low"], ...extra });
+  const fabEl = () => layer()!.querySelector<HTMLElement>(".acfab")!;
+  const down = () => fabEl().dispatchEvent(new PointerEvent("pointerdown", { button: 0, clientX: 0, clientY: 0, bubbles: true, composed: true }));
+  const open = async (el: Card) => {
+    fabEl().click();
+    await settle(el);
+    return layer()!.querySelector<HTMLElement>('[role="dialog"]')!;
+  };
+
+  it("takes the size of its slot: 64 px at the bottom", async () => {
+    const h = mockHass([unit(), ent("climate.b", "cool", { temperature: 20 })]);
+    const a = await mountCard("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, h);
+    await settle(a);
+    const first = fabEl().getAttribute("style")!;
+    expect(first).toContain("width:64px");
+    expect(first).toContain("height:64px");
+    a.remove();
+  });
+
+  it("the 48 px size above another button", async () => {
+    const h = mockHass([unit(), ent("climate.b", "cool", { temperature: 20 })]);
+    const a = await mountCard("climate", { entity: "climate.b", fab: true, fab_narrow_only: false }, h);
+    const b = await mountCard("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, h);
+    await settle(a);
+    await settle(b);
+    const sizes = [...document.querySelectorAll("lumen-cards-layer")].map((l) => l.shadowRoot!.querySelector<HTMLElement>(".acfab")!.style.width);
+    expect(sizes).toEqual(["64px", "48px"]);
+    a.remove();
+    b.remove();
+  });
+
+  it("a hold takes 500 ms like everywhere, a scroll cancels it, the keyboard can do it", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = mockHass([unit()]);
+      const el = await mountCard("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, h);
+      await vi.advanceTimersByTimeAsync(0);
+      await el.updateComplete;
+      down();
+      vi.advanceTimersByTime(499);
+      expect(h.calls.length).toBe(0);
+      vi.advanceTimersByTime(2);
+      expect(h.calls.at(-1)?.[1]).toBe("turn_off");
+      fabEl().dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+      // The click that ends a hold does not open the window.
+      fabEl().dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+      expect(layer()!.querySelector('[role="dialog"]')).toBeNull();
+
+      await vi.advanceTimersByTimeAsync(11_000);
+      await el.updateComplete;
+      h.calls.length = 0;
+      down();
+      fabEl().dispatchEvent(new PointerEvent("pointermove", { clientX: 0, clientY: 40, bubbles: true, composed: true }));
+      vi.advanceTimersByTime(600);
+      expect(h.calls.length).toBe(0);
+      fabEl().dispatchEvent(new PointerEvent("pointercancel", { bubbles: true, composed: true }));
+
+      fabEl().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", shiftKey: true }));
+      expect(h.calls.at(-1)?.[1]).toBe("turn_off");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("its window has what the card has: swing, presets, the battery warning", async () => {
+    const h = mockHass([unit({ battery_level: 5 })]);
+    const el = await mountCard("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false }, h);
+    await settle(el);
+    const dlg = await open(el);
+    expect(dlg.querySelector('[role="group"][aria-label="Swing"]')).not.toBeNull();
+    expect(dlg.textContent).toContain("Boost");
+    expect(dlg.querySelector('[role="status"]')?.textContent).toContain("5%");
+    [...dlg.querySelectorAll("button")].find((b) => b.textContent!.includes("Boost"))!.click();
+    expect(h.calls.at(-1)).toEqual(["climate", "set_preset_mode", { preset_mode: "boost" }, { entity_id: "climate.ac" }]);
+    el.remove();
+  });
+
+  it("show_swing and show_presets hide them there too", async () => {
+    const el = await mountCard("climate", { entity: "climate.ac", fab: true, fab_narrow_only: false, show_swing: false, show_presets: false }, mockHass([unit()]));
+    await settle(el);
+    const dlg = await open(el);
+    expect(dlg.querySelector('[role="group"][aria-label="Swing"]')).toBeNull();
+    expect(dlg.textContent).not.toContain("Boost");
+    el.remove();
+  });
+});
+
+describe("climate card while unavailable or off", () => {
+  const step = (r: ParentNode) => [...r.querySelectorAll<HTMLButtonElement>("button")].filter((b) => ["Lower", "Raise", "Decrease", "Increase"].some((w) => b.getAttribute("aria-label")?.includes(w)));
+
+  it("the full card looks like the compact row: dashed, no glass, nothing to press", async () => {
+    const h = mockHass([ent("climate.u", "unavailable", { hvac_modes: ["heat", "off"] })]);
+    const el = await mountCard("climate", { entity: "climate.u", layout: "wide" }, h);
+    const frame = el.shadowRoot!.querySelector<HTMLElement>("[data-fx]")!.getAttribute("style")!;
+    expect(frame).toContain("dashed");
+    expect(frame).not.toContain("backdrop-filter");
+    const all = [...el.shadowRoot!.querySelectorAll<HTMLButtonElement>("button")];
+    expect(all.length).toBeGreaterThan(2);
+    expect(all.every((b) => b.disabled)).toBe(true);
+    el.remove();
+  });
+
+  it("off: − and + are disabled, power and modes still work", async () => {
+    const el = await mountCard("climate", { entity: "climate.o", layout: "wide" }, mockHass([ent("climate.o", "off", { hvac_modes: ["heat", "off"], temperature: 20 })]));
+    const s = step(el.shadowRoot!);
+    expect(s.length).toBe(2);
+    expect(s.every((b) => b.disabled)).toBe(true);
+    expect(el.shadowRoot!.querySelector<HTMLButtonElement>('button[aria-pressed="false"]')!.disabled).toBe(false);
+    el.remove();
   });
 });
