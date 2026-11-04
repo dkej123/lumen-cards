@@ -152,7 +152,7 @@ export class LumenEntityCard extends LumenBaseCard<EntityConfig> {
     return form((c) => hide(c, [
       { name: "entity", required: true, selector: { entity: {} } },
       nameIcon(),
-      { name: "device_class", selector: { select: { mode: "dropdown", options: ["door", "garage_door", "window", "opening", "moisture", "smoke", "motion", "occupancy"].map((value) => ({ value, label: t(`editor.device_class.${value}`) })) } } },
+      { name: "device_class", selector: { select: { mode: "dropdown", options: Object.keys(BINARY).map((value) => ({ value, label: t(`editor.device_class.${value}`) })) } } },
       actions(),
       advanced([["show_name"], ["show_icon"], ["show_state"]], { subButtons: true }),
       appearance({ layout: "width" }),

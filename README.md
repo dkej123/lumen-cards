@@ -575,7 +575,8 @@ You find them under **Appearance** and **Advanced** at the bottom of the editor.
 | `name` | Name shown | from the person |
 | `picture` | Address (URL) of a photo | the person's photo |
 | `avatar_color` | Background colour behind the initial when there is no photo | picked from the name |
-| `presence_badge` | Short label next to the name while presence comes from `presence_entity`; empty hides it | "BLE" |
+| `show_presence_badge` | Show the short label next to the name while presence comes from `presence_entity` | on |
+| `presence_badge` | Text of that label; in YAML an empty text hides it too | "BLE" |
 | `show_name`, `show_status` | Show the name / the "home since…" line | on |
 
 <a id="lumen-alarm-card"></a>

@@ -358,7 +358,7 @@ Lumen · Entity: Small state tile, e.g. a door contact (closed / open); a narrow
 | `entity` | yes | entity |  |  | Entity |  |
 | `name` |  | text |  |  | Name |  |
 | `icon` |  | icon |  |  | Icon |  |
-| `device_class` |  | select | `door` (Door), `garage_door` (Garage door), `window` (Window), `opening` (Opening), `moisture` (Moisture), `smoke` (Smoke), `motion` (Motion), `occupancy` (Occupancy) |  | Sensor type | Changes the icons and colours, e.g. “Door” for an opening contact on a door. Empty = as in HA |
+| `device_class` |  | select | `door` (Door), `garage_door` (Garage door), `window` (Window), `opening` (Opening), `motion` (Motion), `occupancy` (Occupancy), `presence` (Presence), `moisture` (Moisture), `smoke` (Smoke), `gas` (Gas), `problem` (Problem), `battery` (Battery), `plug` (Plug), `power` (Power) |  | Sensor type | Changes the icons and colours, e.g. “Door” for an opening contact on a door. Empty = as in HA |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |
 | `double_tap_action` |  | ui_action |  |  | Double tap action |  |
@@ -664,7 +664,8 @@ Lumen · Person: Household member with avatar, presence dot and since when
 | `presence_entity` |  | entity (domain: binary_sensor, device_tracker) |  |  | Presence sensor (optional) | E.g. a BLE sensor; without it the person's zone counts |
 | `name` |  | text |  |  | Name |  |
 | `avatar_color` |  | ui_color |  |  | Initial colour |  |
-| `presence_badge` |  | text |  |  | Presence badge | Shown next to the name while presence comes from the presence sensor (default BLE; empty hides it) |
+| `show_presence_badge` |  | boolean |  | `true` | Show the presence badge | A small label next to the name while presence comes from the presence sensor |
+| `presence_badge` |  | text |  |  | Presence badge | The text of the label. Empty: BLE |
 | `picture` |  | text |  |  | Picture (URL) |  |
 | `tap_action` |  | ui_action |  |  | Tap action |  |
 | `hold_action` |  | ui_action |  |  | Hold action |  |

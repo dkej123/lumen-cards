@@ -379,7 +379,6 @@
   "card.title.description": "Nagłówek: nadtytuł, tytuł sekcji lub pokoju, z wartościami encji (np. temperatura)",
   "card.title.error.entity": "badges[{i}]: wybierz encję",
   "card.title.error.list": "badges musi być listą",
-  "card.title.error.strings": "badges: wpisy jako tekst – edycja w YAML",
   "card.title.name": "Tytuł sekcji",
   "card.title.state_content": "Atrybut zamiast stanu (opcjonalnie)",
   "card.title.stub": "Bezpieczeństwo",
@@ -514,7 +513,7 @@
   "editor.help.power_action": "Domyślnie włącza ostatni tryb lub wyłącza urządzenie",
   "editor.help.power_entity": "Przekaźnik albo gniazdko, które odcina prąd żarówce. Gdy jest wyłączony, żarówka pokazuje „Wyłączone” zamiast „Niedostępne”, a dotknięcie włącza przekaźnik. Puste = żarówka ma stałe zasilanie",
   "editor.help.power_entities": "Kilka przekaźników albo gniazdek zasilających to światło, zwykle grupę żarówek. Karta dostaje po jednym przycisku na przekaźnik i tylko one go przełączają: dotknięcie karty nic nie robi. Gdy działa choć jeden, karta ustawia jasność i barwę całego światła. Zastępuje pole wyżej",
-  "editor.help.presence_badge": "Widoczny przy imieniu, gdy obecność pochodzi z czujnika obecności (domyślnie BLE; puste ukrywa)",
+  "editor.help.presence_badge": "Tekst napisu. Puste: BLE",
   "editor.help.presence_entity": "Np. czujnik BLE; bez niego liczy się strefa osoby",
   "editor.help.secondary_entity": "Jej stan jest drugą linią (np. stan odkurzacza)",
   "editor.help.show_trigger": "Wiersz w dashboardzie otwierający pop-up; wyłączony = karta niewidoczna",
@@ -749,5 +748,13 @@
   "card.purifier.editor.option_label": "Wyświetlana nazwa",
   "card.purifier.editor.service_controls": "Sterowanie przez usługę",
   "card.purifier.help.service_controls": "Dla integracji z własną usługą: atrybut oczyszczacza z wartością, usługa i jej pole wartości. Opcje dają wybór, maksimum daje przyciski − / +, inaczej jest to przełącznik",
-  "editor.help.light_height": "W pikselach, co najmniej 40. Puste: 64, a na kompaktowym kaflu 44"
+  "editor.help.light_height": "W pikselach, co najmniej 40. Puste: 64, a na kompaktowym kaflu 44",
+  "editor.show_presence_badge": "Pokaż znacznik obecności",
+  "editor.help.show_presence_badge": "Mały napis przy imieniu, gdy obecność pochodzi z czujnika obecności",
+  "editor.device_class.presence": "Obecność",
+  "editor.device_class.gas": "Gaz",
+  "editor.device_class.problem": "Problem",
+  "editor.device_class.battery": "Bateria",
+  "editor.device_class.plug": "Gniazdko",
+  "editor.device_class.power": "Zasilanie"
 }

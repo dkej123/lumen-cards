@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import { actions, advanced, appearance, entityStub, form } from "../core/form";
+import { actions, advanced, appearance, entityStub, form, hide } from "../core/form";
 import { SubButtons, subButtonEntities, subButtonLimit } from "../core/sub-buttons";
 import { t } from "../core/i18n";
 import type { ActionConfig } from "../core/actions";
@@ -23,7 +23,9 @@ export interface PersonConfig extends BaseConfig {
   picture?: string;
   /** Background behind the initial (no picture): HA colour name or hex. Default: picked from the name. */
   avatar_color?: string;
-  /** Badge next to the name while presence comes from `presence_entity` (default "BLE"; "" hides it). */
+  /** Badge next to the name while presence comes from `presence_entity` (default on). */
+  show_presence_badge?: boolean;
+  /** Text of that badge (default "BLE"; in YAML "" hides it too). */
   presence_badge?: string;
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
@@ -108,7 +110,7 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
         <span style="margin-left:auto"></span>${c.sub_buttons?.length ? html`<span style="flex:none;display:flex;margin-right:-4px">${this.subs.render(c.sub_buttons, { compact: true, max: 1 })}</span>` : nothing}
       </div>`;
     }
-    const badge = c.presence_entity && !s.unavailable ? (c.presence_badge ?? "BLE") : "";
+    const badge = c.presence_entity && !s.unavailable && c.show_presence_badge !== false ? (c.presence_badge ?? "BLE") : "";
     const opts = {
       title: name,
       sub: s.label,
@@ -128,16 +130,19 @@ export class LumenPersonCard extends LumenBaseCard<PersonConfig> {
   static getStubConfig = entityStub("person", "person.example");
 
   static getConfigForm() {
-    return form([
+    return form((c) => hide(c, [
       { name: "entity", selector: { entity: { domain: "person" } } },
       { name: "presence_entity", selector: { entity: { domain: ["binary_sensor", "device_tracker"] } } },
       { name: "", type: "grid", flatten: true, schema: [{ name: "name", selector: { text: {} } }, { name: "avatar_color", selector: { ui_color: {} } }] },
-      { name: "presence_badge", selector: { text: {} } },
+      { name: "", type: "grid", flatten: true, schema: [{ name: "show_presence_badge", default: true, selector: { boolean: {} } }, { name: "presence_badge", selector: { text: {} } }] },
       { name: "picture", selector: { text: { type: "url" } } },
       actions(),
       advanced([["show_name"], ["show_status"]], { subButtons: true }),
       appearance({ layout: "width" }),
-    ]);
+    ], [
+      [!c?.presence_entity, ["show_presence_badge", "presence_badge"]],
+      [c?.show_presence_badge === false, ["presence_badge"]],
+    ]));
   }
 }
 

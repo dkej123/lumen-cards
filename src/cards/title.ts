@@ -36,7 +36,6 @@ export interface TitleConfig extends BaseConfig {
 /** Structure the editor cannot show; an empty title is fine while editing. */
 export function assertTitle(c: Partial<TitleConfig>): void {
   if (c.badges !== undefined && !Array.isArray(c.badges)) throw new Error(t("card.title.error.list"));
-  if ((c.badges ?? []).some((x) => typeof x === "string")) throw new Error(t("card.title.error.strings"));
 }
 
 export function validateTitle(c: Partial<TitleConfig>): void {
@@ -159,6 +158,7 @@ export class LumenTitleCard extends LumenBaseCard<TitleConfig> {
         appearance({ effects: false, layout: "screen", accent: false }),
       ],
       (c) => assertTitle(c as Partial<TitleConfig>),
+      (c) => (Array.isArray(c.badges) ? { ...c, badges: c.badges.map((x) => (typeof x === "string" ? { entity: x } : x)) } : c),
     );
   }
 }

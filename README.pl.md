@@ -570,7 +570,8 @@ Znajdziesz je w sekcjach **Wygląd** i **Zaawansowane** na dole edytora.
 | `name` | Wyświetlane imię | z osoby |
 | `picture` | Adres (URL) zdjęcia | zdjęcie osoby |
 | `avatar_color` | Kolor tła za literą, gdy nie ma zdjęcia | dobrany do imienia |
-| `presence_badge` | Krótki znacznik obok imienia, gdy obecność pochodzi z `presence_entity`; puste = bez znacznika | „BLE” |
+| `show_presence_badge` | Pokazuj krótki znacznik obok imienia, gdy obecność pochodzi z `presence_entity` | wł. |
+| `presence_badge` | Tekst znacznika; w YAML pusty tekst też go ukrywa | „BLE” |
 | `show_name`, `show_status` | Pokazuj imię / linię „w domu od…” | wł. |
 
 <a id="lumen-alarm-card"></a>

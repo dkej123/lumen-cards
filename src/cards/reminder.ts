@@ -178,7 +178,8 @@ export class LumenReminderCard extends LumenBaseCard<ReminderConfig> {
     const showDialog = this.preview && c.dialog !== false;
     if (!pill && !showDialog) return nothing;
     const { key, col } = this.tone();
-    const value = reminderValue(c.value, this.entity(c.value_entity), this._hass);
+    // An entity without a text of its own: just its value.
+    const value = reminderValue(c.value || (c.value_entity ? "{value}" : undefined), this.entity(c.value_entity), this._hass);
     const a = c.dialog !== false && !this.preview ? activate(() => (this._open = true)) : undefined;
     // Editor preview: show the window under the pill so its texts and buttons can be checked.
     const noop = () => {};

@@ -379,7 +379,6 @@
   "card.title.description": "Heading: overline, section or room title, with entity values (e.g. temperature)",
   "card.title.error.entity": "badges[{i}]: pick an entity",
   "card.title.error.list": "badges must be a list",
-  "card.title.error.strings": "badges: plain text entries – edit in YAML",
   "card.title.name": "Section title",
   "card.title.state_content": "Attribute instead of the state (optional)",
   "card.title.stub": "Security",
@@ -514,7 +513,7 @@
   "editor.help.power_action": "Default: turns on the last mode or turns the device off",
   "editor.help.power_entity": "A relay or plug that cuts the bulb's power. While it is off the bulb shows “Off” instead of “Unavailable”, and a tap turns the relay on. Empty = the bulb is always powered",
   "editor.help.power_entities": "Several relays or plugs feeding this light, usually a group of bulbs. The card gets one button per relay and only they switch the relays: a tap on the card does nothing. While any relay is on, the card sets the brightness and colour of the whole light. Replaces the field above",
-  "editor.help.presence_badge": "Shown next to the name while presence comes from the presence sensor (default BLE; empty hides it)",
+  "editor.help.presence_badge": "The text of the label. Empty: BLE",
   "editor.help.presence_entity": "E.g. a BLE sensor; without it the person's zone counts",
   "editor.help.secondary_entity": "Its state is the second line (e.g. the vacuum status)",
   "editor.help.show_trigger": "A row in the dashboard that opens the pop-up; off = the card is invisible",
@@ -749,5 +748,13 @@
   "card.purifier.editor.option_label": "Name shown",
   "card.purifier.editor.service_controls": "Controls that call a service",
   "card.purifier.help.service_controls": "For integrations with their own service: the purifier attribute that holds the value, the service and its value field. Options make it a choice, a maximum makes it − / + buttons, otherwise it is a switch",
-  "editor.help.light_height": "In pixels, at least 40. Empty: 64, or 44 on the compact tile"
+  "editor.help.light_height": "In pixels, at least 40. Empty: 64, or 44 on the compact tile",
+  "editor.show_presence_badge": "Show the presence badge",
+  "editor.help.show_presence_badge": "A small label next to the name while presence comes from the presence sensor",
+  "editor.device_class.presence": "Presence",
+  "editor.device_class.gas": "Gas",
+  "editor.device_class.problem": "Problem",
+  "editor.device_class.battery": "Battery",
+  "editor.device_class.plug": "Plug",
+  "editor.device_class.power": "Power"
 }

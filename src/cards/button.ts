@@ -52,6 +52,14 @@ export interface ButtonConfig extends BaseConfig {
   color?: string | [number, number, number];
 }
 
+/** The time an entity holds: an input_datetime's `timestamp` attribute, or a timestamp sensor's ISO state. */
+export function lastUsedMs(e: HassEntity | undefined): number | undefined {
+  const ts = e?.attributes.timestamp;
+  if (typeof ts === "number") return ts * 1000;
+  const ms = e && /^\d{4}-\d{2}-\d{2}/.test(e.state) ? Date.parse(e.state) : NaN;
+  return Number.isFinite(ms) ? ms : undefined;
+}
+
 /** How long the success line stays before the last use comes back (catalog: 6 s). */
 export const SUCCESS_MS = 6000;
 
@@ -231,8 +239,8 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
       case "last-triggered":
         return this.when(e?.attributes.last_triggered) ?? "—";
     }
-    const ts = c.last_used_entity ? this.entity(c.last_used_entity)?.attributes.timestamp : undefined;
-    if (typeof ts === "number") return formatWhen(ts * 1000);
+    const used = lastUsedMs(this.entity(c.last_used_entity));
+    if (used !== undefined) return formatWhen(used);
     const fb = this.feedback;
     const status = fb ? this.entity(fb.status_entity) : undefined;
     if (status && status.state === String(fb!.success_state ?? "200")) {

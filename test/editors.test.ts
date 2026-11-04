@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { form, hide, type Schema } from "../src/core/form";
 import { LumenFormEditor } from "../src/core/form-editor";
 import "../src/lumen-cards";
+import { lastUsedMs } from "../src/cards/button";
 import { purifierFormConfig } from "../src/cards/purifier";
 import { ent, mockHass, mount, settle } from "./helpers";
 
@@ -224,5 +225,81 @@ describe("options that were YAML only", () => {
     const help = form.computeHelper(formOf("light").schema.find((f) => f.name === "height")!);
     expect(help).toContain("40");
     expect(help).not.toContain("chart");
+  });
+});
+
+describe("behaviour behind the fields", () => {
+  const text = (el: HTMLElement) => el.shadowRoot!.textContent ?? "";
+
+  it("the presence badge has a real switch", async () => {
+    const h = mockHass([ent("person.a", "home"), ent("binary_sensor.b", "on")]);
+    const on = await mount("person", { entity: "person.a", presence_entity: "binary_sensor.b", layout: "wide" }, h);
+    await settle(on);
+    expect(text(on)).toContain("BLE");
+    on.remove();
+    const off = await mount("person", { entity: "person.a", presence_entity: "binary_sensor.b", layout: "wide", show_presence_badge: false }, h);
+    await settle(off);
+    expect(text(off)).not.toContain("BLE");
+    off.remove();
+    expect(shown("person", {})).not.toContain("show_presence_badge");
+    expect(shown("person", { presence_entity: "binary_sensor.b" })).toEqual(expect.arrayContaining(["show_presence_badge", "presence_badge"]));
+    expect(shown("person", { presence_entity: "binary_sensor.b", show_presence_badge: false })).not.toContain("presence_badge");
+  });
+
+  it("the sensor type offers every type the card knows", async () => {
+    const field = names(formOf("entity").schema).includes("device_class") ? JSON.stringify(formOf("entity").schema) : "";
+    for (const k of ["door", "presence", "gas", "problem", "battery", "plug", "power"]) expect(field).toContain(`"value":"${k}"`);
+    const h = mockHass([ent("binary_sensor.g", "on")]);
+    const el = await mount("entity", { entity: "binary_sensor.g", device_class: "plug", layout: "wide" }, h);
+    await settle(el);
+    expect(el.shadowRoot!.innerHTML).toContain("mdi:power-plug");
+    el.remove();
+  });
+
+  it("a reminder with only a value entity shows its value", async () => {
+    const h = mockHass([ent("input_boolean.r", "on"), ent("sensor.v", "42")]);
+    const el = await mount("reminder", { entity: "input_boolean.r", value_entity: "sensor.v", dialog: false }, h);
+    await settle(el);
+    expect(text(el)).toContain("42");
+    el.remove();
+    const own = await mount("reminder", { entity: "input_boolean.r", value_entity: "sensor.v", value: "{value} km", dialog: false }, h);
+    await settle(own);
+    expect(text(own)).toContain("42 km");
+    own.remove();
+  });
+
+  it("the last use comes from a timestamp attribute or an ISO state, nothing else", () => {
+    expect(lastUsedMs(ent("input_datetime.a", "2026-01-01", { timestamp: 1000 }))).toBe(1_000_000);
+    expect(lastUsedMs(ent("sensor.a", "2026-11-04T08:00:00+00:00"))).toBe(Date.parse("2026-11-04T08:00:00Z"));
+    expect(lastUsedMs(ent("sensor.a", "5"))).toBeUndefined();
+    expect(lastUsedMs(ent("sensor.a", "unknown"))).toBeUndefined();
+    expect(lastUsedMs(undefined)).toBeUndefined();
+  });
+
+  it("a timestamp sensor fills the button's second line", async () => {
+    const h = mockHass([ent("script.go", "off"), ent("sensor.last", new Date(Date.now() - 3_600_000).toISOString())]);
+    const el = await mount("button", { entity: "script.go", last_used_entity: "sensor.last" }, h);
+    await settle(el);
+    const plain = await mount("button", { entity: "script.go" }, h);
+    await settle(plain);
+    expect(text(el)).not.toEqual(text(plain));
+    el.remove();
+    plain.remove();
+  });
+
+  it("plain string badges keep the visual editor", async () => {
+    const ctor = customElements.get("lumen-title-card") as unknown as { getConfigElement(): LumenFormEditor };
+    const ed = ctor.getConfigElement();
+    const cfg = { type: "custom:lumen-title-card", badges: ["sensor.a", { entity: "sensor.b" }] };
+    expect(() => ed.setConfig(cfg)).not.toThrow();
+    document.body.append(ed);
+    await ed.updateComplete;
+    expect((ed.shadowRoot!.querySelector("ha-form") as HTMLElement & { data: { badges: unknown } }).data.badges).toEqual([{ entity: "sensor.a" }, { entity: "sensor.b" }]);
+    ed.remove();
+  });
+
+  it("a badges value that is not a list still goes to YAML", () => {
+    const ed = (customElements.get("lumen-title-card") as unknown as { getConfigElement(): LumenFormEditor }).getConfigElement();
+    expect(() => ed.setConfig({ badges: "x" })).toThrow();
   });
 });
