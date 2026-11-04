@@ -275,6 +275,8 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
                 name: { label: t("editor.name"), selector: { text: {} } },
                 icon: { label: t("editor.icon"), selector: { icon: {} } },
                 tap_action: { label: t("card.chips.tap_action"), selector: { ui_action: {} } },
+                hold_action: { label: t("editor.hold_action"), selector: { ui_action: {} } },
+                double_tap_action: { label: t("editor.double_tap_action"), selector: { ui_action: {} } },
                 active_value: { label: t("card.chips.active_value"), selector: { text: {} } },
                 active_attribute: { label: t("card.chips.active_attribute"), selector: { text: {} } },
                 power_entity: { label: t("card.chips.power_entity"), selector: { entity: { domain: ["switch", "light", "input_boolean"] } } },
@@ -305,7 +307,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
           schema: [...fabFields(), { name: "", type: "grid", flatten: true, schema: [{ name: "fab_icon", selector: { icon: {} } }, { name: "title", selector: { text: {} } }] }],
         },
         advanced(),
-        appearance({ layout: "screen" }),
+        appearance({ glow: true, layout: "screen" }),
       ], [[!c?.fab, ["fab_narrow_only", "fab_side", "fab_icon", "title"]]]),
       (c) => assertChips(c as Partial<ChipsConfig>),
     );

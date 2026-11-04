@@ -18,6 +18,8 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `chips[].name` |  | text |  |  | Name |  |
 | `chips[].icon` |  | icon |  |  | Icon |  |
 | `chips[].tap_action` |  | ui_action |  |  | Tap action (default: run / toggle / details) |  |
+| `chips[].hold_action` |  | ui_action |  |  | Hold action |  |
+| `chips[].double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `chips[].active_value` |  | text |  |  | Active when the state is |  |
 | `chips[].active_attribute` |  | text |  |  | Read an attribute instead of the state (optional) |  |
 | `chips[].power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) – only when the bulb sits behind a relay / plug; empty = always powered |  |
@@ -33,12 +35,11 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact on screens narrower than 1024 px |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `glow_color` |  | ui_color |  |  | Glow colour | Default: the light's own colour |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `chips[].hold_action` |  | action (YAML only) |  |  | | HA action |
-| `chips[].double_tap_action` |  | action (YAML only) |  |  | | HA action |
 
 ## Reading the table
 

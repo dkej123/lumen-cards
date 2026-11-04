@@ -68,6 +68,7 @@ export class LumenLightCard extends LumenBaseCard<LightTileConfig> {
       nameIcon(),
       { name: "power_entity", selector: { entity: { domain: ["switch", "light", "input_boolean"] } } },
       { name: "power_entities", selector: { entity: { multiple: true, domain: ["switch", "light", "input_boolean"] } } },
+      { name: "height", helper: "light_height", selector: { number: { min: 40, max: 200, step: 2, mode: "box", unit_of_measurement: "px" } } },
       subButtonsField(),
       actions(),
       advanced([["show_state"], ["show_color_button"]]),

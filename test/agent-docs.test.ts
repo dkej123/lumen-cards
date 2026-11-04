@@ -61,15 +61,12 @@ const STACK_NOTES = [CARDS_KEY_NOTE, "Editor: own `getConfigElement`: `title` an
 const CARDS_EDITOR = (title: string) => `Editor: own \`getConfigElement\`: \`cards\` ${title} edited in HA's stack editor, the other fields above it.`;
 
 const SUPPLEMENT: Record<string, Supplement> = {
-  "lumen-air-quality-card": { yaml: [{ key: "levels", type: "{title?, hint?}[]", note: "Own texts of the six levels, best to worst" }] },
+  // The position in the list is the level, and HA's list editor can drag and delete items, which would silently shift the meaning.
+  "lumen-air-quality-card": { yaml: [{ key: "levels", type: "{title?, hint?}[]", note: "Own texts of the six levels, best to worst. YAML only on purpose: an item's place in the list is its level, and the editor's lists can be reordered" }] },
   "lumen-bar-card": {
     notes: [CARDS_KEY_NOTE, CARDS_EDITOR("are"), "Inner Lumen cards always get `layout: compact`, and `weather_effects: false` unless they set it."],
   },
   "lumen-chips-card": {
-    yaml: [
-      { key: "chips[].hold_action", type: "action", note: "HA action" },
-      { key: "chips[].double_tap_action", type: "action", note: "HA action" },
-    ],
     notes: ["With `fab`, only `type: action` chips float; `type: light` chips stay in the row."],
   },
   "lumen-fab-sheet-card": {
@@ -80,14 +77,12 @@ const SUPPLEMENT: Record<string, Supplement> = {
     ],
   },
   "lumen-horizontal-stack-card": { notes: STACK_NOTES },
-  "lumen-light-card": { yaml: [{ key: "height", type: "number", note: "Tile height in px, at least 40", default: "64; compact 44" }] },
   "lumen-popup-card": {
     notes: [CARDS_KEY_NOTE, CARDS_EDITOR("and the title (`name`) are"), "Inner cards are built only while the sheet is open. Inner Lumen cards get `weather_effects: false` unless they set it. Open it with a link to `hash`, e.g. `navigate` with `navigation_path: \"#living-room\"`."],
   },
   "lumen-purifier-card": { notes: ["A control that calls a service goes in `service_controls`. One written in `controls` keeps working; the editor shows the service fields of `controls` only then."] },
   "lumen-title-card": { notes: ["An item of `badges` may also be a plain entity id string."] },
   "lumen-vertical-stack-card": { notes: STACK_NOTES },
-  "lumen-weather-card": { yaml: [{ key: "sun_entity", type: "entity", note: "Day and night icons", default: "sun.sun" }] },
 };
 
 /** Domains probed against each card's picker suggestion (`getEntitySuggestion`). */

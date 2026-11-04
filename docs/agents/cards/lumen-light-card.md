@@ -18,6 +18,7 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `icon` |  | icon |  |  | Icon |  |
 | `power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) | A relay or plug that cuts the bulb's power. While it is off the bulb shows “Off” instead of “Unavailable”, and a tap turns the relay on. Empty = the bulb is always powered |
 | `power_entities` |  | entity[] (domain: switch, light, input_boolean) |  |  | Power (several relays) | Several relays or plugs feeding this light, usually a group of bulbs. The card gets one button per relay and only they switch the relays: a tap on the card does nothing. While any relay is on, the card sets the brightness and colour of the whole light. Replaces the field above |
+| `height` |  | number (min: 40; max: 200; step: 2; unit: px) |  |  | Height | In pixels, at least 40. Empty: 64, or 44 on the compact tile |
 | `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
@@ -41,7 +42,6 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `height` |  | number (YAML only) |  | 64; compact 44 | | Tile height in px, at least 40 |
 
 ## Reading the table
 

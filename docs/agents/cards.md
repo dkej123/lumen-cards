@@ -79,7 +79,7 @@ Lumen · Air quality: Air quality (PM2.5 / PM10 / AQI) in 6 levels with a 24 h c
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `levels` |  | {title?, hint?}[] (YAML only) |  |  | | Own texts of the six levels, best to worst |
+| `levels` |  | {title?, hint?}[] (YAML only) |  |  | | Own texts of the six levels, best to worst. YAML only on purpose: an item's place in the list is its level, and the editor's lists can be reordered |
 
 ## `lumen-alarm-card`
 
@@ -241,6 +241,8 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `chips[].name` |  | text |  |  | Name |  |
 | `chips[].icon` |  | icon |  |  | Icon |  |
 | `chips[].tap_action` |  | ui_action |  |  | Tap action (default: run / toggle / details) |  |
+| `chips[].hold_action` |  | ui_action |  |  | Hold action |  |
+| `chips[].double_tap_action` |  | ui_action |  |  | Double tap action |  |
 | `chips[].active_value` |  | text |  |  | Active when the state is |  |
 | `chips[].active_attribute` |  | text |  |  | Read an attribute instead of the state (optional) |  |
 | `chips[].power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) – only when the bulb sits behind a relay / plug; empty = always powered |  |
@@ -256,12 +258,11 @@ Lumen · Chips: A row of chips: actions (scenes, scripts; optionally a floating 
 | `styles` |  | text (multiline) |  |  | Custom CSS | CSS added to the card, e.g. .press { border-radius: 8px } |
 | `layout` |  | select | `auto` (Auto), `wide` (Full), `compact` (Compact) |  | Layout | Auto: compact on screens narrower than 1024 px |
 | `color_scheme` |  | select | `auto` (Auto), `light` (Light), `dark` (Dark) |  | Colour scheme | Auto: like Home Assistant |
+| `glow_color` |  | ui_color |  |  | Glow colour | Default: the light's own colour |
 | `accent_color` |  | ui_color |  |  | Accent colour | Default: from the theme |
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `chips[].hold_action` |  | action (YAML only) |  |  | | HA action |
-| `chips[].double_tap_action` |  | action (YAML only) |  |  | | HA action |
 
 ## `lumen-climate-card`
 
@@ -500,6 +501,7 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `icon` |  | icon |  |  | Icon |  |
 | `power_entity` |  | entity (domain: switch, light, input_boolean) |  |  | Power (relay) | A relay or plug that cuts the bulb's power. While it is off the bulb shows “Off” instead of “Unavailable”, and a tap turns the relay on. Empty = the bulb is always powered |
 | `power_entities` |  | entity[] (domain: switch, light, input_boolean) |  |  | Power (several relays) | Several relays or plugs feeding this light, usually a group of bulbs. The card gets one button per relay and only they switch the relays: a tap on the card does nothing. While any relay is on, the card sets the brightness and colour of the whole light. Replaces the field above |
+| `height` |  | number (min: 40; max: 200; step: 2; unit: px) |  |  | Height | In pixels, at least 40. Empty: 64, or 44 on the compact tile |
 | `sub_buttons` |  | object[] |  |  | Sub-buttons | Small buttons on the right of the card, each with its own entity and action. At most 4 are shown, 2 on a narrow card and 1 on a compact one; the rest is hidden |
 | `sub_buttons[].entity` |  | entity |  |  | Entity |  |
 | `sub_buttons[].name` |  | text |  |  | Name |  |
@@ -523,7 +525,6 @@ Lumen · Light: Large light tile: tap toggles, drag sets the brightness, the ico
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `height` |  | number (YAML only) |  | 64; compact 44 | | Tile height in px, at least 40 |
 
 ## `lumen-lock-card`
 
@@ -1008,6 +1009,7 @@ Lumen · Weather: Current weather as a line or a card with hours; tap for detail
 |---|---|---|---|---|---|---|
 | `entity` | yes | entity (domain: weather) |  |  | Entity |  |
 | `warnings_entity` |  | entity (domain: sensor, binary_sensor) |  |  | Warnings (optional) | Sensor with a warnings list attribute, e.g. IMGW-PIB Monitor |
+| `sun_entity` |  | entity (domain: sun) |  |  | Sun |  |
 | `layout` |  | select | `auto` (Auto), `compact` (Line), `wide` (Card), `icon` (Icon and temperature only) | `auto` | Layout |  |
 | `hours` |  | number (min: 4; max: 8; step: 1) |  | `6` | Hours on the card | 4–8; the card shows as many columns as fit at 44 px or more |
 | `show_feels` |  | boolean |  | `true` | Show feels like |  |
@@ -1023,4 +1025,3 @@ Lumen · Weather: Current weather as a line or a card with hours; tap for detail
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `sun_entity` |  | entity (YAML only) |  | sun.sun | | Day and night icons |

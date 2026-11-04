@@ -748,5 +748,6 @@
   "card.purifier.editor.option_value": "Wartość",
   "card.purifier.editor.option_label": "Wyświetlana nazwa",
   "card.purifier.editor.service_controls": "Sterowanie przez usługę",
-  "card.purifier.help.service_controls": "Dla integracji z własną usługą: atrybut oczyszczacza z wartością, usługa i jej pole wartości. Opcje dają wybór, maksimum daje przyciski − / +, inaczej jest to przełącznik"
+  "card.purifier.help.service_controls": "Dla integracji z własną usługą: atrybut oczyszczacza z wartością, usługa i jej pole wartości. Opcje dają wybór, maksimum daje przyciski − / +, inaczej jest to przełącznik",
+  "editor.help.light_height": "W pikselach, co najmniej 40. Puste: 64, a na kompaktowym kaflu 44"
 }

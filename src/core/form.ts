@@ -205,6 +205,7 @@ const HELPERS: Record<string, string> = {
   badge_entities: "editor.help.badge_entities",
   narrow_only_fab: "editor.help.narrow_only_fab",
   spacer_height: "editor.help.spacer_height",
+  light_height: "editor.help.light_height",
   purifier_layout: "card.purifier.help.layout",
   purifier_preset_modes: "card.purifier.help.preset_modes",
   purifier_speeds: "card.purifier.help.speeds",

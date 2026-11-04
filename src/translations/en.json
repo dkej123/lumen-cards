@@ -748,5 +748,6 @@
   "card.purifier.editor.option_value": "Value",
   "card.purifier.editor.option_label": "Name shown",
   "card.purifier.editor.service_controls": "Controls that call a service",
-  "card.purifier.help.service_controls": "For integrations with their own service: the purifier attribute that holds the value, the service and its value field. Options make it a choice, a maximum makes it − / + buttons, otherwise it is a switch"
+  "card.purifier.help.service_controls": "For integrations with their own service: the purifier attribute that holds the value, the service and its value field. Options make it a choice, a maximum makes it − / + buttons, otherwise it is a switch",
+  "editor.help.light_height": "In pixels, at least 40. Empty: 64, or 44 on the compact tile"
 }

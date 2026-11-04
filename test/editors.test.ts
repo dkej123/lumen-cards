@@ -208,3 +208,21 @@ describe("purifier editor", () => {
     expect(JSON.stringify(fieldOf(formOf("purifier").schema, "target_humidity_entity"))).toContain('"number"');
   });
 });
+
+describe("options that were YAML only", () => {
+  it.each([["light", "height"], ["weather", "sun_entity"], ["chips", "glow_color"]])("%s has %s", (card, field) => {
+    expect(names(formOf(card).schema)).toContain(field);
+  });
+
+  it("a chip's dialog offers hold and double tap", () => {
+    const chips = formOf("chips").schema.find((f) => f.name === "chips") as Field & { selector: { object: { fields: Record<string, unknown> } } };
+    expect(Object.keys(chips.selector.object.fields)).toEqual(expect.arrayContaining(["tap_action", "hold_action", "double_tap_action"]));
+  });
+
+  it("the light's height has its own help, not the sensor's", () => {
+    const form = formOf("light") as unknown as { computeHelper(s: Field): string };
+    const help = form.computeHelper(formOf("light").schema.find((f) => f.name === "height")!);
+    expect(help).toContain("40");
+    expect(help).not.toContain("chart");
+  });
+});

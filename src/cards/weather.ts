@@ -668,6 +668,7 @@ export class LumenWeatherCard extends LumenBaseCard<WeatherConfig> {
     return form([
       { name: "entity", required: true, selector: { entity: { domain: "weather" } } },
       { name: "warnings_entity", selector: { entity: { domain: ["sensor", "binary_sensor"] } } },
+      { name: "sun_entity", selector: { entity: { domain: "sun" } } },
       {
         name: "",
         type: "grid",

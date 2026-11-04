@@ -29,7 +29,7 @@ Lumen · Air quality: Air quality (PM2.5 / PM10 / AQI) in 6 levels with a 24 h c
 | `max_width` |  | number (min: 1; max: 2000; step: 1) |  |  | Max. width | The card is never wider than this and stays centred in its place. Percent is of its place in the grid. Empty = the full width |
 | `max_width_unit` |  | select | `px` (Pixels (px)), `%` (Percent (%)) | `px` | Width unit |  |
 | `weather_effects` |  | boolean |  | `true` | Weather effects on the card | Works with a “Lumen · Weather background” card in the same view |
-| `levels` |  | {title?, hint?}[] (YAML only) |  |  | | Own texts of the six levels, best to worst |
+| `levels` |  | {title?, hint?}[] (YAML only) |  |  | | Own texts of the six levels, best to worst. YAML only on purpose: an item's place in the list is its level, and the editor's lists can be reordered |
 
 ## Reading the table
 
