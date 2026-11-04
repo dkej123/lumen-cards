@@ -60,3 +60,9 @@ export function waitForResponse(
     check();
   });
 }
+
+/** A `feedback` option only counts once it names the status sensor: half-filled in the editor it is no feedback. */
+export function activeFeedback<T extends { status_entity?: unknown }>(f: unknown): (T & { status_entity: string }) | undefined {
+  const s = f && typeof f === "object" ? (f as T).status_entity : undefined;
+  return typeof s === "string" && s ? (f as T & { status_entity: string }) : undefined;
+}

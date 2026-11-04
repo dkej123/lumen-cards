@@ -61,7 +61,6 @@
   "card.button.description": "Przycisk uruchamiający skrypt, scenę lub przycisk, opcjonalnie z oczekiwaniem na odpowiedź urządzenia (np. brama)",
   "card.button.device_error": "Błąd urządzenia",
   "card.button.done": "Wykonano",
-  "card.button.error.feedback": "feedback wymaga status_entity",
   "card.button.error_code": "Błąd {code}",
   "card.button.feedback": "Potwierdzenie z odpowiedzi",
   "card.button.name": "Przycisk",

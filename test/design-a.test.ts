@@ -449,3 +449,44 @@ describe("default tap: the same on a button, a chip and a sub-button", () => {
     expect(JSON.stringify(seen)).not.toContain("unlock");
   });
 });
+
+describe("button card: feedback without status_entity counts as no feedback", () => {
+  const press = (el: HTMLElement) => {
+    el.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+    el.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+  };
+
+  it("no error card, a tap just runs, a hold opens the button's own details", async () => {
+    vi.useFakeTimers();
+    try {
+      for (const feedback of [{}, { success_text: "Open" }, { status_entity: "" }, { status_entity: "", message_entity: "sensor.m" }, null]) {
+        const h = mockHass([ent("script.gate", "off")]);
+        const el = await mountCard("button", { entity: "script.gate", layout: "wide", feedback }, h);
+        expect(el.shadowRoot!.querySelector('[role="alert"]'), JSON.stringify(feedback)).toBeNull();
+        const row = el.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!;
+        press(row);
+        await el.updateComplete;
+        expect(h.calls).toEqual([["script", "turn_on", {}, { entity_id: "script.gate" }]]);
+        expect(el.shadowRoot!.querySelector('[aria-busy="true"]')).toBeNull();
+        const info: string[] = [];
+        el.addEventListener("hass-more-info", (e) => info.push((e as CustomEvent).detail.entityId));
+        row.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+        vi.advanceTimersByTime(600);
+        row.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+        expect(info).toEqual(["script.gate"]);
+        el.remove();
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("with status_entity the card still waits for the answer", async () => {
+    const h = mockHass([ent("script.gate", "off"), ent("sensor.s", "200")]);
+    const el = await mountCard("button", { entity: "script.gate", layout: "wide", feedback: { status_entity: "sensor.s" } }, h);
+    press(el.shadowRoot!.querySelector<HTMLElement>('[role="button"]')!);
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('[aria-busy="true"]')).toBeTruthy();
+    el.remove();
+  });
+});

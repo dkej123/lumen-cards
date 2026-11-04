@@ -15,7 +15,7 @@ import { requireEntity } from "../core/validate";
 import type { HassEntity } from "../hass/types";
 import { isUnavailable } from "../hass/types";
 import { stateText } from "../logic/format";
-import { waitForResponse, type EntitySource } from "../logic/response";
+import { activeFeedback, waitForResponse, type EntitySource } from "../logic/response";
 import { RUN, defaultTap } from "../logic/run";
 import { formatWhen } from "../logic/time";
 
@@ -59,7 +59,6 @@ const ICONS: Record<string, string> = { script: "mdi:script-text-play", scene: "
 
 export function validateButton(c: Partial<ButtonConfig>): void {
   requireEntity(c);
-  if (c.feedback !== undefined && (typeof c.feedback !== "object" || !c.feedback?.status_entity)) throw new Error(t("card.button.error.feedback"));
 }
 
 type Phase = "idle" | "wait" | "ok" | "err";
@@ -93,7 +92,8 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
 
   protected entityIds() {
     const c = this._config;
-    return [c.entity, c.feedback?.status_entity, c.feedback?.message_entity, c.last_used_entity, ...subButtonEntities(c.sub_buttons)];
+    const fb = this.feedback;
+    return [c.entity, fb?.status_entity, fb?.message_entity, c.last_used_entity, ...subButtonEntities(c.sub_buttons)];
   }
 
   protected validate(c: ButtonConfig) {
@@ -109,6 +109,11 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     super.disconnectedCallback();
     window.clearTimeout(this.okTimer);
     if (this._phase === "ok") this._phase = "idle";
+  }
+
+  /** The `feedback` option, once it names the status sensor. */
+  private get feedback(): ButtonFeedback | undefined {
+    return activeFeedback<ButtonFeedback>(this._config.feedback);
   }
 
   private get name() {
@@ -144,7 +149,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     window.clearTimeout(this.okTimer);
     this.result = null;
     this._phase = "idle";
-    const fb = c.feedback;
+    const fb = this.feedback;
     // Without feedback a plain action (navigate, more-info…) needs no spinner.
     if (!fb) {
       this.start().catch((err: Error) => this.fail(null, err.message ?? String(err)));
@@ -228,7 +233,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     }
     const ts = c.last_used_entity ? this.entity(c.last_used_entity)?.attributes.timestamp : undefined;
     if (typeof ts === "number") return formatWhen(ts * 1000);
-    const fb = c.feedback;
+    const fb = this.feedback;
     const status = fb ? this.entity(fb.status_entity) : undefined;
     if (status && status.state === String(fb!.success_state ?? "200")) {
       const ok = this.when(status.attributes.last_run ?? status.last_changed);
@@ -246,7 +251,7 @@ export class LumenButtonCard extends LumenBaseCard<ButtonConfig> {
     const busy = this._phase === "wait";
     const h = una
       ? undefined
-      : this.actions(`button:${c.entity}`, c, c.entity, { tap: () => this.run(), hold: () => this.moreInfo(c.feedback?.status_entity ?? c.entity) });
+      : this.actions(`button:${c.entity}`, c, c.entity, { tap: () => this.run(), hold: () => this.moreInfo(this.feedback?.status_entity ?? c.entity) });
     const ic = c.icon ?? e?.attributes.icon ?? ICONS[this.domain] ?? "mdi:gesture-tap";
     const look = this.look(e);
     // Owner 2026-10-29: compact is always the access bar cell (no square tile).

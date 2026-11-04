@@ -8,6 +8,7 @@ import { airQuality } from "../src/logic/air";
 import { alertToShow } from "../src/logic/alert";
 import { ctPresets, kelvinRange, lightPower } from "../src/logic/light";
 import { presence } from "../src/logic/presence";
+import { activeFeedback } from "../src/logic/response";
 import { defaultTap } from "../src/logic/run";
 import { alarmBarIcon, alarmStatus } from "../src/logic/status";
 import { formatDuration, formatNumber, formatWhen } from "../src/logic/time";
@@ -227,6 +228,13 @@ describe("edit-mode layout preview", () => {
     expect(visibleAt([{ condition: "user", users: ["x"] }], 390)).toBe(true);
     expect(visibleAt([{ condition: "or", conditions: [...narrow, { condition: "state", entity: "a", state: "on" }] }], 1440)).toBe(true);
     expect(visibleAt(undefined, 390)).toBe(true);
+  });
+});
+
+describe("activeFeedback", () => {
+  it("needs a status_entity", () => {
+    for (const f of [undefined, null, "x", {}, { success_text: "ok" }, { status_entity: "" }, { status_entity: 5 }]) expect(activeFeedback(f)).toBeUndefined();
+    expect(activeFeedback({ status_entity: "sensor.s" })).toEqual({ status_entity: "sensor.s" });
   });
 });
 

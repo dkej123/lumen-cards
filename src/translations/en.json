@@ -61,7 +61,6 @@
   "card.button.description": "Runs a script, scene or button, optionally waiting for the device's answer (e.g. a gate)",
   "card.button.device_error": "Device error",
   "card.button.done": "Done",
-  "card.button.error.feedback": "feedback needs status_entity",
   "card.button.error_code": "Error {code}",
   "card.button.feedback": "Device response",
   "card.button.name": "Button",
