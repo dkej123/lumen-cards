@@ -457,3 +457,14 @@ describe("05 alarm: commands", () => {
     expect(await pending({ action: "toggle" })).toBe(true);
   });
 });
+
+describe("09 climate: entities it reads", () => {
+  it("re-renders when battery_entity changes", async () => {
+    const h = hass(ent("climate.c", "heat", { temperature: 20, current_temperature: 20, hvac_modes: ["heat", "off"] }), ent("sensor.b", "50", { unit_of_measurement: "%", device_class: "battery" }));
+    const el = await mount("climate", { entity: "climate.c", battery_entity: "sensor.b" }, h);
+    expect(root(el).textContent).not.toContain("5%");
+    el.hass = { ...h, states: { ...h.states, "sensor.b": ent("sensor.b", "5", { unit_of_measurement: "%", device_class: "battery" }) } };
+    await el.updateComplete;
+    expect(root(el).textContent).toContain("5%");
+  });
+});

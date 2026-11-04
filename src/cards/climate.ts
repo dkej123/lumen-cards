@@ -174,7 +174,7 @@ export class LumenClimateCard extends LumenBaseCard<ClimateConfig> {
   );
 
   protected entityIds() {
-    return [this._config.entity];
+    return [this._config.entity, this._config.battery_entity];
   }
 
   protected validate(c: ClimateConfig) {

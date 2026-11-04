@@ -570,3 +570,19 @@ describe("purifier card", () => {
     el.remove();
   });
 });
+
+describe("light chip: entities it reads", () => {
+  it("re-renders when a relay of power_entities or a group member changes", async () => {
+    const group = ent("light.g", "on", { brightness: 200, entity_id: ["light.a", "light.b"] });
+    const states = [group, ent("light.a", "on", { brightness: 200 }), ent("light.b", "off"), ent("switch.r1", "on"), ent("switch.r2", "off")];
+    const h = mockHass(states);
+    const el = await mount("chips", { chips: [{ type: "light", entity: "light.g", power_entities: ["switch.r1", "switch.r2"] }, { type: "light", entity: "light.g" }] }, h);
+    const update = vi.spyOn(el, "requestUpdate");
+    for (const id of ["switch.r2", "light.b"]) {
+      update.mockClear();
+      el.hass = { ...h, states: { ...h.states, [id]: ent(id, "on") } };
+      expect(update, id).toHaveBeenCalled();
+    }
+    el.remove();
+  });
+});

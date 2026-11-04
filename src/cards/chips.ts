@@ -15,7 +15,8 @@ import { toast } from "../core/toast";
 import { listOf } from "../core/validate";
 import type { HassLike } from "../hass/types";
 import { isUnavailable } from "../hass/types";
-import { LightsController, type LightItem } from "../lights/controller";
+import { LightsController, relaysOf, type LightItem } from "../lights/controller";
+import { groupMembers } from "../logic/light";
 import { defaultTap } from "../logic/run";
 
 /** How long a tapped chip stays highlighted while the device reports its new state (polled integrations are slow). */
@@ -99,7 +100,7 @@ export class LumenChipsCard extends LumenBaseCard<ChipsConfig> {
   }
 
   protected entityIds() {
-    return this.chipList.flatMap((x) => (x.type === "light" ? [x.entity, x.power_entity] : [x.entity]));
+    return this.chipList.flatMap((x) => (x.type === "light" ? [x.entity, ...relaysOf(x), ...groupMembers(this.entity(x.entity))] : [x.entity]));
   }
 
   protected validate(c: ChipsConfig) {
