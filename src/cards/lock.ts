@@ -1,5 +1,5 @@
 import { css, html, nothing } from "lit";
-import { handleAction, type ActionConfig } from "../core/actions";
+import type { ActionConfig } from "../core/actions";
 import { LumenBaseCard, type BaseConfig } from "../core/base-card";
 import { entityName } from "../core/call";
 import { CodePad } from "../core/controllers/code-pad";
@@ -334,19 +334,20 @@ export class LumenLockCard extends LumenBaseCard<LockConfig> {
     const l = this.look();
     const st = this.lock?.state;
     // Catalog correction 2026-10-30: hold 500 ms = the main command (lock, or unlock with the
-    // code); a tap opens the lock dialog. Nothing while a command is on its way.
-    const handlers = this.presses.handlers(
-      `lockcell:${this._config.entity}`,
-      () => {
-        if (busy || una) return;
-        this._dialog = true;
-      },
-      () => {
-        if (busy || una) return;
-        if (this._config.hold_action) handleAction(this, this._config.hold_action, this._config.entity, "hold");
-        else this.request(st === "locked" ? "unlock" : "lock");
-      },
-    );
+    // code); a tap opens the lock dialog; the card's actions replace them. Nothing while a command
+    // is on its way.
+    const c = this._config;
+    const handlers =
+      busy || una
+        ? this.presses.handlers(`lockcell:${c.entity}`)
+        : this.actions(`lockcell:${c.entity}`, c, c.entity, {
+            tap: c.tap_action
+              ? undefined
+              : () => {
+                  this._dialog = true;
+                },
+            hold: () => this.request(st === "locked" ? "unlock" : "lock"),
+          });
     return compactCell({
       title: `${this.name} · ${l.sub}`,
       color: l.iconFg ?? "var(--lumen-text-2)",

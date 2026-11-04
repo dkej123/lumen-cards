@@ -458,6 +458,67 @@ describe("05 alarm: commands", () => {
   });
 });
 
+describe("06 lock: compact cell actions", () => {
+  const press = (el: HTMLElement) => {
+    el.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+    el.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true, composed: true }));
+  };
+  const cell = (el: Card) => root(el).querySelector<HTMLElement>('[role="button"]')!;
+  const actions = (el: Card) => {
+    const fired: string[] = [];
+    el.addEventListener("hass-action", (e) => fired.push((e as CustomEvent).detail.action));
+    return fired;
+  };
+  const dialogOpen = (el: Card) => (el as unknown as { _dialog: boolean })._dialog;
+
+  it("tap_action replaces the lock dialog", async () => {
+    const el = await mount("lock", { entity: "lock.l", layout: "compact", tap_action: { action: "navigate", navigation_path: "/x" } }, hass(ent("lock.l", "locked")));
+    const fired = actions(el);
+    press(cell(el));
+    await el.updateComplete;
+    expect(fired).toEqual(["tap"]);
+    expect(dialogOpen(el)).toBe(false);
+  });
+
+  it("double_tap_action fires on two quick taps; one tap still opens the dialog", async () => {
+    const el = await mount("lock", { entity: "lock.l", layout: "compact", double_tap_action: { action: "navigate", navigation_path: "/x" } }, hass(ent("lock.l", "locked")));
+    const fired = actions(el);
+    press(cell(el));
+    press(cell(el));
+    await el.updateComplete;
+    expect(fired).toEqual(["double_tap"]);
+    expect(dialogOpen(el)).toBe(false);
+    press(cell(el));
+    await new Promise((r) => setTimeout(r, 300));
+    expect(dialogOpen(el)).toBe(true);
+  });
+
+  it("without actions a tap opens the dialog and a hold is the main command; offline nothing runs", async () => {
+    vi.useFakeTimers();
+    try {
+      const h = hass(ent("lock.l", "unlocked"));
+      const el = await mount("lock", { entity: "lock.l", layout: "compact" }, h);
+      press(cell(el));
+      expect(dialogOpen(el)).toBe(true);
+      (el as unknown as { _dialog: boolean })._dialog = false;
+      cell(el).dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+      vi.advanceTimersByTime(600);
+      expect(h.calls.at(-1)?.slice(0, 2)).toEqual(["lock", "lock"]);
+
+      const off = hass(ent("lock.o", "unavailable"));
+      const una = await mount("lock", { entity: "lock.o", layout: "compact", tap_action: { action: "navigate", navigation_path: "/x" } }, off);
+      const fired = actions(una);
+      press(cell(una));
+      cell(una).dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true, composed: true }));
+      vi.advanceTimersByTime(600);
+      expect(fired).toEqual([]);
+      expect(off.calls).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe("09 climate: entities it reads", () => {
   it("re-renders when battery_entity changes", async () => {
     const h = hass(ent("climate.c", "heat", { temperature: 20, current_temperature: 20, hvac_modes: ["heat", "off"] }), ent("sensor.b", "50", { unit_of_measurement: "%", device_class: "battery" }));
