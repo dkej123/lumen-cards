@@ -42,6 +42,7 @@ type Card = HTMLElement & { hass: HassLike; setConfig(c: unknown): void; getGrid
 type Condition = { condition: string; media_query?: string; entity?: string; state?: string; conditions?: Condition[] };
 
 const lang = document.documentElement.lang === "pl" ? "pl" : "en";
+const PARAMS = new URLSearchParams(location.search);
 const tr = (en: string, pl: string) => (lang === "pl" ? pl : en);
 
 const ICONS: Record<string, string> = {
@@ -111,6 +112,9 @@ const home: DemoHome = createDemoHome({
   dark: true,
   extra: (e) =>
     (STATES as unknown as [string, string, Record<string, unknown>, number][]).map(([id, state, attrs, age]) => {
+      // ?weather=<HA condition> and ?sun=up: other skies for checking the weather background.
+      if (id === "weather.home" && PARAMS.get("weather")) return e(id, PARAMS.get("weather")!, attrs, age);
+      if (id === "sun.sun" && PARAMS.get("sun") === "up") return e(id, "above_horizon", { ...attrs, elevation: 30, rising: false }, age);
       if (id === "input_datetime.barrier_last") {
         const at = new Date(state.replace(" ", "T") + "+01:00").getTime() + moved;
         return e(id, localStamp(at), { ...attrs, timestamp: at / 1000 }, age);

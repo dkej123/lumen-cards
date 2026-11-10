@@ -70,6 +70,51 @@ function drawSurf(ctx,W,H,cards,st,t,cond,phase,dark,mv,lv=1){
    for(const p of s.pel){if(mv)p.a=Math.min(1,p.a+.08*mv);const dx=p.u*w,rr=p.r*p.a,py=y+edgeY(dx,w,r)-rr;ctx.beginPath();ctx.arc(x+dx,py,rr,0,6.283);ctx.fill();ctx.stroke()}}
  }
 }
+/* Lumen: rain on one card, redrawn only where it changed.
+ * Same state, same Math.random calls in the same order and the same drawing operations as the rain
+ * branch of drawSurf, so the pixels are identical; what changes is that a tick clears and repaints only
+ * the device-pixel tiles where a drop moved, faded, appeared or disappeared, and leaves the canvas
+ * untouched when nothing changed. `full` repaints everything (first draw, resize, new scene).
+ * Returns true when the canvas was touched. */
+const TILE=32;
+function drawRainSurf(ctx,W,H,c,st,cond,dark,mv,lv,dpr,full){
+ const fx=SURF[cond];const R=Math.random;const{x,y,w,h,r}=c;let s=st.get(c.el);
+ if(!s){s={drops:[],flakes:[],pel:[],dew:null,snowH:lv,noise:Array.from({length:Math.ceil(w/6)+3},()=>R())};
+  for(let i=0;i<w*h/2600*fx.rain*(.35+.65*lv)*lv;i++)s.drops.push(mv?{x:R()*w,y:R()*h,r:1.3+R()*3.4,vy:0,age:6+R()*200,life:300+R()*700}:{x:R()*w,y:R()*h,r:1.3+R()*3.4,vy:0,age:20,life:1e9});
+  st.set(c.el,s);full=true}
+ const cols=Math.ceil(W*dpr/TILE),rows=Math.ceil(H*dpr/TILE);
+ if(!s.grid||s.grid.length!==cols*rows){s.grid=new Uint8Array(cols*rows);full=true}
+ const grid=s.grid;grid.fill(0);let dirty=false;
+ const mark=(b)=>{if(!b)return;dirty=true;const c0=Math.max(0,Math.floor(b[0]*dpr/TILE)),c1=Math.min(cols-1,Math.floor(b[2]*dpr/TILE)),r0=Math.max(0,Math.floor(b[1]*dpr/TILE)),r1=Math.min(rows-1,Math.floor(b[3]*dpr/TILE));for(let j=r0;j<=r1;j++)for(let i=c0;i<=c1;i++)grid[j*cols+i]=1};
+ const hits=(b)=>{const c0=Math.max(0,Math.floor(b[0]*dpr/TILE)),c1=Math.min(cols-1,Math.floor(b[2]*dpr/TILE)),r0=Math.max(0,Math.floor(b[1]*dpr/TILE)),r1=Math.min(rows-1,Math.floor(b[3]*dpr/TILE));for(let j=r0;j<=r1;j++)for(let i=c0;i<=c1;i++)if(grid[j*cols+i])return true;return false};
+ // update: the rain branch of drawSurf without the drawing
+ const max=w*h/2600*fx.rain*(.35+.65*lv);if(mv&&s.drops.length<max&&R()<.3*fx.rain*mv)s.drops.push({x:R()*w,y:R()*h,r:1.3+R()*3.4,vy:0,age:0,life:300+R()*700});
+ let born=0;
+ for(let i=s.drops.length-1;i>=0;i--){const d=s.drops[i];
+  if(mv){d.age+=mv;if(!d.vy&&d.r>3.4&&R()<.003*mv)d.vy=.2;if(d.vy){d.vy=Math.min(3,d.vy+.06*mv);const oy=d.y;d.y+=d.vy*mv;d.x+=Math.sin(d.y*.08)*.15*mv;if((oy/7|0)!==(d.y/7|0)&&R()<.7&&s.drops.length<max*1.8){s.drops.push({x:d.x+(R()-.5),y:oy,r:.8+R()*.9,vy:0,age:0,life:120+R()*200});born++}d.r=Math.max(2.2,d.r-.004*mv)}}
+  const a=Math.min(1,d.age/6)*Math.min(1,(d.life-d.age)/40);if(a<=0||d.y>h+6){mark(d.bb);s.drops.splice(i,1);continue}
+  d.a=a}
+ // drops born this tick are drawn from the next one, as in drawSurf
+ const n=s.drops.length-born;
+ for(let i=n-1;i>=0;i--){const d=s.drops[i];const px=x+d.x,py=y+d.y,rr=d.r,ry=d.vy?rr*1.25:rr;
+  if(!full&&d.bb&&d.px===px&&d.py===py&&d.rr===rr&&d.ry===ry&&d.da===d.a)continue;
+  mark(d.bb);d.px=px;d.py=py;d.rr=rr;d.ry=ry;d.da=d.a;d.bb=[px-rr-2,py-ry-2,px+rr+2,py+ry+rr*.28+2];mark(d.bb)}
+ if(!full&&!dirty)return false;
+ // A clip edge through a drop rasterizes its edge slightly differently: grow the region until no drawn drop crosses it.
+ if(!full){const inside=(b)=>{const c0=Math.max(0,Math.floor(b[0]*dpr/TILE)),c1=Math.min(cols-1,Math.floor(b[2]*dpr/TILE)),r0=Math.max(0,Math.floor(b[1]*dpr/TILE)),r1=Math.min(rows-1,Math.floor(b[3]*dpr/TILE));for(let j=r0;j<=r1;j++)for(let i=c0;i<=c1;i++)if(!grid[j*cols+i])return false;return true};
+  let grew=true;while(grew){grew=false;for(let i=0;i<n;i++){const b=s.drops[i].bb;if(hits(b)&&!inside(b)){mark(b);grew=true}}}}
+ ctx.save();
+ if(full)ctx.clearRect(0,0,W,H);
+ else{/* no clip: every drop drawn below lies wholly inside the cleared tiles, so drops rasterize exactly as in a full repaint */ctx.setTransform(1,0,0,1,0,0);for(let j=0;j<rows;j++){let i=0;while(i<cols){if(!grid[j*cols+i]){i++;continue}let e=i;while(e+1<cols&&grid[j*cols+e+1])e++;ctx.clearRect(i*TILE,j*TILE,(e-i+1)*TILE,TILE);i=e+1}}ctx.setTransform(dpr,0,0,dpr,0,0)}
+ rrect(ctx,x,y,w,h,r);ctx.clip();const hi=dark?'rgba(255,255,255,.8)':'rgba(255,255,255,1)',sh=dark?'rgba(0,0,0,.55)':'rgba(30,45,70,.38)',rim=dark?'rgba(255,255,255,.35)':'rgba(255,255,255,.75)',body=dark?'rgba(210,225,245,.10)':'rgba(255,255,255,.32)',edge=dark?'rgba(0,0,0,.28)':'rgba(40,60,90,.16)';
+ for(let i=n-1;i>=0;i--){const d=s.drops[i];if(!full&&!hits(d.bb))continue;
+  const px=d.px,py=d.py,rr=d.rr,ry=d.ry;ctx.globalAlpha=d.a;
+  ctx.fillStyle=sh;ctx.beginPath();ctx.ellipse(px+.3,py+rr*.28,rr,ry,0,0,6.283);ctx.fill();
+  ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(px,py,rr,ry,0,0,6.283);ctx.fill();
+  ctx.strokeStyle=edge;ctx.lineWidth=Math.max(.7,rr*.22);ctx.beginPath();ctx.ellipse(px,py,rr*.88,ry*.88,0,3.5,5.9);ctx.stroke();
+  ctx.strokeStyle=rim;ctx.lineWidth=Math.max(.6,rr*.2);ctx.beginPath();ctx.ellipse(px,py,rr*.78,ry*.78,0,.35,2.8);ctx.stroke();
+  ctx.fillStyle=hi;ctx.beginPath();ctx.ellipse(px-rr*.32,py-ry*.38,Math.max(.45,rr*.26),Math.max(.35,rr*.18),-.6,0,6.283);ctx.fill()}
+ ctx.globalAlpha=1;ctx.restore();return true}
 function drawWeather(ctx,W,H,st,t,cond,phase,dark,animate,dt=1){
  const cf=WCFG[cond]||{};const night=phase==='night';const R=Math.random;
  if(!st.init){st.init=1;const area=W*H/180000;
@@ -105,4 +150,4 @@ function drawWeather(ctx,W,H,st,t,cond,phase,dark,animate,dt=1){
 }
 
 
-export { warm, COND, COND_ALIAS, WCFG, SKY, SKYO, sky, SURF, drawMist, drawWind, drawSurf, drawWeather };
+export { warm, COND, COND_ALIAS, WCFG, SKY, SKYO, sky, SURF, drawMist, drawWind, drawSurf, drawRainSurf, drawWeather };

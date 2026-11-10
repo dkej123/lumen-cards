@@ -1,4 +1,4 @@
-import { SURF, WCFG, drawMist, drawSurf, drawWeather, drawWind } from "./fx";
+import { SURF, WCFG, drawMist, drawRainSurf, drawSurf, drawWeather, drawWind } from "./fx";
 
 // Weather renderer as a page-wide singleton:
 // every Lumen card registers here, the lumen-weather-background-card card provides the scene and the
@@ -26,6 +26,8 @@ interface CardSurface {
   w?: number;
   h?: number;
   drawnSig?: string;
+  /** Canvas size + scene of the last full repaint: rain repaints only what changed while it matches. */
+  fullSig?: string;
   lit?: boolean;
   /** Card without glass (no backdrop blur, opaque surface): effects only on the edge. */
   edge?: boolean;
@@ -91,6 +93,8 @@ export class WeatherEngine {
   private tickNo = 0;
   private scrollUntil = 0;
   private listening = false;
+  /** Pulses are stepped by the loop instead of running natively. */
+  private sampled = false;
 
   private bg = { sig: "", st: {} as Record<string, unknown>, drawn: false, visible: true, last: 0 };
   private surf = { sig: "", st: new WeakMap<object, unknown>(), last: 0, dirty: true, hidden: false };
@@ -251,23 +255,55 @@ export class WeatherEngine {
       this.layers ? this.drawFloat(t, this.layers.fx) : false,
       scrolling ? true : this.drawBackground(t, this.layers?.bg),
     ];
-    if (needs.some(Boolean)) this.schedule(TICK);
+    const animating = needs.some(Boolean);
+    this.sampleClocked(animating ? t : undefined);
+    if (animating) this.schedule(TICK);
   };
 
   // ------------------------------------------------------------- CSS animations
 
   /**
    * Endless pulses (presence dot, alarm, FAB halo) of every card share one clock origin, so
-   * cards rendered at different times pulse in phase. The browser runs them natively: no
-   * per-frame work, the loop above only runs for weather.
+   * cards rendered at different times pulse in phase. While the weather loop runs, the pulses
+   * are stepped on its 30 Hz tick: a pulse running natively makes a frame on every display
+   * refresh (60 or 120 Hz), and every frame blurs all glass cards again, although the weather
+   * changes only 30 times a second. When the loop stops, the browser runs them natively.
    */
   private collectAnimations(host: Host) {
     const all = host.renderRoot.getAnimations?.() ?? [];
     const next = all.filter(
       (a) => a instanceof CSSAnimation && CLOCKED.has(a.animationName) && a.effect?.getComputedTiming().iterations === Infinity,
     );
-    for (const a of next) if (a.startTime !== this.clockStart && a.playState === "running") a.startTime = this.clockStart;
+    for (const a of next) {
+      if (this.sampled) {
+        if (a.playState !== "paused") a.pause();
+        a.currentTime = performance.now() - this.clockStart;
+      } else if (a.startTime !== this.clockStart && a.playState === "running") a.startTime = this.clockStart;
+    }
     this.clocked.set(host, next);
+  }
+
+  /** `t`: step every pulse to this tick. `undefined`: hand them back to the browser. */
+  private sampleClocked(t: number | undefined) {
+    if (t === undefined) {
+      if (!this.sampled) return;
+      this.sampled = false;
+      for (const list of this.clocked.values()) {
+        for (const a of list) {
+          a.play();
+          a.startTime = this.clockStart;
+        }
+      }
+      return;
+    }
+    this.sampled = true;
+    const time = t - this.clockStart;
+    for (const list of this.clocked.values()) {
+      for (const a of list) {
+        if (a.playState !== "paused") a.pause();
+        a.currentTime = time;
+      }
+    }
   }
 
   // ------------------------------------------------------------- background
@@ -288,7 +324,7 @@ export class WeatherEngine {
       bg.height = Math.round(h * k);
       this.bg.st = {};
     }
-    const ctx = bg.getContext("2d", { willReadFrequently: true })!;
+    const ctx = bg.getContext("2d")!;
     ctx.setTransform(k, 0, 0, k, 0, 0);
     if (this.bg.sig !== sig) {
       this.bg.sig = sig;
@@ -348,6 +384,7 @@ export class WeatherEngine {
     this.surf.dirty = false;
     const dpr = Math.min(2, devicePixelRatio || 1);
     const onlyGlint = kinds.length === 1 && glint;
+    const onlyRain = kinds.length === 1 && kinds[0] === "rain";
     for (const [canvas, surface] of this.surfaces) {
       if (!surface.visible) continue;
       const card = surface.card;
@@ -384,7 +421,16 @@ export class WeatherEngine {
         surface.edge = isSolidCard(cs as unknown as Parameters<typeof isSolidCard>[0]);
       }
       const r = Math.min(surface.radius, ch / 2, cw / 2);
-      drawSurf(ctx, w, h, [{ el: card, x: BLEED.x, y: BLEED.top, w: cw, h: ch, r, edge: surface.edge }], this.surf.st, t, s.cond, s.phase, s.dark, animated ? dt : 0, s.level);
+      const area = { el: card, x: BLEED.x, y: BLEED.top, w: cw, h: ch, r, edge: surface.edge };
+      if (onlyRain) {
+        // A resized canvas comes back cleared, a new scene has new drops: both need a full repaint.
+        const fullSig = `${canvas.width}x${canvas.height}|${sig}`;
+        drawRainSurf(ctx, w, h, area, this.surf.st, s.cond, s.dark, animated ? dt : 0, s.level, dpr, surface.fullSig !== fullSig);
+        surface.fullSig = fullSig;
+      } else {
+        surface.fullSig = undefined;
+        drawSurf(ctx, w, h, [area], this.surf.st, t, s.cond, s.phase, s.dark, animated ? dt : 0, s.level);
+      }
     }
     return animated;
   }
