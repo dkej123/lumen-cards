@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { drawRainSurf, drawSurf } from "../src/weather/fx";
+import { drawSurf, drawSurfInc } from "../src/weather/fx";
 
 /** Canvas 2D stand-in that counts drawing calls; geometry is not rasterized here (pixels are compared in a browser). */
 function fakeCtx() {
@@ -12,6 +12,7 @@ function fakeCtx() {
         if (key === "calls") return calls;
         if (key === "fill" || key === "stroke") return () => calls.draw++;
         if (key === "clearRect") return () => calls.clear++;
+        if (key === "createLinearGradient" || key === "createRadialGradient") return () => ({ addColorStop: noop });
         return noop;
       },
       set: () => true,
@@ -32,41 +33,46 @@ afterEach(() => {
   Math.random = random;
 });
 
-type Drop = { x: number; y: number; r: number; vy: number; age: number; life: number };
-const drops = (st: WeakMap<object, { drops: Drop[] }>, el: object) =>
-  st.get(el)!.drops.map(({ x, y, r, vy, age, life }) => ({ x, y, r, vy, age, life }));
+type Shape = { x?: number; y?: number; u?: number; r: number; vy?: number; age?: number; life?: number; a?: number };
+type State = { drops: Shape[]; flakes: Shape[]; pel: Shape[]; snowH: number };
+const pick = ({ x, y, u, r, vy, age, life, a }: Shape) => ({ x, y, u, r, vy, age, life, a: u === undefined ? undefined : a });
+/** Everything the drawing depends on: drops, flakes, hailstones and the snow depth. */
+const drops = (st: WeakMap<object, State>, el: object) => {
+  const s = st.get(el)!;
+  return { drops: s.drops.map(pick), flakes: s.flakes.map(pick), pel: s.pel.map(pick), snowH: s.snowH };
+};
 
-describe("drawRainSurf", () => {
-  for (const cond of ["rainy", "pouring", "lightning-rainy"]) {
-    it(`${cond}: same drops as drawSurf, tick after tick, with fewer drawing calls`, () => {
+describe("drawSurfInc", () => {
+  for (const cond of ["rainy", "pouring", "lightning-rainy", "snowy", "snowy-rainy", "hail"]) {
+    it(`${cond}: same shapes as drawSurf, tick after tick, with fewer drawing calls`, () => {
       const card = { x: 4, y: 16, w: 300, h: 150, r: 22 };
       const a = fakeCtx();
       const b = fakeCtx();
       const elA = {};
       const elB = {};
-      const stA = new WeakMap();
-      const stB = new WeakMap();
+      const stA = new WeakMap<object, State>();
+      const stB = new WeakMap<object, State>();
       const ra = seeded(11);
       const rb = seeded(11);
       for (let k = 0; k < 400; k++) {
         Math.random = ra;
         drawSurf(a, 308, 170, [{ el: elA, ...card }], stA, k * 33, cond, "day", false, 1, 1);
         Math.random = rb;
-        drawRainSurf(b, 308, 170, { el: elB, ...card }, stB, cond, false, 1, 1, 2, k === 0);
+        drawSurfInc(b, 308, 170, { el: elB, ...card }, stB, cond, false, 1, 1, 2, k === 0);
         expect(drops(stB, elB)).toEqual(drops(stA, elA));
       }
       expect(b.calls.draw).toBeLessThan(a.calls.draw / 2);
     });
   }
 
-  it("leaves the canvas alone when nothing moves", () => {
+  it.each(["rainy", "snowy", "hail"])("%s: leaves the canvas alone when nothing moves", (cond) => {
     const ctx = fakeCtx();
     const el = {};
     const st = new WeakMap();
     const card = { el, x: 4, y: 16, w: 200, h: 100, r: 16 };
-    expect(drawRainSurf(ctx, 208, 120, card, st, "rainy", true, 0, 1, 2, true)).toBe(true);
+    expect(drawSurfInc(ctx, 208, 120, card, st, cond, true, 0, 1, 2, true)).toBe(true);
     const after = { ...ctx.calls };
-    expect(drawRainSurf(ctx, 208, 120, card, st, "rainy", true, 0, 1, 2, false)).toBe(false);
+    expect(drawSurfInc(ctx, 208, 120, card, st, cond, true, 0, 1, 2, false)).toBe(false);
     expect(ctx.calls).toEqual(after);
   });
 });

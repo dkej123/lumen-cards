@@ -1,4 +1,4 @@
-import { SURF, WCFG, drawMist, drawRainSurf, drawSurf, drawWeather, drawWind } from "./fx";
+import { SURF, WCFG, drawMist, drawSurf, drawSurfInc, drawWeather, drawWind } from "./fx";
 
 // Weather renderer as a page-wide singleton:
 // every Lumen card registers here, the lumen-weather-background-card card provides the scene and the
@@ -26,7 +26,7 @@ interface CardSurface {
   w?: number;
   h?: number;
   drawnSig?: string;
-  /** Canvas size + scene of the last full repaint: rain repaints only what changed while it matches. */
+  /** Canvas size + scene of the last full repaint: rain, snow and hail repaint only what changed while it matches. */
   fullSig?: string;
   lit?: boolean;
   /** Card without glass (no backdrop blur, opaque surface): effects only on the edge. */
@@ -384,7 +384,8 @@ export class WeatherEngine {
     this.surf.dirty = false;
     const dpr = Math.min(2, devicePixelRatio || 1);
     const onlyGlint = kinds.length === 1 && glint;
-    const onlyRain = kinds.length === 1 && kinds[0] === "rain";
+    // Rain, snow and hail repaint only what changed (drawSurfInc); glint and fog draw as before.
+    const incremental = kinds.length > 0 && kinds.every((k) => k === "rain" || k === "snow" || k === "hail");
     for (const [canvas, surface] of this.surfaces) {
       if (!surface.visible) continue;
       const card = surface.card;
@@ -422,10 +423,10 @@ export class WeatherEngine {
       }
       const r = Math.min(surface.radius, ch / 2, cw / 2);
       const area = { el: card, x: BLEED.x, y: BLEED.top, w: cw, h: ch, r, edge: surface.edge };
-      if (onlyRain) {
+      if (incremental) {
         // A resized canvas comes back cleared, a new scene has new drops: both need a full repaint.
         const fullSig = `${canvas.width}x${canvas.height}|${sig}`;
-        drawRainSurf(ctx, w, h, area, this.surf.st, s.cond, s.dark, animated ? dt : 0, s.level, dpr, surface.fullSig !== fullSig);
+        drawSurfInc(ctx, w, h, area, this.surf.st, s.cond, s.dark, animated ? dt : 0, s.level, dpr, surface.fullSig !== fullSig);
         surface.fullSig = fullSig;
       } else {
         surface.fullSig = undefined;
@@ -442,6 +443,7 @@ export class WeatherEngine {
     e.style.rotate = "";
     e.style.translate = "";
     e.style.transformOrigin = "";
+    e.style.willChange = "";
     this.float.sway.delete(e);
   }
 
