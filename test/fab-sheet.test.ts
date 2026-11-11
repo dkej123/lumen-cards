@@ -174,6 +174,25 @@ describe("floating panel card", () => {
     expect(norm).not.toContain("max-height:85%");
   });
 
+  it("HA events from cards in the open panel (chip tap actions, more-info) reach HA through the card", async () => {
+    const el = await mount("fab-sheet", { title: "Heating", cards: THREE });
+    (el as unknown as { open(): void }).open();
+    await el.updateComplete;
+    const got: string[] = [];
+    const onHost = (e: Event) => got.push(`${e.type}:${JSON.stringify((e as CustomEvent).detail)}`);
+    el.addEventListener("hass-action", onHost);
+    el.addEventListener("hass-more-info", onHost);
+    const leaked: string[] = [];
+    const onBody = (e: Event) => e.composedPath().includes(el) || leaked.push(e.type);
+    document.body.addEventListener("hass-action", onBody);
+    const inner = layer()!.querySelector('[role="dialog"]')!;
+    inner.dispatchEvent(new CustomEvent("hass-action", { detail: { action: "tap" }, bubbles: true, composed: true }));
+    inner.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: "climate.salon" }, bubbles: true, composed: true }));
+    document.body.removeEventListener("hass-action", onBody);
+    expect(got).toEqual(['hass-action:{"action":"tap"}', 'hass-more-info:{"entityId":"climate.salon"}']);
+    expect(leaked).toEqual([]);
+  });
+
   it("editor preview: the real cards in a static sheet, and no taps reach them", async () => {
     const el = await mount("fab-sheet", { title: "Heating", cards: THREE }, hass(), (x) => (x.preview = true));
     await vi.waitFor(() => expect(el.shadowRoot!.querySelectorAll("lumen-climate-card").length).toBe(3));

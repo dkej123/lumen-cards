@@ -34,7 +34,13 @@ if (typeof customElements !== "undefined" && !customElements.get("lumen-cards-la
 
 type Content = TemplateResult | typeof nothing;
 
-const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+/**
+ * Events HA's frontend handles on its own element tree (actions, more-info, dialogs, haptics, toasts).
+ * The layer sits on <body>, outside that tree, so these would never arrive: they are sent again from the card.
+ */
+const HA_EVENTS = ["hass-action", "hass-more-info", "show-dialog", "haptic", "hass-notification", "ll-custom"];
+
+const FOCUSABLE ='button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Focused element across shadow roots. */
 const deepActive = (): HTMLElement | null => {
@@ -104,6 +110,13 @@ export class LayerController implements ReactiveController {
     return seg === this.home;
   }
 
+  /** An HA event from a card in the layer (e.g. a chip's tap action) goes on from the host card, inside HA's tree. */
+  private forward = (e: Event) => {
+    if (!(e instanceof CustomEvent) || !this.host.isConnected) return;
+    e.stopPropagation();
+    this.host.dispatchEvent(new CustomEvent(e.type, { detail: e.detail, bubbles: true, composed: true, cancelable: e.cancelable }));
+  };
+
   private onKey = (e: KeyboardEvent) => {
     if (!this.dialog) return;
     if (e.key === "Escape" && this.close) {
@@ -167,6 +180,7 @@ export class LayerController implements ReactiveController {
     if (!this.el) {
       this.el = document.createElement("lumen-cards-layer") as LumenLayerElement;
       this.el.addEventListener("keydown", this.onKey);
+      for (const type of HA_EVENTS) this.el.addEventListener(type, this.forward);
       document.body.append(this.el);
     }
     // Theme and per-card overrides (accent) follow the card.
@@ -214,6 +228,7 @@ export class LayerController implements ReactiveController {
     if (!this.el) return;
     render(nothing, this.el.shadowRoot!, { host: this.host });
     this.el.removeEventListener("keydown", this.onKey);
+    for (const type of HA_EVENTS) this.el.removeEventListener(type, this.forward);
     this.el.remove();
     this.el = undefined;
     if (this.dialog) {
